@@ -1,0 +1,26 @@
+{
+  "name": "hlresistance-backend",
+  "version": "0.0.0",
+  "description": "Backend for the Hololive Resistance website",
+  "main": "index.js",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "express": "^4.17.1",
+    "hbs": "^4.1.1",
+    "mongoose": "^5.9.19"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HL-Resistance/backend.git"
+  },
+  "author": "Hololive Resistance website team",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/HL-Resistance/backend/issues"
+  },
+  "homepage": "https://github.com/HL-Resistance/backend#readme"
+}
