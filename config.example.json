@@ -1,0 +1,12 @@
+{
+  "mongodb": {
+    "host": "",
+    "username": "",
+    "password": "",
+    "database": ""
+  },
+  "discord": {
+    "token": "",
+    "prefix": ""
+  }
+}
