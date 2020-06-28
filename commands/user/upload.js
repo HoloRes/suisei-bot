@@ -196,6 +196,7 @@ function convertAndDb(doc, msg, embed, message, tags) {
                 .audioCodec('libmp3lame')
                 .noVideo()
                 .save(`./tmp/conversion/${doc._id}.mp3`)
+                .audioBitrate('128k')
                 .on('error', err => {
                     if(err) {
                         console.error(err)
