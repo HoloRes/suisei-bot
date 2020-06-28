@@ -7,6 +7,12 @@
   },
   "discord": {
     "token": "",
-    "prefix": ""
+    "prefix": "",
+    "devprefix": "",
+    "roles": {
+      "musician": "",
+      "staff": "",
+      "dev": ""
+    }
   }
 }

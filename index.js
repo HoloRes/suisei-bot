@@ -1,15 +1,16 @@
 // Packages
 const fs = require("fs"),
     Discord = require("discord.js"),
+    bodyParser = require("body-parser"),
     mongoose = require("mongoose"), // Library for MongoDB
     express = require("express"), // Web server
-    hbs = require("hbs"); // Handlebars
-
-// Models
-const Music = require("./models/music");
+    hbs = require("hbs"); // Handlebars, used to host a temporary page
 
 // Local config files
-const config = require("./config.json");
+const config = require("$/config.json");
+
+// Schemas
+const Music = require("$/models/music");
 
 // Init
 // Express
@@ -27,25 +28,18 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 // Code
 // Routers
 app.get('/', (req, res) => {
-    res.render("index", {
-        music: [
-            {
-                "name": "NEXT COLOR PLANET",
-                "author": "Hoshimachi Suisei",
-                "id": "1"
-            }
-        ]
+    Music.find({}).lean().exec((err, docs) =>{
+        if(err) console.error(err);
+        res.render("index", { music: docs });
     });
 });
 
 app.get('/player/:id', (req, res) => {
-    const music = {
-        "name": "NEXT COLOR PLANET",
-        "author": "Hoshimachi Suisei",
-        "id": "1"
-    }
-    if (req.params.id === music.id) return res.render("player", {music: music});
-    else res.status(400).send("Page not found")
+    Music.findOne({ _id: req.params.id }).lean().exec((err, doc) => {
+        if(err) return console.error(err);
+        if(doc) return res.render("player", { music: doc });
+        else res.status(400).send("Page not found")
+    })
 });
 
 // Discord bot
@@ -54,15 +48,31 @@ app.get('/player/:id', (req, res) => {
 const client = new Discord.Client();
 
 client.on("ready", () => {
-    client.user.setActivity("great music", { type: "LISTENING" });
+    client.commands = new Discord.Collection(); // This holds all the commands accessible for the end users.
+    client.devcmds = new Discord.Collection(); // This will hold commands that are only accessible for the maintainers
     loadcmds();
     console.log("Bot online");
 });
 
 client.on("message", (message) => {
     if(message.author.bot) return;
-    if (message.content.startsWith(config.discord.prefix)) {
-
+    if (message.content.startsWith(config.discord.prefix)) { // User command handler
+        if (!message.member.roles.cache.has(config.discord.roles.musician) && !message.member.roles.cache.has(config.discord.roles.staff)) return;
+        let cont = message.content.slice(config.discord.prefix.length).split(" ");
+        let args = cont.slice(1);
+        let cmd = client.commands.get(cont[0]);
+        if (cmd) return cmd.run(client, message, args);
+    } else if (message.content.startsWith(config.discord.devprefix)) { // Dev command handler
+        if (!message.member.roles.cache.has(config.discord.roles.dev)) return;
+        let cont = message.content.slice(config.discord.devprefix.length).split(" ");
+        if (cont[0] === "reload") {
+            message.channel.send("Reloading commands...");
+            loadcmds();
+            return message.channel.send("All commands have been reloaded.");
+        }
+        let args = cont.slice(1);
+        let cmd = client.devcmds.get(cont[0]);
+        if (cmd) return cmd.run(client, message, args);
     }
 })
 
@@ -90,9 +100,9 @@ function loadcmds() {
             return console.log("No commands found.");
         }
         jsfiles.forEach((f, i) => {
-            delete require.cache[require.resolve(`./commands/admin/${f}`)];
-            const cmd = require(`./commands/dev`);
-            client.admincmds.set(cmd.config.command, cmd);
+            delete require.cache[require.resolve(`./commands/dev/${f}`)];
+            const cmd = require(`./commands/dev/${f}`);
+            client.devcmds.set(cmd.config.command, cmd);
         });
     });
 }
