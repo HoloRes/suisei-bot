@@ -58,10 +58,44 @@ client.on("message", (message) => {
     if(message.author.bot) return;
     if (message.content.startsWith(config.discord.prefix)) { // User command handler
         if (!message.member.roles.cache.has(config.discord.roles.musician) && !message.member.roles.cache.has(config.discord.roles.staff)) return;
+
         let cont = message.content.slice(config.discord.prefix.length).split(" ");
         let args = cont.slice(1);
         let cmd = client.commands.get(cont[0]);
-        if (cmd) return cmd.run(client, message, args);
+        if(!cmd) return;
+        if (!message.member.roles.cache.has(config.discord.roles.musician)) {
+            message.reply("you don't have the musician role, do you still want to perform this action?").then(msg => {
+                msg.react("726782736617963561").then(() => { // Confirm reaction
+                    msg.react("726785875215777823"); // Cancel reaction
+                });
+
+                const filter = (reaction, user) => {
+                    return ['726782736617963561', '726785875215777823'].includes(reaction.emoji.id) && user.id === message.author.id;
+                };
+                const collector = msg.createReactionCollector(filter, {time: 15000});
+
+                collector.on('collect', r => {
+                    switch(r.emoji.id) {
+                        case "726782736617963561":
+                            msg.delete({ reason: "Automated" });
+                            return cmd.run(client, message, args);
+                        default:
+                            message.delete({ reason: "Automated" });
+                            return msg.delete({ reason: "Automated" });
+                    }
+                });
+
+                collector.on('end', collected => {
+                    if(collected.size === 0) {
+                        message.delete({ reason: "Automated" });
+                        return msg.delete({ reason: "Automated" });
+                    }
+                });
+            });
+
+        } else {
+            return cmd.run(client, message, args);
+        }
     } else if (message.content.startsWith(config.discord.devprefix)) { // Dev command handler
         if (!message.member.roles.cache.has(config.discord.roles.dev)) return;
         let cont = message.content.slice(config.discord.devprefix.length).split(" ");

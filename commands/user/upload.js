@@ -5,7 +5,7 @@ const Music = require("$/models/music");
 const https = require("https"), // This will be used to download files
     fs = require("fs"),
     ffmpeg = require("fluent-ffmpeg"),
-    NodeID3 = require('node-id3'),
+    NodeID3 = require("node-id3"),
     util = require("util"),
     Discord = require("discord.js");
 
@@ -13,7 +13,7 @@ exports.run = (client, message, args) => {
     // Upload process
     if (message.attachments.size === 0) { // Check if there are any attachments
         message.delete({timeout: 4000, reason: "Automated"});
-        return message.channel.send("Please attach a MP3 or FLAC file to upload.").then(msg => {
+        return message.channel.send("Please attach a MP3 file to upload.").then(msg => {
             msg.delete({timeout: 4000, reason: "Automated"});
         });
     }
@@ -21,12 +21,12 @@ exports.run = (client, message, args) => {
 
     if (!/\.mp3$/i.test(file.url)) { // Check if the file is a MP3
         message.delete({timeout: 4000, reason: "Automated"});
-        return message.channel.send("Invalid file type: Please attach a MP3 or FLAC file to upload.").then(msg => {
+        return message.channel.send("Invalid file type: Please attach a MP3 file to upload.").then(msg => {
             msg.delete({timeout: 4000, reason: "Automated"});
         });
     }
 
-    // Create a progress report
+    // Create a progress report in the user's DM
     let embed = new Discord.MessageEmbed()
         .setTitle("Uploading file - ID: pending")
         .setDescription(`
@@ -43,11 +43,11 @@ exports.run = (client, message, args) => {
         msg = sentMsg
     });
 
-    const doc = new Music({author: parseInt(message.author.id)}); // Create a new MongoDB document
+    const doc = new Music({author: message.author.id}); // Create a new MongoDB document
     const tmpFile = fs.createWriteStream(`./tmp/download/${doc._id}.mp3`);
     https.get(file.url, (res) => { // Download the file
         res.pipe(tmpFile);
-        res.on('end', () => {
+        res.on("end", () => {
             embed
                 .setDescription(`
                     <:check:726782736617963561> - Downloading file
@@ -85,19 +85,16 @@ exports.run = (client, message, args) => {
                     });
 
                     const filter = (reaction, user) => {
-                        return ['726782736617963561', '726785875215777823'].includes(reaction.emoji.id) && user.id === message.author.id;
+                        return ["726782736617963561", "726785875215777823"].includes(reaction.emoji.id) && user.id === message.author.id;
                     };
                     const collector = msg.createReactionCollector(filter, {time: 15000});
 
-                    collector.on('collect', r => {
+                    collector.on("collect", r => {
                         if (r.emoji.id === "726782736617963561") {
                             msg.edit(embed);
-                            let newTags = {
-                                artist: message.author.username
-                            };
                             doc.authorName = message.author.username;
 
-                            if (NodeID3.update(tags, `./tmp/download/${doc._id}.mp3`) === false) {
+                            if (NodeID3.update({ artist: message.author.username }, `./tmp/download/${doc._id}.mp3`) === false) {
                                 embed = new Discord.MessageEmbed()
                                     .setTitle("Uploading file - Failed")
                                     .setDescription(`
@@ -130,7 +127,7 @@ exports.run = (client, message, args) => {
                         }
                     });
 
-                    collector.on('end', collected => {
+                    collector.on("end", collected => {
                         if (collected.size === 0) {
                             embed = new Discord.MessageEmbed()
                                 .setTitle("Uploading file - Failed")
@@ -154,7 +151,7 @@ exports.run = (client, message, args) => {
                 }
             });
         })
-    }).on('error', (e) => {
+    }).on("error", (e) => {
         console.error(e);
         embed = new Discord.MessageEmbed()
             .setTitle("Uploading file - Failed")
@@ -177,7 +174,7 @@ exports.config = {
 
 // Functions
 function ext(url) { // (Stolen) from https://stackoverflow.com/a/6997591
-    return (url = url.substr(1 + url.lastIndexOf("/")).split('?')[0]).split('#')[0].substr(url.lastIndexOf("."))
+    return (url = url.substr(1 + url.lastIndexOf("/")).split("?")[0]).split("#")[0].substr(url.lastIndexOf("."))
 }
 
 function convertAndDb(doc, msg, embed, message, tags) {
@@ -193,11 +190,12 @@ function convertAndDb(doc, msg, embed, message, tags) {
             msg.edit(embed);
 
             ffmpeg(`./tmp/download/${doc._id}.mp3`)
-                .audioCodec('libmp3lame')
+                .audioCodec("libmp3lame")
                 .noVideo()
                 .save(`./tmp/conversion/${doc._id}.mp3`)
-                .audioBitrate('128k')
-                .on('error', err => {
+                .audioBitrate(128)
+                .outputOption("-id3v2_version 3")
+                .on("error", err => {
                     if(err) {
                         console.error(err)
                         embed = new Discord.MessageEmbed()
@@ -216,7 +214,7 @@ function convertAndDb(doc, msg, embed, message, tags) {
                         return message.author.send("Conversion failed");
                     }
                 })
-                .on('end', () => {
+                .on("end", () => {
                     embed
                         .setDescription(`
                             <:check:726782736617963561> - Downloading file

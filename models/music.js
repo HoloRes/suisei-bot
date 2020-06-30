@@ -4,7 +4,7 @@ const mongoose = require("mongoose"),
 
 // Schema
 const Music = new mongoose.Schema({
-    "author": Number,
+    "author": String,
     "_id": {
         "type": String,
         "default": shortid.generate
