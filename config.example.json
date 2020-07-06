@@ -14,5 +14,11 @@
       "staff": "",
       "dev": ""
     }
+  },
+  "s3": {
+    "endpoint": "",
+    "bucket": "",
+    "accessKeyId": "",
+    "secretAccessKey": ""
   }
 }

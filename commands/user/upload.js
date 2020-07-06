@@ -6,8 +6,18 @@ const https = require("https"), // This will be used to download files
     fs = require("fs"),
     ffmpeg = require("fluent-ffmpeg"),
     NodeID3 = require("node-id3"),
-    util = require("util"),
-    Discord = require("discord.js");
+    Discord = require("discord.js"),
+    S3 = require("aws-sdk/clients/s3");
+
+// Local files
+const config = require("$/config.json")
+
+// S3 init
+const s3 = new S3({
+    endpoint: config.s3.endpoint,
+    accessKeyId: config.s3.accessKeyId,
+    secretAccessKey: config.s3.secretAccessKey
+});
 
 exports.run = (client, message, args) => {
     // Upload process
@@ -53,6 +63,7 @@ exports.run = (client, message, args) => {
                     <:check:726782736617963561> - Downloading file
                     <a:loading:726782135792566388> - Checking file
                     <:pending:726786878711398430> - Converting file
+                    <:pending:726786878711398430> - Upload the file to S3
                     <:pending:726786878711398430> - Add to the Database
                 `)
                 .setTitle(`Uploading file - ID: ${doc._id}`)
@@ -66,6 +77,7 @@ exports.run = (client, message, args) => {
                             <:check:726782736617963561> - Downloading file
                             <:failure:726785875215777823> - Checking file
                             <:pending:726786878711398430> - Converting file
+                            <:pending:726786878711398430> - Upload the file to S3
                             <:pending:726786878711398430> - Add to the Database
                         `)
                         .setColor("#FF0000")
@@ -94,13 +106,14 @@ exports.run = (client, message, args) => {
                             msg.edit(embed);
                             doc.authorName = message.author.username;
 
-                            if (NodeID3.update({ artist: message.author.username }, `./tmp/download/${doc._id}.mp3`) === false) {
+                            if (NodeID3.update({artist: message.author.username}, `./tmp/download/${doc._id}.mp3`) === false) {
                                 embed = new Discord.MessageEmbed()
                                     .setTitle("Uploading file - Failed")
                                     .setDescription(`
                                         <:check:726782736617963561> - Downloading file
                                         <:failure:726785875215777823> - Checking file
                                         <:pending:726786878711398430> - Converting file
+                                        <:pending:726786878711398430> - Upload the file to S3
                                         <:pending:726786878711398430> - Add to the Database
                                     `)
                                     .setColor("#FF0000")
@@ -108,8 +121,7 @@ exports.run = (client, message, args) => {
                                 msg.edit(embed);
                                 fs.unlinkSync(`./tmp/download/${doc._id}.mp3`);
                                 return message.author.send("Updating tag failed");
-                            }
-                            else convertAndDb(doc, msg, embed, message, tags);
+                            } else convertAndDb(doc, msg, embed, message, tags);
                         } else if (r.emoji.id === "726785875215777823") {
                             embed = new Discord.MessageEmbed()
                                 .setTitle("Uploading file - Failed")
@@ -117,6 +129,7 @@ exports.run = (client, message, args) => {
                                     <:check:726782736617963561> - Downloading file
                                     <:failure:726785875215777823> - Checking file
                                     <:pending:726786878711398430> - Converting file
+                                    <:pending:726786878711398430> - Upload the file to S3
                                     <:pending:726786878711398430> - Add to the Database
                                 `)
                                 .setColor("#FF0000")
@@ -135,6 +148,7 @@ exports.run = (client, message, args) => {
                                     <:check:726782736617963561> - Downloading file
                                     <:failure:726785875215777823> - Checking file
                                     <:pending:726786878711398430> - Converting file
+                                    <:pending:726786878711398430> - Upload the file to S3
                                     <:pending:726786878711398430> - Add to the Database
                                 `)
                                 .setColor("#FF0000")
@@ -144,8 +158,7 @@ exports.run = (client, message, args) => {
                             return message.author.send("Cancelled");
                         }
                     });
-                }
-                else {
+                } else {
                     doc.authorName = tags.artist;
                     convertAndDb(doc, msg, embed, message, tags);
                 }
@@ -159,6 +172,7 @@ exports.run = (client, message, args) => {
                 <:failure:726785875215777823> - Downloading file
                 <:pending:726786878711398430> - Checking file
                 <:pending:726786878711398430> - Converting file
+                <:pending:726786878711398430> - Upload the file to S3
                 <:pending:726786878711398430> - Add to the Database
             `)
             .setColor("#FF0000")
@@ -185,6 +199,7 @@ function convertAndDb(doc, msg, embed, message, tags) {
                     <:check:726782736617963561> - Downloading file
                     <:check:726782736617963561> - Checking file
                     <a:loading:726782135792566388> - Converting file
+                    <:pending:726786878711398430> - Upload the file to S3
                     <:pending:726786878711398430> - Add to the Database
                 `);
             msg.edit(embed);
@@ -196,14 +211,15 @@ function convertAndDb(doc, msg, embed, message, tags) {
                 .audioBitrate(128)
                 .outputOption("-id3v2_version 3")
                 .on("error", err => {
-                    if(err) {
+                    if (err) {
                         console.error(err)
-                        embed = new Discord.MessageEmbed()
+                        embed
                             .setTitle("Uploading file - Failed")
                             .setDescription(`
                                 <:check:726782736617963561> - Downloading file
                                 <:check:726782736617963561> - Checking file
                                 <:failure:726785875215777823> - Converting file
+                                <:pending:726786878711398430> - Upload the file to S3
                                 <:pending:726786878711398430> - Add to the Database
                             `)
                             .setColor("#FF0000")
@@ -220,44 +236,105 @@ function convertAndDb(doc, msg, embed, message, tags) {
                             <:check:726782736617963561> - Downloading file
                             <:check:726782736617963561> - Checking file
                             <:check:726782736617963561> - Converting file
-                            <a:loading:726782135792566388> - Add to the Database
+                            <a:loading:726782135792566388> - Upload the file to S3
+                            <:pending:726786878711398430> - Add to the Database
                         `);
                     msg.edit(embed);
                     fs.unlinkSync(`./tmp/download/${doc._id}.mp3`);
-                    fs.copyFileSync(`./tmp/conversion/${doc._id}.mp3`, `./public/audio/${doc._id}.mp3`)
-                    fs.unlinkSync(`./tmp/conversion/${doc._id}.mp3`);
+                    const stream = fs.createReadStream(`./tmp/conversion/${doc._id}.mp3`);
+                    const params = {
+                        Bucket: config.s3.bucket,
+                        Key: `${doc._id}.mp3`,
+                        Body: stream,
+                        ACL: "public-read"
+                    };
+                    s3.upload(params, (err, data) => {
+                        if (err) {
+                            embed
+                                .setTitle("Uploading file - Failed")
+                                .setDescription(`
+                                    <:check:726782736617963561> - Downloading file
+                                    <:check:726782736617963561> - Checking file
+                                    <:check:726782736617963561>  - Converting file
+                                    <:failure:726785875215777823> - Upload the file to S3
+                                    <:pending:726786878711398430> - Add to the Database
+                                `)
+                                .setColor("#FF0000")
+                                .setFooter(message.author.tag, message.author.avatarURL());
+                            msg.edit(embed);
+                            return fs.unlinkSync(`./tmp/conversion/${doc._id}.mp3`);
+                        } else {
+                            embed
+                                .setDescription(`
+                                    <:check:726782736617963561> - Downloading file
+                                    <:check:726782736617963561> - Checking file
+                                    <:check:726782736617963561> - Converting file
+                                    <:check:726782736617963561> - Upload the file to S3
+                                    <a:loading:726782135792566388> - Add to the Database
+                                `);
+                            msg.edit(embed);
+                            fs.unlinkSync(`./tmp/conversion/${doc._id}.mp3`);
+                            doc.save();
+                            embed
+                                .setDescription(`
+                                    <:check:726782736617963561> - Downloading file
+                                    <:check:726782736617963561> - Checking file
+                                    <:check:726782736617963561> - Converting file
+                                    <:check:726782736617963561> - Upload the file to S3
+                                    <:check:726782736617963561> - Add to the Database
+                                `)
+                                .setColor("#7AC853");
+                            msg.edit(embed);
+                        }
+                    });
+                });
+        } else {
+            const stream = fs.createReadStream(`./tmp/download/${doc._id}.mp3`);
+            const params = {
+                Bucket: config.s3.bucket,
+                Key: `${doc._id}.mp3`,
+                Body: stream,
+                ACL: "public-read"
+            };
+            s3.upload(params, (err, data) => {
+                if (err) {
+                    embed
+                        .setTitle("Uploading file - Failed")
+                        .setDescription(`
+                                    <:check:726782736617963561> - Downloading file
+                                    <:check:726782736617963561> - Checking file
+                                    <:skip:726787489930412042> - Converting file
+                                    <:failure:726785875215777823> - Upload the file to S3
+                                    <:pending:726786878711398430> - Add to the Database
+                                `)
+                        .setColor("#FF0000")
+                        .setFooter(message.author.tag, message.author.avatarURL());
+                    msg.edit(embed);
+                    return fs.unlinkSync(`./tmp/conversion/${doc._id}.mp3`);
+                } else {
+                    embed
+                        .setDescription(`
+                                    <:check:726782736617963561> - Downloading file
+                                    <:check:726782736617963561> - Checking file
+                                    <:skip:726787489930412042> - Converting file
+                                    <:check:726782736617963561> - Upload the file to S3
+                                    <a:loading:726782135792566388> - Add to the Database
+                                `);
+                    msg.edit(embed);
+                    fs.unlinkSync(`./tmp/download/${doc._id}.mp3`);
                     doc.save();
                     embed
                         .setDescription(`
-                            <:check:726782736617963561> - Downloading file
-                            <:check:726782736617963561> - Checking file
-                            <:check:726782736617963561> - Converting file
-                            <:check:726782736617963561> - Add to the Database
-                        `)
+                                    <:check:726782736617963561> - Downloading file
+                                    <:check:726782736617963561> - Checking file
+                                    <:skip:726787489930412042> - Converting file
+                                    <:check:726782736617963561> - Upload the file to S3
+                                    <:check:726782736617963561> - Add to the Database
+                                `)
                         .setColor("#7AC853");
                     msg.edit(embed);
-                });
-        } else {
-            embed
-                .setDescription(`
-                    <:check:726782736617963561> - Downloading file
-                    <:check:726782736617963561> - Checking file
-                    <:skip:726787489930412042> - Converting file
-                    <a:loading:726782135792566388> - Add to the Database
-                `);
-            msg.edit(embed);
-            fs.copyFileSync(`./tmp/download/${doc._id}.mp3`, `$/public/audio/${doc._id}.mp3`);
-            fs.unlinkSync(`./tmp/download/${doc._id}.mp3`);
-            doc.save();
-            embed
-                .setDescription(`
-                    <:check:726782736617963561> - Downloading file
-                    <:check:726782736617963561> - Checking file
-                    <:skip:726787489930412042> - Converting file
-                    <:check:726782736617963561> - Add to the Database
-                `)
-                .setColor("#7AC853");
-            msg.edit(embed);
+                }
+            });
         }
     });
 }

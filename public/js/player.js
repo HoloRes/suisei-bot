@@ -1,7 +1,7 @@
 const jsmediatags = window.jsmediatags;
 
 const id = window.location.href.substr(1 + window.location.href.lastIndexOf("/"));
-jsmediatags.read(`${window.location.protocol}//${window.location.host}/audio/${id}.mp3`, {
+jsmediatags.read(`https://hololive-resistance.s3.nl-ams.scw.cloud/${id}.mp3`, {
     onSuccess: function (tag) {
         if(tag.tags.picture) {
             const image = tag.tags.picture;
