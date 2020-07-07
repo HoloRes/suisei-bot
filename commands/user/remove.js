@@ -2,7 +2,8 @@
 const Music = require("$/models/music");
 
 // Local files
-const config = require("$/config.json")
+const config = require("$/config.json"),
+    { confirmRequest } = require("$/util/functions");
 
 // Modules
 const Discord = require("discord.js"),
@@ -34,94 +35,76 @@ exports.run = (client, message, args) => {
             .setTitle("Are you sure?")
             .setDescription(`Are you sure you want to delete ${doc.title} from ${doc.authorName} with ID: ${doc._id}?`)
         message.channel.send(embed).then(msg => {
-            msg.react("726782736617963561").then(() => { // Confirm reaction
-                msg.react("726785875215777823"); // Cancel reaction
-            });
+            confirmRequest(msg, message.author.id)
+                .then((confirmation) => {
+                    msg.reactions.removeAll();
+                    if(confirmation) {
+                        let removalEmbed = new Discord.MessageEmbed()
+                            .setTitle(`Removing file - ID: ${doc._id}`)
+                            .setDescription(`
+                                <a:loading:726782135792566388> - Deleting file from filesystem
+                                <:pending:726786878711398430> - Remove ID from the database
+                            `)
+                            .setColor("#F6944C")
+                            .setFooter(message.author.tag, message.author.avatarURL());
+                        msg.edit(removalEmbed);
 
-            const filter = (reaction, user) => {
-                return ["726782736617963561", "726785875215777823"].includes(reaction.emoji.id) && user.id === message.author.id;
-            };
-            const collector = msg.createReactionCollector(filter, {time: 15000});
+                        const params = {
+                            Bucket: config.s3.bucket,
+                            Key: `${doc._id}.mp3`
+                        };
 
-            collector.on("collect", r => {
-                msg.reactions.removeAll();
-                if (r.emoji.id === "726782736617963561") {
-                    let removalEmbed = new Discord.MessageEmbed()
-                        .setTitle(`Removing file - ID: ${doc._id}`)
-                        .setDescription(`
-                            <a:loading:726782135792566388> - Deleting file from filesystem
-                            <:pending:726786878711398430> - Remove ID from the database
-                        `)
-                        .setColor("#F6944C")
-                        .setFooter(message.author.tag, message.author.avatarURL());
-                    msg.edit(removalEmbed);
-
-                    const params = {
-                        Bucket: config.s3.bucket,
-                        Key: `${doc._id}.mp3`
-                    };
-
-                    s3.deleteObject(params, (err, data) => {
-                        if (err) {
-                            removalEmbed
-                                .setDescription(`
-                                    <:failure:726785875215777823> - Deleting file from filesystem
-                                    <:pending:726786878711398430> - Remove ID from the database
-                                `)
-                                .setColor("#FF0000");
-                            msg.edit(removalEmbed);
-                            msg.delete({ timeout: 4000, reason: "Automated" });
-                            return message.delete({ timeout: 4000, reason: "Automated" });
-                        }
-                        else {
-                            removalEmbed
-                                .setDescription(`
-                                    <:check:726782736617963561> - Deleting file from filesystem
-                                    <a:loading:726782135792566388> - Remove ID from the database
-                                `);
-                            msg.edit(removalEmbed);
-                            doc.remove(err => {
-                                if(err) {
-                                    removalEmbed
-                                        .setDescription(`
-                                            <:check:726782736617963561> - Deleting file from filesystem
-                                            <:failure:726785875215777823> - Remove ID from the database
+                        s3.deleteObject(params, (err, data) => {
+                            if (err) {
+                                removalEmbed
+                                    .setDescription(`
+                                            <:failure:726785875215777823> - Deleting file from filesystem
+                                            <:pending:726786878711398430> - Remove ID from the database
                                         `)
-                                        .setColor("#FF0000");
-                                    msg.edit(removalEmbed);
-                                    msg.delete({timeout: 4000, reason: "Automated"});
-                                    return message.delete({timeout: 4000, reason: "Automated"});
-                                }
-                                else {
-                                    removalEmbed
-                                        .setDescription(`
-                                            <:check:726782736617963561> - Deleting file from filesystem
-                                            <:check:726782736617963561> - Remove ID from the database
-                                        `)
-                                        .setColor("#7AC853");
-                                    msg.edit(removalEmbed);
-                                    msg.delete({timeout: 4000, reason: "Automated"});
-                                    return message.delete({timeout: 4000, reason: "Automated"});
-                                }
-                            });
-                        }
-                    });
-                } else if (r.emoji.id === "726785875215777823") {
-                    msg.edit("Cancelled");
-                    msg.delete({ timeout: 4000, reason: "Automated" });
-                    return message.delete({ timeout: 4000, reason: "Automated" });
-                }
-            });
-
-            collector.on("end", collected => {
-                msg.reactions.removeAll();
-                if (collected.size === 0) {
-                    msg.edit("Cancelled");
-                    msg.delete({ timeout: 4000, reason: "Automated" });
-                    return message.delete({ timeout: 4000, reason: "Automated" });
-                }
-            });
-
+                                    .setColor("#FF0000");
+                                msg.edit(removalEmbed);
+                                msg.delete({ timeout: 4000, reason: "Automated" });
+                                return message.delete({ timeout: 4000, reason: "Automated" });
+                            }
+                            else {
+                                removalEmbed
+                                    .setDescription(`
+                                        <:check:726782736617963561> - Deleting file from filesystem
+                                        <a:loading:726782135792566388> - Remove ID from the database
+                                    `);
+                                msg.edit(removalEmbed);
+                                doc.remove(err => {
+                                    if(err) {
+                                        removalEmbed
+                                            .setDescription(`
+                                                <:check:726782736617963561> - Deleting file from filesystem
+                                                <:failure:726785875215777823> - Remove ID from the database
+                                            `)
+                                            .setColor("#FF0000");
+                                        msg.edit(removalEmbed);
+                                        msg.delete({timeout: 4000, reason: "Automated"});
+                                        return message.delete({timeout: 4000, reason: "Automated"});
+                                    }
+                                    else {
+                                        removalEmbed
+                                            .setDescription(`
+                                                <:check:726782736617963561> - Deleting file from filesystem
+                                                <:check:726782736617963561> - Remove ID from the database
+                                            `)
+                                            .setColor("#7AC853");
+                                        msg.edit(removalEmbed);
+                                        msg.delete({timeout: 4000, reason: "Automated"});
+                                        return message.delete({timeout: 4000, reason: "Automated"});
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        msg.edit("Cancelled");
+                        msg.delete({ timeout: 4000, reason: "Automated" });
+                        return message.delete({ timeout: 4000, reason: "Automated" });
+                    }
+                });
         });
     });
 }
