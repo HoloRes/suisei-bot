@@ -19,7 +19,7 @@ const app = express();
 app.use(express.static("public")); // Set public as static files folder, can be uses for JS and CSS files
 app.set("view engine", "hbs"); // Set the view engine to Handlebars
 
-app.listen(3000); // Start the web server on port 3000
+app.listen(3001); // Start the web server on port 3001
 console.log("Express is listening");
 
 // Mongoose
@@ -40,13 +40,6 @@ app.get("/player/:id", (req, res) => {
         if(doc) return res.render("player", { music: doc });
         else res.status(400).send("Page not found")
     })
-});
-
-app.get("/listAll", (req, res) => {
-    Music.find({}).lean().exec((err, docs) => {
-        if(err) return res.status(500).send("Internal server error");
-        return res.status(200).json({ docs: docs });
-    });
 });
 
 // Discord bot
