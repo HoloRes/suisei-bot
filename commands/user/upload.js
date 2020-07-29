@@ -49,7 +49,7 @@ exports.run = (client, message, args) => {
         .setColor("#F6944C")
         .setFooter(message.author.tag, message.author.avatarURL());
     let msg;
-    if (message.author.dmChannel) message.author.createDM();
+    if (!message.author.dmChannel) message.author.createDM();
     message.author.send(embed).then(sentMsg => {
         msg = sentMsg
     });

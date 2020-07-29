@@ -6,6 +6,9 @@ const fs = require("fs"),
     express = require("express"), // Web server
     hbs = require("hbs"); // Handlebars, used to host a temporary page
 
+// Local JS files
+const {confirmRequest} = require("./util/functions");
+
 // Local config files
 const config = require("$/config.json");
 
@@ -65,32 +68,16 @@ client.on("message", (message) => {
         if(!cmd) return;
         if (!message.member.roles.cache.has(config.discord.roles.musician)) {
             message.reply("you don't have the musician role, do you still want to perform this action?").then(msg => {
-                msg.react("726782736617963561").then(() => { // Confirm reaction
-                    msg.react("726785875215777823"); // Cancel reaction
-                });
-
-                const filter = (reaction, user) => {
-                    return ['726782736617963561', '726785875215777823'].includes(reaction.emoji.id) && user.id === message.author.id;
-                };
-                const collector = msg.createReactionCollector(filter, {time: 15000});
-
-                collector.on('collect', r => {
-                    switch(r.emoji.id) {
-                        case "726782736617963561":
+                confirmRequest(msg, message.author.id)
+                    .then(result => {
+                        if(result === true) {
                             msg.delete({ reason: "Automated" });
                             return cmd.run(client, message, args);
-                        default:
+                        } else {
                             message.delete({ reason: "Automated" });
                             return msg.delete({ reason: "Automated" });
-                    }
-                });
-
-                collector.on('end', collected => {
-                    if(collected.size === 0) {
-                        message.delete({ reason: "Automated" });
-                        return msg.delete({ reason: "Automated" });
-                    }
-                });
+                        }
+                    });
             });
 
         } else {
