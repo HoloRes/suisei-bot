@@ -1,10 +1,7 @@
 // Packages
 const fs = require("fs"),
     Discord = require("discord.js"),
-    bodyParser = require("body-parser"),
-    mongoose = require("mongoose"), // Library for MongoDB
-    express = require("express"), // Web server
-    hbs = require("hbs"); // Handlebars, used to host a temporary page
+    mongoose = require("mongoose"); // Library for MongoDB
 
 // Local JS files
 const {confirmRequest} = require("./util/functions");
@@ -16,37 +13,10 @@ const config = require("$/config.json");
 const Music = require("$/models/music");
 
 // Init
-// Express
-const app = express();
-
-app.use(express.static("public")); // Set public as static files folder, can be uses for JS and CSS files
-app.set("view engine", "hbs"); // Set the view engine to Handlebars
-
-app.listen(3001); // Start the web server on port 3001
-console.log("Express is listening");
-
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // Code
-// Routers
-app.get("/", (req, res) => {
-    Music.find({}).lean().exec((err, docs) => {
-        if(err) console.error(err);
-        res.render("index", { music: docs });
-    });
-});
-
-app.get("/player/:id", (req, res) => {
-    Music.findOne({ _id: req.params.id }).lean().exec((err, doc) => {
-        if(err) return console.error(err);
-        if(doc) return res.render("player", { music: doc });
-        else res.status(400).send("Page not found")
-    })
-});
-
-// Discord bot
-
 // Create a Discord client
 const client = new Discord.Client();
 
