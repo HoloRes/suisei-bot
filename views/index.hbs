@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hololive Resistance - Music Player</title>
+</head>
+<body>
+<h1>Song list</h1>
+{{#each music}}
+    <a href="/player/{{this._id}}">{{this.authorName}} - {{this.title}}</a> <br />
+    {{else}}
+    <p>No available songs</p>
+{{/each}}
+</body>
+</html>

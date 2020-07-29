@@ -1,0 +1,24 @@
+{
+  "mongodb": {
+    "host": "",
+    "username": "",
+    "password": "",
+    "database": ""
+  },
+  "discord": {
+    "token": "",
+    "prefix": "",
+    "devprefix": "",
+    "roles": {
+      "musician": "",
+      "staff": "",
+      "dev": ""
+    }
+  },
+  "s3": {
+    "endpoint": "",
+    "bucket": "",
+    "accessKeyId": "",
+    "secretAccessKey": ""
+  }
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hololive Resistance - Music Player</title>
+    <style>
+        .audioPlayer {
+            width: 500px;
+            height: 500px;
+            background-size: cover;
+            position: relative;
+        }
+
+        .audioPlayer audio{
+            position: absolute;
+            bottom: 0;
+            width: 100%
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.3/jsmediatags.min.js" integrity="sha256-JL8cj/5/L53z17EszUdmOPwSei3Oj1+UXsDaLENzyDo=" crossorigin="anonymous"></script>
+    <script src="/js/player.js"></script>
+</head>
+<body>
+    <h1>{{music.authorName}} - {{music.title}}</h1>
+    <div class="audioPlayer" id="player">
+        <audio controls>
+            <source src="https://hololive-resistance.s3.nl-ams.scw.cloud/{{music._id}}.mp3" type="audio/mp3">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+</body>
+</html>
