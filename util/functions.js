@@ -11,6 +11,7 @@ exports.confirmRequest = (msg, authorId) => {
         const collector = msg.createReactionCollector(filter, {time: 15000});
 
         collector.on("collect", r => {
+            collector.stop();
             if (r.emoji.id === "726782736617963561") {
                 resolve(true);
             } else resolve(false);

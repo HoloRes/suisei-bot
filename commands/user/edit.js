@@ -79,6 +79,7 @@ exports.run = (client, message, args) => {
         const collector = msg.createReactionCollector(filter, {time: 15000});
 
         collector.on("collect", r => {
+            collector.stop();
             msg.reactions.removeAll();
             switch (r.emoji.name) {
                 case "1️⃣":
@@ -109,6 +110,7 @@ exports.run = (client, message, args) => {
         embed.setDescription("Mention or give the ID of the user you want to transfer ownership to.\nType \"cancel\" to cancel this action.");
         msg.edit(embed);
         collector.on("collect", (collectedMsg) => {
+            collector.stop();
             collectedMsg.delete({reason: "Automated"});
             if (collectedMsg.mentions.users.size > 0) {
                 const selectedUser = collectedMsg.mentions.users.first();
@@ -167,6 +169,7 @@ exports.run = (client, message, args) => {
         embed.setDescription("Send the new author name.\nType \"cancel\" to cancel this action.");
         msg.edit(embed);
         collector.on("collect", collectedMsg => {
+            collector.stop();
             collectedMsg.delete({reason: "Automated"});
             if (collectedMsg.content.toLowerCase() === "cancel") {
                 embed.setDescription("Author name change cancelled.");
@@ -199,6 +202,7 @@ exports.run = (client, message, args) => {
         embed.setDescription("Send the new title.\nType \"cancel\" to cancel this action.");
         msg.edit(embed);
         collector.on("collect", collectedMsg => {
+            collector.stop();
             collectedMsg.delete({reason: "Automated"});
             if (collectedMsg.content.toLowerCase() === "cancel") {
                 embed.setDescription("Title change cancelled.");
