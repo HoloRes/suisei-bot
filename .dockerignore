@@ -1,0 +1,5 @@
+tmp/*
+.github/*
+config.example.json
+# Disable eval command for safety reasons
+commands/dev/eval.js
