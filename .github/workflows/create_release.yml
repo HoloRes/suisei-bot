@@ -16,7 +16,7 @@ jobs:
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          repository: HL-Resistance/backend/discord-bot
+          repository: hl-resistance/backend/discord-bot
           registry: docker.pkg.github.com
           tags: latest
           tag_with_sha: true
