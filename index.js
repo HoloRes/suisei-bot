@@ -185,7 +185,7 @@ function loadcmds() {
             client.commands.set(cmd.config.command, cmd);
         });
     });
-    fs.readdir("./commands/dev", (err, files) => { // Commmands only available to the developer, these can break.
+    fs.readdir("./commands/dev", (err, files) => { // Commands only available to the developer, these can break.
         if (err) throw (err);
         let jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
@@ -197,7 +197,7 @@ function loadcmds() {
             client.devcmds.set(cmd.config.command, cmd);
         });
     });
-    fs.readdir("./commands/staff", (err, files) => { // Commmands only available to the staff
+    fs.readdir("./commands/staff", (err, files) => { // Commands only available to the staff
         if (err) throw (err);
         let jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
