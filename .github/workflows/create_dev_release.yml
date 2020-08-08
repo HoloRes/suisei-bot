@@ -1,4 +1,4 @@
-name: Create Docker image
+name: Create development Docker image
 on:
   push:
     branches:
