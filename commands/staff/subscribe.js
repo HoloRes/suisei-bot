@@ -43,11 +43,13 @@ exports.run = (client, message, args, pubSubSubscriber) => {
                         .then((webhook) => {
                             wh = webhook;
                         })
-                        .catch(() => {
-                            return message.channel.send("Unable to create a webhook in that channel, please create one with the name `Stream notification`").then((msg) => {
-                                message.delete({timeout: 4000, reason: "Automated"});
-                                msg.delete({timeout: 4000, reason: "Automated"});
-                            });
+                        .catch((err) => {
+                            if(err) {
+                                return message.channel.send("Unable to create a webhook in that channel, please create one with the name `Stream notification`").then((msg) => {
+                                    message.delete({timeout: 4000, reason: "Automated"});
+                                    msg.delete({timeout: 4000, reason: "Automated"});
+                                });
+                            }
                         });
 
                     Subscription.findById(subscription._id, (err, sub) => {
