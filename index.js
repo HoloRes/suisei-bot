@@ -32,6 +32,25 @@ const pubHubSubscriber = PubHubSubBub.createServer({
 });
 pubHubSubscriber.listen(config.PubHubSubBub.hubPort);
 
+// Debug stuff
+pubHubSubscriber.on("subscribe", function(data){
+    console.log("Subscribe");
+    console.log(data);
+    console.log("-----------------------------------------");
+});
+
+pubHubSubscriber.on("unsubscribe", function(data){
+    console.log("Unsubscribe");
+    console.log(data);
+    console.log("-----------------------------------------");
+});
+
+pubHubSubscriber.on("error", function(error){
+    console.log("Error");
+    console.log(error);
+    console.log("-----------------------------------------");
+});
+
 // Add all subscriptions
 Subscription.find({}).lean().exec((err, docs) => {
    if(err) throw new Error("Couldn't read subscriptions");
@@ -52,6 +71,8 @@ const YT = google.youtube("v3");
 
 // PubSubHubBub notifications
 pubHubSubscriber.on("feed", (data) => {
+    console.log(data.feed.toString("utf-8"));
+    console.log("-----------------------------------------");
     let removedChannels = [];
     xmlParser.parseString(data.feed.toString("utf-8"), (err, res) => {
         if (err) return;
