@@ -20,5 +20,12 @@
     "bucket": "",
     "accessKeyId": "",
     "secretAccessKey": ""
-  }
+  },
+  "PubHubSubBub": {
+    "secret": "",
+    "hubPort": 80,
+    "callbackUrl": "",
+    "hubUrl": ""
+  },
+  "YtApiKey": ""
 }

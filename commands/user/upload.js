@@ -1,4 +1,4 @@
-// Schemas
+// Models
 const Music = require("$/models/music");
 
 // Modules
