@@ -126,11 +126,13 @@ exports.run = (client, message, args, pubSubSubscriber) => {
                         });
                     });
                 })
-                .catch(() => {
-                    message.channel.send("That channel doesn't exist.").then((msg) => {
-                        message.delete({timeout: 4000, reason: "Automated"});
-                        msg.delete({timeout: 4000, reason: "Automated"});
-                    });
+                .catch((err) => {
+                    if(err) {
+                        message.channel.send("That channel doesn't exist.").then((msg) => {
+                            message.delete({timeout: 4000, reason: "Automated"});
+                            msg.delete({timeout: 4000, reason: "Automated"});
+                        });
+                    }
                 });
         }
     });
