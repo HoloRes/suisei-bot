@@ -6,6 +6,7 @@ const fs = require("fs"),
     Discord = require("discord.js"),
     mongoose = require("mongoose"), // Library for MongoDB
     xml2js = require("xml2js"),
+    express = require("express"),
     PubHubSubBub = require("pubsubhubbub"), // Library for YouTube notifications
     {google} = require("googleapis");
 
@@ -30,7 +31,12 @@ const pubHubSubscriber = PubHubSubBub.createServer({
     secret: config.PubHubSubBub.secret,
     callbackUrl: config.PubHubSubBub.callbackUrl
 });
-pubHubSubscriber.listen(config.PubHubSubBub.hubPort);
+
+// Express
+const app = express();
+app.listen(config.PubHubSubBub.hubPort);
+
+app.use("/ytPush", pubHubSubscriber.listener());
 
 // Debug stuff
 pubHubSubscriber.on("subscribe", function(data){
