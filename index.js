@@ -52,6 +52,8 @@ scheduleJob("0 * * * *", () => { // Resubscribe every hour
                         "hub.lease_seconds": `${60 * 60}`, // 1 hour lease
                         "hub.secret": config.PubHubSubBub.secret,
                     }),
+                }).then((res) => {
+                    console.log(`Subscription to ${docs[i]._id} successful.`)
                 });
             } catch (err2) {
                 if (err2) return console.error(`Couldn't subscribe to channel: ${docs[i]._id}`);
