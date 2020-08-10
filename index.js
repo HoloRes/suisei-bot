@@ -47,7 +47,7 @@ scheduleJob("0 * * * *", () => { // Resubscribe every hour
                     headers: {"content-type": "application/x-www-form-urlencoded"},
                     data: querystring.stringify({
                         "hub.mode": "subscribe",
-                        "hub.callback": config.PubSubHubBub.callbackUrl,
+                        "hub.callback": `${config.PubSubHubBub.callbackUrl}/ytPush/${docs[i]._id}`,
                         "hub.topic": `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${docs[i]._id}`,
                         "hub.lease_seconds": `${60 * 60}`, // 1 hour lease
                         "hub.secret": config.PubSubHubBub.secret,
@@ -71,12 +71,12 @@ const YT = google.youtube("v3");
 // Code
 
 // PubSubHubBub notifications
-app.get("/", (req, res) => {
+app.get("/ytPush/:id", (req, res) => {
     if (req.query["hub.mode"] === "subscribe" && req.query["hub.challenge"].length > 0) res.status(200).send(req.query["hub.challenge"]);
     else res.status(400).send("");
 });
 
-app.post("/", verifyHmac, (req, res) => {
+app.post("/ytPush/:id", verifyHmac, (req, res) => {
     console.log(req.body.feed.toString("utf-8"));
     console.log("-----------------------------------------");
     res.status(200).send("");
