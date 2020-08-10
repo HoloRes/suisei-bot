@@ -72,42 +72,46 @@ const YT = google.youtube("v3");
 
 // PubSubHubBub notifications
 app.get("/ytPush/:id", (req, res) => {
-    if (req.query["hub.mode"] === "subscribe" && req.query["hub.challenge"].length > 0) res.status(200).send(req.query["hub.challenge"]);
+    console.log(req);
+    console.log("-----------------------------------------");
+    if (req.query["hub.challenge"].length > 0) res.status(200).send(req.query["hub.challenge"]);
     else res.status(400).send("");
 });
 
 app.post("/ytPush/:id", verifyHmac, (req, res) => {
-    console.log(req.body.feed.toString("utf-8"));
+    console.log(req);
+    console.log("-----------------------------------------");
+    console.log(req.body.feed);
     console.log("-----------------------------------------");
     res.status(200).send("");
     let removedChannels = [];
-    xmlParser.parseString(req.body.feed.toString("utf-8"), (err, res) => {
-        if (err) return console.error(err);
-        Subscription.findById(res.feed.entry["yt:channelId"], (err2, subscription) => {
+        Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
             client.channels.fetch("730061446108676146")
                 .then((channel) => {
                     channel.send(JSON.stringify(res, null, 4), {code: "json"});
                 })
                 .catch(chErr => {});
-            if (err2) return console.error(err2);
+            if (err) return console.error(err);
             YT.videos.list({
                 auth: config.YtApiKey,
                 id: res.feed.entry["yt:videoId"],
                 part: "snippet"
-            }, (err3, video) => {
-                if (err3 || !video) return;
+            }, (err2, video) => {
+                if (err2) return console.error(err2);
+                if(!video) return console.error("Video not found");
                 client.channels.fetch("730061446108676146")
                     .then((channel) => {
                         channel.send(JSON.stringify(video, null, 4), {code: "json"});
                     })
                     .catch(chErr => {});
-                if (video.items[0].snippet.liveBroadcastContent !== "live") return;
+                if (video.items[0].snippet.liveBroadcastContent !== "live") return console.log("Not a live broadcast.");
                 YT.channels.list({
                     auth: config.YtApiKey,
                     id: res.feed.entry["yt:channelId"],
                     part: "snippet"
-                }, (err4, ytChannel) => {
-                    if (err4) return console.error(err4);
+                }, (err3, ytChannel) => {
+                    if (err3) return console.error(err3);
+                    console.log("-----------------------------------------");
                     for (let i = 0; i < subscription.channels.length; i++) {
                         client.channels.fetch(subscription.channels[i])
                             .then((channel) => {
@@ -129,8 +133,8 @@ app.post("/ytPush/:id", verifyHmac, (req, res) => {
                                         });
                                     });
                             })
-                            .catch((err5) => {
-                                if (err5) removedChannels.push(i);
+                            .catch((err4) => {
+                                if (err4) removedChannels.push(i);
                             });
                     }
                 });
@@ -254,6 +258,7 @@ async function verifyHmac(req, res, next) {
 
         const hmac = createHmac(method, config.PubSubHubBub.secret);
         hmac.update(raw);
+        req.body = await xml2js.parseStringPromise(raw);
         if (signature !== `${method}=${hmac.digest("hex")}`) return res.status(403).send("");
         next();
     } catch (error) {
