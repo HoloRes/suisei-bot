@@ -5,6 +5,9 @@ const Subscription = require("$/models/subscription");
 const config = require("$/config.json"),
     {confirmRequest} = require("$/util/functions");
 
+// Modules
+const axios = require("axios");
+
 exports.run = (client, message, args, pubSubSubscriber) => {
     if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}unsubscribe [YT channel id] [text channel id]`)
         .then(msg => {
@@ -45,20 +48,34 @@ exports.run = (client, message, args, pubSubSubscriber) => {
                                             message.delete({timeout: 4000, reason: "Automated"});
                                             msg.delete({timeout: 4000, reason: "Automated"});
                                         });
-                                    else pubSubSubscriber.unsubscribe(
-                                        `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${subscription._id}`,
-                                        "https://pubsubhubbub.appspot.com",
-                                        (err) => {
-                                            if (err) message.channel.send("Something went wrong during unsubscription, notifications won't be sent anymore but do notify the Website Team of this issue.")
-                                                .then(msg => {
-                                                    message.delete({timeout: 4000, reason: "Automated"});
-                                                    msg.delete({timeout: 4000, reason: "Automated"});
-                                                });
-                                            else message.channel.send("Subscription removal successful.")
+                                    else
+                                        axios({
+                                            url: "http://pubsubhubbub.appspot.com/",
+                                            method: "POST",
+                                            headers: {"content-type": "application/x-www-form-urlencoded"},
+                                            data: querystring.stringify({
+                                                "hub.mode": "unsubscribe",
+                                                "hub.callback": config.PubSubHubBub.callbackUrl,
+                                                "hub.topic": `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${docs[i]._id}`,
+                                            }),
+                                        }).then((res) => {
+                                            if(res.status === 202) console.log(`Unsubscription to ${docs[i]._id} successful.`);
+                                            else console.log(`Subscription to ${docs[i]._id} gave response: ${res.status}`);
+
+                                            message.channel.send("Subscription removal successful.")
                                                 .then(msg2 => {
                                                     message.delete({timeout: 4000, reason: "Automated"});
                                                     msg2.delete({timeout: 4000, reason: "Automated"});
                                                 });
+                                        }).catch(err2 => {
+                                            if(err2) {
+                                                console.log(`Error: ${err2.response.status}, unsubscription unsuccessful.`);
+                                                message.channel.send("Something went wrong during unsubscription, notifications won't be sent anymore but do notify the Website Team of this issue.")
+                                                    .then(msg => {
+                                                        message.delete({timeout: 4000, reason: "Automated"});
+                                                        msg.delete({timeout: 4000, reason: "Automated"});
+                                                    });
+                                            }
                                         });
                                 });
                             } else {

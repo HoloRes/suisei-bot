@@ -32,7 +32,7 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 
 // Express
 const app = express();
-app.listen(config.PubHubSubBub.hubPort);
+app.listen(config.PubSubHubBub.hubPort);
 
 
 // Add all subscriptions
@@ -47,13 +47,16 @@ scheduleJob("0 * * * *", () => { // Resubscribe every hour
                     headers: {"content-type": "application/x-www-form-urlencoded"},
                     data: querystring.stringify({
                         "hub.mode": "subscribe",
-                        "hub.callback": config.PubHubSubBub.callbackUrl,
+                        "hub.callback": config.PubSubHubBub.callbackUrl,
                         "hub.topic": `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${docs[i]._id}`,
                         "hub.lease_seconds": `${60 * 60}`, // 1 hour lease
-                        "hub.secret": config.PubHubSubBub.secret,
+                        "hub.secret": config.PubSubHubBub.secret,
                     }),
                 }).then((res) => {
-                    console.log(`Subscription to ${docs[i]._id} successful.`)
+                    if(res.status === 202) console.log(`Subscription to ${docs[i]._id} successful.`);
+                    else console.log(`Subscription to ${docs[i]._id} gave response: ${res.status}`);
+                }).catch(err2 => {
+                    if(err2) console.log(`Error: ${err2.response.status}, subscription unsuccessful.`);
                 });
             } catch (err2) {
                 if (err2) return console.error(`Couldn't subscribe to channel: ${docs[i]._id}`);
@@ -131,7 +134,10 @@ app.post("/", verifyHmac, (req, res) => {
                             });
                     }
                 });
-            })
+            });
+            for(let i = 0; i < removedChannels.length; i++) {
+                subscription.channels.splice(subscription.channels.findIndex(removedChannels[i]), 1);
+            }
         });
     });
 });
@@ -180,7 +186,7 @@ client.on("message", (message) => {
         let args = cont.slice(1);
         let cmd = client.staffcmds.get(cont[0]);
         if (!cmd) return;
-        return cmd.run(client, message, args, pubHubSubscriber)
+        return cmd.run(client, message, args);
     } else if (message.content.startsWith(config.discord.devprefix)) { // Dev command handler
         if (!message.member.roles.cache.has(config.discord.roles.dev)) return;
         let cont = message.content.slice(config.discord.devprefix.length).split(" ");
@@ -246,7 +252,7 @@ async function verifyHmac(req, res, next) {
         const signature = xhs.split("=")[1];
         const raw = await rawBody(req);
 
-        const hmac = createHmac(method, config.PubHubSubBub.secret);
+        const hmac = createHmac(method, config.PubSubHubBub.secret);
         hmac.update(raw);
         if (signature !== `${method}=${hmac.digest("hex")}`) return res.status(403).send("");
         next();
