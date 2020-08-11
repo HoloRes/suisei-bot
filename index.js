@@ -72,14 +72,16 @@ const YT = google.youtube("v3");
 
 // PubSubHubBub notifications
 app.get("/ytPush/:id", (req, res) => {
-    console.log(req);
-    console.log("-----------------------------------------");
-    if (req.query["hub.challenge"].length > 0) res.status(200).send(req.query["hub.challenge"]);
+    console.log(req.query["hub.challenge"]);
+    if (req.query["hub.challenge"].length > 0) {
+        console.log("Status 200 sent with hub.challenge");
+        res.status(200).send(req.query["hub.challenge"]);
+        console.log("-----------------------------------------");
+    }
     else res.status(400).send("");
 });
 
 app.post("/ytPush/:id", verifyHmac, (req, res) => {
-    console.log(req);
     console.log("-----------------------------------------");
     console.log(req.body.feed);
     console.log("-----------------------------------------");
