@@ -107,7 +107,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
         if (err) return console.error(err);
         YT.videos.list({
             auth: config.YtApiKey,
-            id: req.data.feed.entry["yt:videoId"],
+            id: req.body.feed.entry["yt:videoId"],
             part: "snippet"
         }, (err2, video) => {
             if (err2) return logger.verbose(err2);
@@ -118,7 +118,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
             if (video.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
             YT.channels.list({
                 auth: config.YtApiKey,
-                id: req.data.feed.entry["yt:channelId"],
+                id: req.body.feed.entry["yt:channelId"],
                 part: "snippet"
             }, (err3, ytChannel) => {
                 if (err3) return logger.verbose(err3);
@@ -130,8 +130,8 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                                     const webhook = hooks.find(wh => wh.name.toLowerCase() === "stream notification");
                                     if (!webhook) return removedChannels.push(i);
                                     const embed = new Discord.MessageEmbed()
-                                        .setTitle(req.data.feed.entry.title)
-                                        .setURL(req.data.feed.entry.link["$"].href)
+                                        .setTitle(req.body.feed.entry.title)
+                                        .setURL(req.body.feed.entry.link["$"].href)
                                         .setImage(video.items[0].snippet.thumbnails.maxres.url)
                                         .setColor("#FF0000")
                                         .setFooter("Powered by Suisei's Mic")
