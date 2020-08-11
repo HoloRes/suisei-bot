@@ -118,7 +118,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
             if (video.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
             YT.channels.list({
                 auth: config.YtApiKey,
-                id: res.feed.entry["yt:channelId"],
+                id: req.data.feed.entry["yt:channelId"],
                 part: "snippet"
             }, (err3, ytChannel) => {
                 if (err3) return logger.verbose(err3);
@@ -130,8 +130,8 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                                     const webhook = hooks.find(wh => wh.name.toLowerCase() === "stream notification");
                                     if (!webhook) return removedChannels.push(i);
                                     const embed = new Discord.MessageEmbed()
-                                        .setTitle(res.feed.entry.title)
-                                        .setURL(res.feed.entry.link["$"].href)
+                                        .setTitle(req.data.feed.entry.title)
+                                        .setURL(req.data.feed.entry.link["$"].href)
                                         .setImage(video.items[0].snippet.thumbnails.maxres.url)
                                         .setColor("#FF0000")
                                         .setFooter("Powered by Suisei's Mic")
