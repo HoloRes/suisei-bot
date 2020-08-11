@@ -28,7 +28,6 @@ const date = new Date().toISOString();
 const logger = winston.createLogger({
     level: config.loggingLevel,
     format: winston.format.simple(),
-    defaultMeta: { service: 'user-service' },
     transports: [
         new winston.transports.Console(),
         new winston.transports.File({filename: path.join(__dirname, "logs", "error", `${date}.log`), level: "error"}),
