@@ -262,7 +262,10 @@ async function verifyHmac(req, res, next) {
         const hmac = createHmac(method, config.PubSubHubBub.secret);
         hmac.update(raw);
         req.body = await xml2js.parseStringPromise(raw);
-        if (signature !== `${method}=${hmac.digest("hex")}`) return res.status(403).send("");
+        if (signature !== `${method}=${hmac.digest("hex")}`) {
+            console.error("HMAC verify failure");
+            return res.status(403).send("");
+        }
         next();
     } catch (error) {
         next(error);
