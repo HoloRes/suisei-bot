@@ -29,5 +29,5 @@
   },
   "YtApiKey": "",
   "environment": "production",
-  "loggingLevel": "info"
+  "logLevel": "info"
 }

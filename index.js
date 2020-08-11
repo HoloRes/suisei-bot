@@ -26,7 +26,7 @@ const config = require("$/config.json");
 // Winston logger
 const date = new Date().toISOString();
 const logger = winston.createLogger({
-    level: config.loggingLevel,
+    level: config.logLevel,
     format: winston.format.simple(),
     transports: [
         new winston.transports.Console(),
@@ -115,7 +115,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
             logger.debug("-----------------------------------------");
             logger.debug(JSON.stringify(video, null, 4));
             logger.debug("-----------------------------------------");
-            if (video.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
+            if (video.data.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
             YT.channels.list({
                 auth: config.YtApiKey,
                 id: req.body.feed.entry["yt:channelId"],
