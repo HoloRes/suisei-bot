@@ -27,7 +27,7 @@ const config = require("$/config.json");
 const date = new Date().toISOString();
 const logger = winston.createLogger({
     level: config.loggingLevel,
-    format: winston.format.json(),
+    format: winston.format.simple(),
     defaultMeta: { service: 'user-service' },
     transports: [
         new winston.transports.Console(),
@@ -224,7 +224,7 @@ function loadcmds() {
         if (err) throw (err);
         let jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
-            return console.log("No user commands found.");
+            return logger.info("No user commands found.");
         }
         jsfiles.forEach((f, i) => {
             delete require.cache[require.resolve(`./commands/user/${f}`)];
@@ -236,7 +236,7 @@ function loadcmds() {
         if (err) throw (err);
         let jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
-            return console.log("No dev commands found.");
+            return logger.info("No dev commands found.");
         }
         jsfiles.forEach((f, i) => {
             delete require.cache[require.resolve(`./commands/dev/${f}`)];
@@ -248,7 +248,7 @@ function loadcmds() {
         if (err) throw (err);
         let jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
-            return console.log("No staff commands found.");
+            return logger.info("No staff commands found.");
         }
         jsfiles.forEach((f, i) => {
             delete require.cache[require.resolve(`./commands/staff/${f}`)];
