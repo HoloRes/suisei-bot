@@ -12,7 +12,9 @@ const fs = require("fs"),
     {scheduleJob} = require("node-schedule"),
     rawBody = require("raw-body"),
     querystring = require("querystring"),
-    {google} = require("googleapis");
+    {google} = require("googleapis"),
+    path = require("path"),
+    winston = require("winston"); // Advanced logging library
 
 // Local JS files
 const {confirmRequest} = require("./util/functions");
@@ -21,6 +23,20 @@ const {confirmRequest} = require("./util/functions");
 const config = require("$/config.json");
 
 // Init
+// Winston logger
+const date = new Date().toISOString();
+const logger = winston.createLogger({
+    level: config.loggingLevel,
+    format: winston.format.json(),
+    defaultMeta: { service: 'user-service' },
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({filename: path.join(__dirname, "logs", "error", `${date}.log`), level: "error"}),
+        new winston.transports.File({filename: path.join(__dirname, "logs", "complete", `${date}.log`)})
+    ]
+});
+exports.logger = logger;
+
 // XML Parser
 const xmlParser = new xml2js.Parser({explicitArray: false});
 
@@ -53,13 +69,13 @@ scheduleJob("0 * * * *", () => { // Resubscribe every hour
                         "hub.secret": config.PubSubHubBub.secret,
                     }),
                 }).then((res) => {
-                    if (res.status === 202) console.log(`Subscription to ${docs[i]._id} successful.`);
-                    else console.log(`Subscription to ${docs[i]._id} gave response: ${res.status}`);
+                    if (res.status === 202) logger.verbose(`Subscription to ${docs[i]._id} successful.`);
+                    else logger.verbose(`Subscription to ${docs[i]._id} gave response: ${res.status}`);
                 }).catch(err2 => {
-                    if (err2) console.log(`Error: ${err2.response.status}, subscription unsuccessful.`);
+                    if (err2) logger.warn(`Error: ${err2.response.status}, subscription to ${docs[i]._id} unsuccessful.`);
                 });
             } catch (err2) {
-                if (err2) return console.error(`Couldn't subscribe to channel: ${docs[i]._id}`);
+                if (err2) return logger.warn(`Couldn't subscribe to channel: ${docs[i]._id}`);
             }
         }
     });
@@ -72,50 +88,41 @@ const YT = google.youtube("v3");
 
 // PubSubHubBub notifications
 app.get("/ytPush/:id", (req, res) => {
-    console.log(req.query["hub.challenge"]);
+    logger.debug(req.query["hub.challenge"]);
     if (req.query["hub.challenge"].length > 0) {
-        console.log("Status 200 sent with hub.challenge");
+        logger.verbose(`Responding with challenge code for channel: ${req.params.id}`);
         res.status(200).send(req.query["hub.challenge"]);
-        console.log("-----------------------------------------");
-    }
-    else res.status(400).send("");
+        logger.debug("-----------------------------------------");
+    } else res.status(400).send("");
 });
 
-app.post("/ytPush/:id", verifyHmac, (req, res) => {
-    console.log("-----------------------------------------");
-    console.log(req.body.feed);
-    console.log("-----------------------------------------");
+app.post("/ytPush/:id", parseBody, (req, res) => {
+    const xhs = req.headers["x-hub-signature"] || req.headers["X-Hub-Signature"];
+    logger.debug(xhs);
+    logger.debug("-----------------------------------------");
+    logger.debug(req.body.feed);
+    logger.debug("-----------------------------------------");
     res.status(200).send("");
     let removedChannels = [];
     Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
-        client.channels.fetch("730061446108676146")
-            .then((channel) => {
-                channel.send(JSON.stringify(res, null, 4), {code: "json"});
-            })
-            .catch(chErr => {
-            });
         if (err) return console.error(err);
         YT.videos.list({
             auth: config.YtApiKey,
-            id: res.feed.entry["yt:videoId"],
+            id: req.data.feed.entry["yt:videoId"],
             part: "snippet"
         }, (err2, video) => {
-            if (err2) return console.error(err2);
-            if (!video) return console.error("Video not found");
-            client.channels.fetch("730061446108676146")
-                .then((channel) => {
-                    channel.send(JSON.stringify(video, null, 4), {code: "json"});
-                })
-                .catch(chErr => {
-                });
-            if (video.items[0].snippet.liveBroadcastContent !== "live") return console.log("Not a live broadcast.");
+            if (err2) return logger.verbose(err2);
+            if (!video) return logger.verbose("Video not found");
+            logger.debug("-----------------------------------------");
+            logger.debug(JSON.stringify(video, null, 4));
+            logger.debug("-----------------------------------------");
+            if (video.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
             YT.channels.list({
                 auth: config.YtApiKey,
                 id: res.feed.entry["yt:channelId"],
                 part: "snippet"
             }, (err3, ytChannel) => {
-                if (err3) return console.error(err3);
-                console.log("-----------------------------------------");
+                if (err3) return logger.verbose(err3);
                 for (let i = 0; i < subscription.channels.length; i++) {
                     client.channels.fetch(subscription.channels[i])
                         .then((channel) => {
@@ -158,7 +165,7 @@ client.on("ready", () => {
     client.devcmds = new Discord.Collection(); // This will hold commands that are only accessible for the maintainers
     client.staffcmds = new Discord.Collection(); // This will hold commands that are only accessible for staff
     loadcmds();
-    console.log("Bot online");
+    logger.info("Bot online");
 });
 
 client.on("message", (message) => {
@@ -251,21 +258,10 @@ function loadcmds() {
     });
 }
 
-async function verifyHmac(req, res, next) {
+async function parseBody(req, res, next) {
     try {
-        const xhs = req.headers["x-hub-signature"] || req.headers["X-Hub-Signature"];
-        if (!xhs) return res.status(403).send("");
-        const method = xhs.split("=")[0];
-        const signature = xhs.split("=")[1];
         const raw = await rawBody(req);
-
-        const hmac = createHmac(method, config.PubSubHubBub.secret);
-        hmac.update(raw);
         req.body = await xml2js.parseStringPromise(raw);
-        if (signature !== `${method}=${hmac.digest("hex")}`) {
-            console.error("HMAC verify failure");
-            return res.status(403).send("");
-        }
         next();
     } catch (error) {
         next(error);

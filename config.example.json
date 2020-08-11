@@ -27,5 +27,7 @@
     "callbackUrl": "",
     "hubUrl": ""
   },
-  "YtApiKey": ""
+  "YtApiKey": "",
+  "environment": "production",
+  "loggingLevel": "info"
 }
