@@ -99,12 +99,12 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     const xhs = req.headers["x-hub-signature"] || req.headers["X-Hub-Signature"];
     logger.debug(xhs);
     logger.debug("-----------------------------------------");
-    logger.debug(req.body.feed);
+    logger.debug(JSON.stringify(req.body.feed, null, 4));
     logger.debug("-----------------------------------------");
     res.status(200).send("");
     let removedChannels = [];
     Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
-        if (err) return console.error(err);
+        if (err) return logger.verbose(err);
         YT.videos.list({
             auth: config.YtApiKey,
             id: req.body.feed.entry["yt:videoId"],
