@@ -22,23 +22,22 @@ exports.run = (client, message, args) => {
                     confirmRequest(msg, message.author.id)
                         .then((result) => {
                             if (result === true) {
-                                let ping;
                                 const embed = new Discord.MessageEmbed()
                                     .setTitle(name)
                                     .setDescription(`React with <:${emoji.name}:${emoji.id}> to subscribe to this ping list`)
                                 channel.send(embed).then((embedMsg) => {
                                     embedMsg.react(emoji);
-                                    ping = new PingSubscription({
+                                    const ping = new PingSubscription({
                                         _id: embedMsg.id,
                                         users: [],
                                         name: name,
                                         emoji: emoji.id
                                     });
+                                    ping.save();
+                                    msg.edit("New list created");
+                                    message.delete({timeout: 4000, reason: "Automated"});
+                                    msg.delete({timeout: 4000, reason: "Automated"});
                                 });
-                                ping.save();
-                                msg.edit("New list created");
-                                message.delete({timeout: 4000, reason: "Automated"});
-                                msg.delete({timeout: 4000, reason: "Automated"});
                             } else {
                                 msg.edit("Action cancelled");
                                 message.delete({timeout: 4000, reason: "Automated"});
