@@ -7,7 +7,7 @@ const {confirmRequest} = require("$/util/functions");
 exports.run = (client, message, args) => {
     client.channels.fetch(args[0])
         .then((channel) => {
-            PingSubscription.find({name: args.splice(1).join(" ")}).lean().exec((err, doc) => {
+            PingSubscription.find({name: args.slice(1).join(" ")}).lean().exec((err, doc) => {
                 if (!doc) return message.channel.send("That list doesn't exist.")
                     .then((msg) => {
                         message.delete({timeout: 4000, reason: "Automated"});

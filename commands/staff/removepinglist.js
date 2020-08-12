@@ -11,7 +11,7 @@ exports.run = (client, message, args) => {
                 message.delete({timeout: 4000, reason: "Automated"});
                 msg.delete({timeout: 4000, reason: "Automated"});
             });
-        if(!doc) return message.channel.send("That list doesn't exist.")
+        if (!doc) return message.channel.send("That list doesn't exist.")
             .then((msg) => {
                 message.delete({timeout: 4000, reason: "Automated"});
                 msg.delete({timeout: 4000, reason: "Automated"});
@@ -20,7 +20,11 @@ exports.run = (client, message, args) => {
             .then((msg) => {
                 confirmRequest(msg, message.author.id)
                     .then((result) => {
-                        if(result === true) {
+                        if (result === true) {
+                            client.messages.fetch(doc.messageID)
+                                .then((reactMsg) => {
+                                    reactMsg.delete()
+                                });
                             PingSubscription.findByIdAndRemove(args[0], (err) => {
                                 if (err) msg.edit("Something went wrong");
                                 else msg.edit("Removal successful.");
