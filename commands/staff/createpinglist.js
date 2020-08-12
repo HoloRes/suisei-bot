@@ -29,6 +29,7 @@ exports.run = (client, message, args) => {
                                     embedMsg.react(emoji);
                                     const ping = new PingSubscription({
                                         _id: embedMsg.id,
+                                        channelID: embedMsg.channel.id,
                                         users: [],
                                         name: name,
                                         emoji: emoji.id

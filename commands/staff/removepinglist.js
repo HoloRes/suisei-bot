@@ -21,9 +21,10 @@ exports.run = (client, message, args) => {
                 confirmRequest(msg, message.author.id)
                     .then((result) => {
                         if (result === true) {
-                            client.messages.fetch(doc.messageID)
-                                .then((reactMsg) => {
-                                    reactMsg.delete()
+                            client.channels.fetch(doc.channelID)
+                                .then((channel) => {
+                                    channel.messages.fetch(doc._id)
+                                        .then((reactMsg) => reactMsg.delete());
                                 });
                             PingSubscription.findByIdAndRemove(args[0], (err) => {
                                 if (err) msg.edit("Something went wrong");
