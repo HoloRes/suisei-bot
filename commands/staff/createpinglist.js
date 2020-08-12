@@ -8,7 +8,7 @@ const {confirmRequest} = require("$/util/functions");
 const Discord = require("discord.js")
 
 exports.run = (client, message, args) => {
-    message.guild.channels.fetch(args[0])
+    client.channels.fetch(args[0])
         .then((channel) => {
             const name = args.slice(2).join(" ");
             const emoji = message.guild.emojis.resolve(args[1]);
