@@ -22,11 +22,13 @@ exports.run = (client, message, args) => {
                     confirmRequest(msg, message.author.id)
                         .then((result) => {
                             if (result === true) {
+                                let ping;
                                 const embed = new Discord.MessageEmbed()
                                     .setTitle(name)
                                     .setDescription(`React with <:${emoji.name}:${emoji.id}> to subscribe to this ping list`)
                                 channel.send(embed).then((embedMsg) => {
-                                    new PingSubscription({
+                                    embedMsg.react(emoji);
+                                    ping = new PingSubscription({
                                         _id: embedMsg.id,
                                         users: [],
                                         name: name,
