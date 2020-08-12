@@ -1,5 +1,6 @@
 // Models
-const Subscription = require("$/models/subscription");
+const Subscription = require("$/models/subscription"),
+    PingSubscription = require("$/models/pingSubscription");
 
 // Packages
 const fs = require("fs"),
@@ -105,50 +106,10 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     let removedChannels = [];
     Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
         if (err) return logger.verbose(err);
-        YT.videos.list({
-            auth: config.YtApiKey,
-            id: req.body.feed.entry[0]["yt:videoId"][0],
-            part: "snippet"
-        }, (err2, video) => {
-            if (err2) return logger.verbose(err2);
-            if (!video) return logger.verbose("Video not found");
-            logger.debug("-----------------------------------------");
-            logger.debug(JSON.stringify(video, null, 4));
-            logger.debug("-----------------------------------------");
-            if (video.data.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
-            YT.channels.list({
-                auth: config.YtApiKey,
-                id: req.body.feed.entry["yt:channelId"],
-                part: "snippet"
-            }, (err3, ytChannel) => {
-                if (err3) return logger.verbose(err3);
-                for (let i = 0; i < subscription.channels.length; i++) {
-                    client.channels.fetch(subscription.channels[i])
-                        .then((channel) => {
-                            channel.fetchWebhooks()
-                                .then((hooks) => {
-                                    const webhook = hooks.find(wh => wh.name.toLowerCase() === "stream notification");
-                                    if (!webhook) return removedChannels.push(i);
-                                    const embed = new Discord.MessageEmbed()
-                                        .setTitle(req.body.feed.entry.title)
-                                        .setURL(req.body.feed.entry.link["$"].href)
-                                        .setImage(video.items[0].snippet.thumbnails.maxres.url)
-                                        .setColor("#FF0000")
-                                        .setFooter("Powered by Suisei's Mic")
-
-                                    webhook.send(subscription.message, {
-                                        embeds: [embed],
-                                        username: ytChannel.items[0].snippet.title,
-                                        avatarURL: ytChannel.items[0].snippet.thumbnails.high
-                                    });
-                                });
-                        })
-                        .catch((err4) => {
-                            if (err4) removedChannels.push(i);
-                        });
-                }
-            });
-        });
+        // TODO: Check if it's planned more then 10 min later
+        setTimeout(() => {
+            checkLive(req.body.feed, subscription, removedChannels)
+        }, 60 * 1000);
         for (let i = 0; i < removedChannels.length; i++) {
             subscription.channels.splice(subscription.channels.findIndex(removedChannels[i]), 1);
         }
@@ -157,7 +118,9 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
 
 // Discord bot
 // Create a Discord client
-const client = new Discord.Client();
+const client = new Discord.Client({
+    partials: ['MESSAGE', 'CHANNEL', 'REACTION'] // Partials are used to be able to fetch events from non cached items
+});
 
 client.on("ready", () => {
     client.commands = new Discord.Collection(); // This holds all the commands accessible for the end users.
@@ -167,11 +130,38 @@ client.on("ready", () => {
     logger.info("Bot online");
 });
 
+// Ping list reaction handler
+client.on('messageReactionAdd', async (reaction, user) => {
+    reaction.fetch().then((reaction) => {
+        PingSubscription.findById(reaction.message.id, (err, doc) => {
+            if (err) return logger.error(err);
+            if (!doc || reaction.emoji.id !== doc.emoji) return;
+            const index = doc.users.findIndex(user.id);
+            if(index !== -1) return;
+            doc.users.push(user.id)
+            doc.save();
+        });
+    });
+});
+
+client.on('messageReactionRemove', async (reaction, user) => {
+    reaction.fetch().then((reaction) => {
+        PingSubscription.findById(reaction.message.id, (err, doc) => {
+            if (err) return logger.error(err);
+            if (!doc || reaction.emoji.id !== doc.emoji) return;
+            const index = doc.users.findIndex(user.id);
+            if(index === -1) return;
+            doc.users.splice(index, 1);
+            doc.save();
+        });
+    });
+});
+
+// Message handler
 client.on("message", (message) => {
     if (message.author.bot) return;
     if (message.content.startsWith(config.discord.prefix)) { // User command handler
         if (!message.member.roles.cache.has(config.discord.roles.musician) && !message.member.roles.cache.has(config.discord.roles.staff)) return;
-
         let cont = message.content.slice(config.discord.prefix.length).split(" ");
         let args = cont.slice(1);
         let cmd = client.commands.get(cont[0]);
@@ -265,4 +255,51 @@ async function parseBody(req, res, next) {
     } catch (error) {
         next(error);
     }
+}
+
+function checkLive(feed, subscription, removedChannels) {
+    YT.videos.list({
+        auth: config.YtApiKey,
+        id: feed.entry[0]["yt:videoId"][0],
+        part: "snippet,liveStreamingDetails"
+    }, (err, video) => {
+        if (err) return logger.error(err);
+        if (!video) return logger.verbose("Video not found");
+        logger.debug("-----------------------------------------");
+        logger.debug(JSON.stringify(video, null, 4));
+        logger.debug("-----------------------------------------");
+        if (video.data.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
+        YT.channels.list({
+            auth: config.YtApiKey,
+            id: feed.entry["yt:channelId"],
+            part: "snippet"
+        }, (err2, ytChannel) => {
+            if (err2) return logger.error(err2);
+            for (let i = 0; i < subscription.channels.length; i++) {
+                client.channels.fetch(subscription.channels[i])
+                    .then((channel) => {
+                        channel.fetchWebhooks()
+                            .then((hooks) => {
+                                const webhook = hooks.find(wh => wh.name.toLowerCase() === "stream notification");
+                                if (!webhook) return removedChannels.push(i);
+                                const embed = new Discord.MessageEmbed()
+                                    .setTitle(feed.entry.title)
+                                    .setURL(feed.entry.link["$"].href)
+                                    .setImage(video.items[0].snippet.thumbnails.maxres.url)
+                                    .setColor("#FF0000")
+                                    .setFooter("Powered by Suisei's Mic")
+
+                                webhook.send(subscription.message, {
+                                    embeds: [embed],
+                                    username: ytChannel.items[0].snippet.title,
+                                    avatarURL: ytChannel.items[0].snippet.thumbnails.high
+                                });
+                            });
+                    })
+                    .catch((err3) => {
+                        if (err3) removedChannels.push(i);
+                    });
+            }
+        });
+    });
 }
