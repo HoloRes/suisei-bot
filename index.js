@@ -131,28 +131,30 @@ client.on("ready", () => {
 });
 
 // Ping list reaction handler
-client.on('messageReactionAdd', async (reaction, user) => {
+client.on('messageReactionAdd', (reaction, user) => {
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
             if (!doc || reaction.emoji.id !== doc.emoji) return;
             const index = doc.users.findIndex(user.id);
             if(index !== -1) return;
-            doc.users.push(user.id)
+            doc.users.push(user.id);
             doc.save();
+            logger.debug(`${user.tag} has been added to ${doc.name}`);
         });
     });
 });
 
-client.on('messageReactionRemove', async (reaction, user) => {
+client.on('messageReactionRemove', (reaction, user) => {
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
             if (!doc || reaction.emoji.id !== doc.emoji) return;
             const index = doc.users.findIndex(user.id);
             if(index === -1) return;
-            doc.users.splice(index, 1);
+            doc.users = doc.users.splice(index, 1);
             doc.save();
+            logger.debug(`${user.tag} has been removed from ${doc.name}`);
         });
     });
 });
