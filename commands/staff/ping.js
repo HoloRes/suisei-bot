@@ -18,9 +18,9 @@ exports.run = (client, message, args) => {
                         confirmRequest(msg, message.author.id)
                             .then((result) => {
                                 if (result === true) {
-                                    let userList = doc.users,
+                                    let userList = doc.users.slice(0),
                                         firstPingMsg = null;
-                                    const loops = Math.ceil(doc.users.length / 95);
+                                    const loops = Math.ceil(userList.length / 95);
                                     for (let i = 0; i < loops; i++) {
                                         let pingMsg = "";
                                         if (userList.length > 95) {

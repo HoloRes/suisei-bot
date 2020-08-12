@@ -153,7 +153,8 @@ client.on('messageReactionRemove', (reaction, user) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
             if (!doc || reaction.emoji.id !== doc.emoji) return;
-            const index = doc.users.findIndex(user.id);
+            const filter = (id) => id === user.id;
+            const index = doc.users.findIndex(filter);
             if(index === -1) return;
             doc.users = doc.users.splice(index, 1);
             doc.save();

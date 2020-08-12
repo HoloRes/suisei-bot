@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 // Schema
 const pingSubscription = new mongoose.Schema({
     "_id": String,
-    "users": [[String]],
+    "users": [String],
     "name": String,
     "emoji": String
 });
