@@ -19,7 +19,7 @@ exports.run = (client, message, args) => {
                         confirmRequest(msg, message.author.id)
                             .then((result) => {
                                 if (result === true) {
-                                    let userList = doc.users.splice(),
+                                    let userList = doc.users.slice(),
                                         firstPingMsg = null;
                                     const loops = Math.ceil(userList.length / 95);
                                     for (let i = 0; i < loops; i++) {
@@ -38,12 +38,14 @@ exports.run = (client, message, args) => {
                                             .then((sentPingMsg) => {
                                                 if (!firstPingMsg) firstPingMsg = sentPingMsg;
                                                 else sentPingMsg.delete({timeout: 1000, reason: "Automated"});
+                                                if (i === loops - 1) {
+                                                    sentPingMsg.edit(`Everyone in ${doc.name} has been pinged.`)
+                                                    msg.edit("Done with sending pings");
+                                                    message.delete({timeout: 4000, reason: "Automated"});
+                                                    msg.delete({timeout: 4000, reason: "Automated"});
+                                                }
                                             });
                                     }
-                                    firstPingMsg.edit(`Everyone in ${doc.name} has been pinged.`)
-                                    msg.edit("Done with sending pings");
-                                    message.delete({timeout: 4000, reason: "Automated"});
-                                    msg.delete({timeout: 4000, reason: "Automated"});
                                 } else {
                                     msg.edit("Cancelled.");
                                     message.delete({timeout: 4000, reason: "Automated"});

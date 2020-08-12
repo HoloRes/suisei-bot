@@ -43,7 +43,8 @@ const xmlParser = new xml2js.Parser({explicitArray: false});
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: true
 });
 
 // Express
