@@ -132,11 +132,13 @@ client.on("ready", () => {
 
 // Ping list reaction handler
 client.on('messageReactionAdd', (reaction, user) => {
+    if(user.id === client.user.id) return;
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
             if (!doc || reaction.emoji.id !== doc.emoji) return;
-            const index = doc.users.findIndex(user.id);
+            const filter = (id) => id === user.id;
+            const index = doc.users.findIndex(filter);
             if(index !== -1) return;
             doc.users.push(user.id);
             doc.save();
@@ -146,6 +148,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 });
 
 client.on('messageReactionRemove', (reaction, user) => {
+    if(user.id === client.user.id) return;
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
