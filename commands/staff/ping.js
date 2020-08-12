@@ -2,7 +2,8 @@
 const PingSubscription = require("$/models/pingSubscription");
 
 // Local files
-const {confirmRequest} = require("$/util/functions");
+const {confirmRequest} = require("$/util/functions"),
+    {logger} = require("$/index");
 
 exports.run = (client, message, args) => {
     client.channels.fetch(args[0])
@@ -13,12 +14,13 @@ exports.run = (client, message, args) => {
                         message.delete({timeout: 4000, reason: "Automated"});
                         msg.delete({timeout: 4000, reason: "Automated"});
                     });
+                logger.debug(doc);
                 message.channel.send(`Are you sure you want to ping everyone in: ${doc.name}?`)
                     .then((msg) => {
                         confirmRequest(msg, message.author.id)
                             .then((result) => {
                                 if (result === true) {
-                                    let userList = doc.users.slice(0),
+                                    let userList = doc.users.splice(),
                                         firstPingMsg = null;
                                     const loops = Math.ceil(userList.length / 95);
                                     for (let i = 0; i < loops; i++) {
@@ -27,7 +29,7 @@ exports.run = (client, message, args) => {
                                             for (let x = 0; x < 95; x++) {
                                                 pingMsg = `${pingMsg}<@${userList[x]}>`;
                                             }
-                                            userList = userList.slice(95);
+                                            userList = userList.splice(0, 95);
                                         } else {
                                             for (let x = 0; x < userList.length; x++) {
                                                 pingMsg = `${pingMsg}<@${userList[x]}>`;

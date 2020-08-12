@@ -156,7 +156,7 @@ client.on('messageReactionRemove', (reaction, user) => {
             const filter = (id) => id === user.id;
             const index = doc.users.findIndex(filter);
             if(index === -1) return;
-            doc.users = doc.users.slice(index, 1);
+            doc.users.splice(index, 1);
             doc.save();
             logger.debug(`${user.tag} has been removed from ${doc.name}`);
         });
