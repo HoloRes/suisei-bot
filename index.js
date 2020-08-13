@@ -44,7 +44,7 @@ const xmlParser = new xml2js.Parser({explicitArray: false});
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useFindAndModify: true
+    useFindAndModify: false
 });
 
 // Express
@@ -152,7 +152,7 @@ client.on('messageReactionAdd', (reaction, user) => {
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
-            if (!doc || reaction.emoji.id !== doc.emoji) return;
+            if (!doc || reaction.emoji.name !== doc.emoji) return;
             const filter = (id) => id === user.id;
             const index = doc.users.findIndex(filter);
             if(index !== -1) return;
@@ -168,7 +168,7 @@ client.on('messageReactionRemove', (reaction, user) => {
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
-            if (!doc || reaction.emoji.id !== doc.emoji) return;
+            if (!doc || reaction.emoji.name !== doc.emoji) return;
             const filter = (id) => id === user.id;
             const index = doc.users.findIndex(filter);
             if(index === -1) return;

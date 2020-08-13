@@ -14,7 +14,7 @@ exports.run = (client, message, args) => {
             const name = args.slice(2).join(" ");
             if(unicodeEmojis[args[1].toLowerCase()]) {
                 const emoji = unicodeEmojis[args[1].toLowerCase()];
-                createList(message, channel, emoji, name);
+                createList(message, channel, emoji, emoji, args[1].toLowerCase(), name);
             }
             else {
                 const emoji = message.guild.emojis.resolve(args[1]);
@@ -23,7 +23,7 @@ exports.run = (client, message, args) => {
                         message.delete({timeout: 4000, reason: "Automated"});
                         msg.delete({timeout: 4000, reason: "Automated"});
                     });
-                else createList(message, channel, emoji, name)
+                else createList(message, channel, emoji, `<:${emoji.name}:${emoji.id}>`, emoji.name, name)
             }
 
         })
@@ -40,7 +40,7 @@ module.exports.config = {
     command: "createpinglist"
 }
 
-function createList(message, channel, emoji, name) {
+function createList(message, channel, emoji, emojiText, emojiName, name) {
     message.reply(`are you sure you want to create a new ping list with the name ${name}?`)
         .then((msg) => {
             confirmRequest(msg, message.author.id)
@@ -48,7 +48,7 @@ function createList(message, channel, emoji, name) {
                     if (result === true) {
                         const embed = new Discord.MessageEmbed()
                             .setTitle(name)
-                            .setDescription(`React with <:${emoji.name}:${emoji.id}> to subscribe to this ping list`)
+                            .setDescription(`React with ${emoji} to subscribe to this ping list`)
                         channel.send(embed).then((embedMsg) => {
                             embedMsg.react(emoji);
                             const ping = new PingSubscription({
@@ -56,7 +56,7 @@ function createList(message, channel, emoji, name) {
                                 channelID: embedMsg.channel.id,
                                 users: [],
                                 name: name,
-                                emoji: emoji.id
+                                emoji: emojiName
                             });
                             ping.save();
                             msg.edit("New list created");
