@@ -113,7 +113,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
             part: "snippet,liveStreamingDetails"
         }, (err2, video) => {
             if(err2) return logger.verbose(err2);
-            if(video.items[0].liveBroadcastContent === "none") return;
+            if(video.data.items[0].liveBroadcastContent === "none") return;
             const currentDate = new Date(),
                 plannedDate = new Date(video.items[0].liveStreamingDetails.scheduledStartTime);
             const diffTime = Math.ceil(Math.abs(plannedDate - currentDate) / 1000 / 60); // Time difference between current in minutes
