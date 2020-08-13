@@ -104,15 +104,22 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     logger.debug(JSON.stringify(req.body.feed, null, 4));
     logger.debug("-----------------------------------------");
     res.status(200).send("");
-    let removedChannels = [];
+    if(req.body.feed["at:deleted-entry"]) return; // This means a stream/video got set to private or was deleted
     Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
         if (err) return logger.verbose(err);
-        // TODO: Check if it's planned more then 10 min later
-        setTimeout(() => {
-            checkLive(req.body.feed, subscription, removedChannels)
-        }, 60 * 1000);
-        for (let i = 0; i < removedChannels.length; i++) {
-            subscription.channels.splice(subscription.channels.findIndex(removedChannels[i]), 1);
+        const currentDate = new Date(),
+            plannedDate = new Date(req.body.feed.items[0].liveStreamingDetails.scheduledStartTime);
+        const diffTime = Math.ceil(Math.abs(plannedDate-currentDate)/1000/60); // Time difference between current in minutes
+        if (diffTime >= 10) {
+            scheduleJob(plannedDate, () => {
+                setTimeout(() => {
+                    checkLive(req.body.feed, subscription);
+                }, 5 * 60 * 1000);
+            })
+        } else {
+            setTimeout(() => {
+                checkLive(req.body.feed, subscription);
+            }, 5 * 60 * 1000);
         }
     });
 });
@@ -264,7 +271,8 @@ async function parseBody(req, res, next) {
     }
 }
 
-function checkLive(feed, subscription, removedChannels) {
+function checkLive(feed, subscription) {
+    let removedChannels = [];
     YT.videos.list({
         auth: config.YtApiKey,
         id: feed.entry[0]["yt:videoId"][0],
@@ -306,6 +314,9 @@ function checkLive(feed, subscription, removedChannels) {
                     .catch((err3) => {
                         if (err3) removedChannels.push(i);
                     });
+            }
+            for (let i = 0; i < removedChannels.length; i++) {
+                subscription.channels.splice(subscription.channels.findIndex(removedChannels[i]), 1);
             }
         });
     });
