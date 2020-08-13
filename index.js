@@ -107,20 +107,28 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     if(req.body.feed["at:deleted-entry"]) return; // This means a stream/video got set to private or was deleted
     Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
         if (err) return logger.verbose(err);
-        const currentDate = new Date(),
-            plannedDate = new Date(req.body.feed.items[0].liveStreamingDetails.scheduledStartTime);
-        const diffTime = Math.ceil(Math.abs(plannedDate-currentDate)/1000/60); // Time difference between current in minutes
-        if (diffTime >= 10) {
-            scheduleJob(plannedDate, () => {
+        YT.videos.list({
+            auth: config.YtApiKey,
+            id: feed.entry[0]["yt:videoId"][0],
+            part: "snippet,liveStreamingDetails"
+        }, (err2, video) => {
+            if(err2) return logger.verbose(err2);
+            if(video.items[0].liveBroadcastContent === "none") return;
+            const currentDate = new Date(),
+                plannedDate = new Date(video.items[0].liveStreamingDetails.scheduledStartTime);
+            const diffTime = Math.ceil(Math.abs(plannedDate - currentDate) / 1000 / 60); // Time difference between current in minutes
+            if (diffTime >= 10) {
+                scheduleJob(plannedDate, () => {
+                    setTimeout(() => {
+                        checkLive(req.body.feed, subscription);
+                    }, 5 * 60 * 1000);
+                })
+            } else {
                 setTimeout(() => {
                     checkLive(req.body.feed, subscription);
                 }, 5 * 60 * 1000);
-            })
-        } else {
-            setTimeout(() => {
-                checkLive(req.body.feed, subscription);
-            }, 5 * 60 * 1000);
-        }
+            }
+        });
     });
 });
 
