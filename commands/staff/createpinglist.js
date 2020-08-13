@@ -12,8 +12,8 @@ exports.run = (client, message, args) => {
     client.channels.fetch(args[0])
         .then((channel) => {
             const name = args.slice(2).join(" ");
-            if(unicodeEmojis[args[0]]) {
-                const emoji = unicodeEmojis[args[0]];
+            if(unicodeEmojis[args[1].toLowerCase()]) {
+                const emoji = unicodeEmojis[args[1].toLowerCase()];
                 createList(message, channel, emoji, name);
             }
             else {
