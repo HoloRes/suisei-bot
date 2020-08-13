@@ -115,7 +115,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
             if(err2) return logger.verbose(err2);
             if(video.data.items[0].liveBroadcastContent === "none") return;
             const currentDate = new Date(),
-                plannedDate = new Date(video.items[0].liveStreamingDetails.scheduledStartTime);
+                plannedDate = new Date(video.data.items[0].liveStreamingDetails.scheduledStartTime);
             const diffTime = Math.ceil(Math.abs(plannedDate - currentDate) / 1000 / 60); // Time difference between current in minutes
             if (diffTime >= 10) {
                 scheduleJob(plannedDate, () => {
