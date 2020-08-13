@@ -14,7 +14,7 @@ exports.run = (client, message, args) => {
             const name = args.slice(2).join(" ");
             if(unicodeEmojis[args[1].toLowerCase()]) {
                 const emoji = unicodeEmojis[args[1].toLowerCase()];
-                createList(message, channel, emoji, emoji, args[1].toLowerCase(), name);
+                createList(message, channel, emoji, emoji, emoji, name);
             }
             else {
                 const emoji = message.guild.emojis.resolve(args[1]);
