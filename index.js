@@ -109,7 +109,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
         if (err) return logger.verbose(err);
         YT.videos.list({
             auth: config.YtApiKey,
-            id: feed.entry[0]["yt:videoId"][0],
+            id: req.body.feed.entry[0]["yt:videoId"][0],
             part: "snippet,liveStreamingDetails"
         }, (err2, video) => {
             if(err2) return logger.verbose(err2);
