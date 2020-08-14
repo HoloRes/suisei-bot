@@ -294,7 +294,7 @@ function checkLive(feed, subscription) {
         if (video.data.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
         YT.channels.list({
             auth: config.YtApiKey,
-            id: feed.entry["yt:channelId"],
+            id: feed.entry[0]["yt:channelId"][0],
             part: "snippet"
         }, (err2, ytChannel) => {
             if (err2) return logger.error(err2);
