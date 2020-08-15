@@ -27,6 +27,9 @@ const config = require("$/config.json");
 
 // Variables
 let scheduledStreams = []; // This array will hold all streams that have been scheduled with node-schedule during this run
+const puppeteerOptions = {
+    args: ["--disable-dev-shm-usage", "--no-sandbox"]
+}
 
 // Init
 // Winston logger
@@ -64,7 +67,7 @@ const videoRegex = /\/watch\?v=.{11}/g;
 Subscription.find({}).lean().exec(async (err, docs) => {
     if (err) throw new Error("Couldn't read subscriptions");
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch(puppeteerOptions);
     const page = await browser.newPage();
 
     for (let i = 0; i < docs.length; i++) {
@@ -436,7 +439,7 @@ function checkLive(feed, subscription) {
 }
 
 exports.planLivestreams = async function (channelID) {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch(puppeteerOptions);
     const page = await browser.newPage();
 
     await page.goto(`https://www.youtube.com/channel/${channelID}/videos?view=2&live_view=502&flow=grid`);
