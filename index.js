@@ -467,7 +467,7 @@ exports.planLivestreams = async function (channelID) {
     }
 
     for (let i = 0; i < streamIDs.length; i++) {
-        await Livestream.findById(streamIDs[i]).lean().exec((err2, doc) => {
+        Livestream.findById(streamIDs[i]).lean().exec((err2, doc) => {
             if (err2) return logger.error(err2);
             if (!doc) {
                 YT.videos.list({
