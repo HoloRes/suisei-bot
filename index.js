@@ -77,32 +77,38 @@ Subscription.find({}).lean().exec(async (err, docs) => {
         const matches = await content.match(/Upcoming live streams/g);
         const isPlannedStreamPage = matches !== null && matches.length > 0;
 
-        if (!isPlannedStreamPage) return browser.close();
+        if (isPlannedStreamPage) {
+            const rawStreams = await content.match(videoRegex);
+            let streams = [];
 
-        const rawStreams = await content.match(videoRegex);
+            for(let i = 0; i < rawStreams.length; i++) {
+                const videoID = await rawStreams[i].substring("/watch?v=".length);
+                const index = streams.findIndex((id) => id === videoID);
+                if(index === -1) streams.push(videoID);
+            }
 
-        for (let i = 0; i < rawStreams.length; i++) {
-            const videoID = await rawStreams[i].substring("/watch?v=".length);
-            await Livestream.findById(videoID).lean().exec((err2, doc) => {
-                if (err2) return logger.error(err2);
-                if (!doc) {
-                    YT.videos.list({
-                        auth: config.YtApiKey,
-                        id: videoID,
-                        part: "snippet,liveStreamingDetails"
-                    }, (err3, video) => {
-                        if (err3) return logger.verbose(err3);
-                        if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
-                        const stream = new Livestream({
-                            _id: videoID,
-                            plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
-                            title: video.data.items[0].snippet.title,
-                            ytChannelID: docs[i]._id
+            for (let i = 0; i < streams.length; i++) {streams[i
+                await Livestream.findById(streams[i]).lean().exec((err2, doc) => {
+                    if (err2) return logger.error(err2);
+                    if (!doc) {
+                        YT.videos.list({
+                            auth: config.YtApiKey,
+                            id: streams[i],
+                            part: "snippet,liveStreamingDetails"
+                        }, (err3, video) => {
+                            if (err3) return logger.verbose(err3);
+                            if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
+                            const stream = new Livestream({
+                                _id: streams[i],
+                                plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
+                                title: video.data.items[0].snippet.title,
+                                ytChannelID: docs[i]._id
+                            });
+                            stream.save();
                         });
-                        stream.save();
-                    });
-                }
-            });
+                    }
+                });
+            }
         }
 
         await Livestream.find({}).lean().exec((err2, docs) => {
@@ -452,26 +458,32 @@ exports.planLivestreams = async function (channelID) {
 
     const rawStreams = await content.match(videoRegex);
     let streams = [];
+    let streamIDs = [];
 
-    for (let i = 0; i < rawStreams.length; i++) {
+    for(let i = 0; i < rawStreams.length; i++) {
         const videoID = await rawStreams[i].substring("/watch?v=".length);
-        await Livestream.findById(videoID).lean().exec((err2, doc) => {
+        const index = streamIDs.findIndex((id) => id === videoID);
+        if(index === -1) streamIDs.push(videoID);
+    }
+
+    for (let i = 0; i < streamIDs.length; i++) {
+        await Livestream.findById(streamIDs[i]).lean().exec((err2, doc) => {
             if (err2) return logger.error(err2);
             if (!doc) {
                 YT.videos.list({
                     auth: config.YtApiKey,
-                    id: videoID,
+                    id: streamIDs[i],
                     part: "snippet,liveStreamingDetails"
                 }, (err3, video) => {
                     if (err3) return logger.verbose(err3);
                     if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
                     streams.push({
-                        id: videoID,
+                        id: streamIDs[i],
                         plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
                         title: video.data.items[0].snippet.title
                     });
                     const stream = new Livestream({
-                        _id: videoID,
+                        _id: streamIDs[i],
                         plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
                         title: video.data.items[0].snippet.title,
                         ytChannelID: channelID
