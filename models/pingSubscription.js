@@ -5,8 +5,8 @@ const mongoose = require("mongoose");
 const pingSubscription = new mongoose.Schema({
     "_id": String,
     "users": [String],
-    "name": String,
     "emoji": String,
+    "messageID": String,
     "channelID": String
 });
 

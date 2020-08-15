@@ -8,13 +8,13 @@ const {confirmRequest} = require("$/util/functions"),
 exports.run = (client, message, args) => {
     client.channels.fetch(args[0])
         .then((channel) => {
-            PingSubscription.findOne({name: args.slice(1).join(" ")}).lean().exec((err, doc) => {
+            PingSubscription.findById(args.slice(1).join(" ")).lean().exec((err, doc) => {
                 if (!doc) return message.channel.send("That list doesn't exist.")
                     .then((msg) => {
                         message.delete({timeout: 4000, reason: "Automated"});
                         msg.delete({timeout: 4000, reason: "Automated"});
                     });
-                message.channel.send(`Are you sure you want to ping everyone in: ${doc.name}?`)
+                message.channel.send(`Are you sure you want to ping everyone in: ${doc._id}?`)
                     .then((msg) => {
                         confirmRequest(msg, message.author.id)
                             .then((result) => {
@@ -39,7 +39,7 @@ exports.run = (client, message, args) => {
                                                 if (!firstPingMsg) firstPingMsg = sentPingMsg;
                                                 else sentPingMsg.delete({timeout: 1000, reason: "Automated"});
                                                 if (i === loops - 1) {
-                                                    sentPingMsg.edit(`Everyone in ${doc.name} has been pinged.`)
+                                                    sentPingMsg.edit(`Everyone in ${doc._id} has been pinged.`)
                                                     msg.edit("Done with sending pings");
                                                     message.delete({timeout: 4000, reason: "Automated"});
                                                     msg.delete({timeout: 4000, reason: "Automated"});

@@ -1,6 +1,7 @@
 // Models
 const Subscription = require("$/models/subscription"),
-    PingSubscription = require("$/models/pingSubscription");
+    PingSubscription = require("$/models/pingSubscription"),
+    Livestream = require("$/models/stream");
 
 // Packages
 const fs = require("fs"),
@@ -15,6 +16,7 @@ const fs = require("fs"),
     querystring = require("querystring"),
     {google} = require("googleapis"),
     path = require("path"),
+    puppeteer = require("puppeteer"), // Headless Chromium browser
     winston = require("winston"); // Advanced logging library
 
 // Local JS files
@@ -22,6 +24,9 @@ const {confirmRequest} = require("./util/functions");
 
 // Local config files
 const config = require("$/config.json");
+
+// Variables
+let scheduledStreams = []; // This array will hold all streams that have been scheduled with node-schedule during this run
 
 // Init
 // Winston logger
@@ -47,10 +52,89 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
     useFindAndModify: false
 });
 
+// Google YT Data V3 API
+const YT = google.youtube("v3");
+
 // Express
 const app = express();
 app.listen(config.PubSubHubBub.hubPort);
 
+//* Get all planned livestreams from subscriptions and add them to schedule.
+const videoRegex = /\/watch\?v=.{11}/g;
+Subscription.find({}).lean().exec(async (err, docs) => {
+    if (err) throw new Error("Couldn't read subscriptions");
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    for (let i = 0; i < docs.length; i++) {
+        await page.goto(`https://www.youtube.com/channel/${docs[i]._id}/videos?view=2&live_view=502&flow=grid`);
+        const content = await page.content();
+
+        const matches = await content.match(/Upcoming live streams/g);
+        const isPlannedStreamPage = matches !== null && matches.length > 0;
+
+        if (!isPlannedStreamPage) return browser.close();
+
+        const rawStreams = await content.match(videoRegex);
+
+        for (let i = 0; i < rawStreams.length; i++) {
+            const videoID = await rawStreams[i].substring("/watch?v=".length);
+            await Livestream.findById(videoID).lean().exec((err2, doc) => {
+                if (err2) return logger.error(err2);
+                if (!doc) {
+                    YT.videos.list({
+                        auth: config.YtApiKey,
+                        id: videoID,
+                        part: "snippet,liveStreamingDetails"
+                    }, (err3, video) => {
+                        if (err3) return logger.verbose(err3);
+                        if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
+                        const stream = new Livestream({
+                            _id: videoID,
+                            plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
+                            title: video.data.items[0].snippet.title,
+                            ytChannelID: docs[i]._id
+                        });
+                        stream.save();
+                    });
+                }
+            });
+        }
+
+        await Livestream.find({}).lean().exec((err2, docs) => {
+            if (err2) return logger.error(err2);
+            for (let i = 0; i < docs.length; i++) {
+                const plannedDate = new Date(docs[i].plannedDate);
+                Subscription.findById(docs[i].ytChannelID).lean().exec((err3, subscription) => {
+                    const feed = { // Recreating the PubSubHubBub feed as the function is coded to use this
+                        entry: [
+                            {
+                                "yt:videoId": [docs[i]._id],
+                                "yt:channelId": [docs[i].ytChannelID],
+                                "title": [docs[i].title],
+                                "link": [
+                                    {
+                                        "$": {
+                                            "href": `https://www.youtube.com/watch?v=${docs[i]._id}`
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    scheduleJob(plannedDate, () => {
+                        setTimeout(() => {
+                            checkLive(feed, subscription);
+                        }, 5 * 60 * 1000);
+                    });
+                    scheduledStreams.push(docs[i]._id);
+                });
+            }
+        });
+    }
+    await browser.close();
+});
 
 // Add all subscriptions
 scheduleJob("0 * * * *", () => { // Resubscribe every hour
@@ -82,9 +166,6 @@ scheduleJob("0 * * * *", () => { // Resubscribe every hour
     });
 });
 
-// Google YT Data V3 API
-const YT = google.youtube("v3");
-
 // Code
 
 // PubSubHubBub notifications
@@ -104,7 +185,12 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     logger.debug(JSON.stringify(req.body.feed, null, 4));
     logger.debug("-----------------------------------------");
     res.status(200).send("");
-    if(req.body.feed["at:deleted-entry"]) return; // This means a stream/video got set to private or was deleted
+    if (req.body.feed["at:deleted-entry"]) return; // This means a stream/video got set to private or was deleted
+    // TODO: Check if stream has ended and delete the embed.
+    Livestream.findById(req.body.feed.entry[0]["yt:videoId"][0]).lean().exec((err, doc) => {
+        if (err) return logger.error(err);
+        if (doc) return;
+    });
     Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
         if (err) return logger.verbose(err);
         YT.videos.list({
@@ -112,8 +198,14 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
             id: req.body.feed.entry[0]["yt:videoId"][0],
             part: "snippet,liveStreamingDetails"
         }, (err2, video) => {
-            if(err2) return logger.verbose(err2);
-            if(video.data.items[0].liveBroadcastContent === "none") return;
+            if (err2) return logger.verbose(err2);
+            if (video.data.items[0].liveBroadcastContent === "none") return;
+            const stream = new Livestream({
+                _id: req.body.feed.entry[0]["yt:videoId"][0],
+                plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
+                title: video.data.items[0].snippet.title
+            });
+            stream.save();
             const currentDate = new Date(),
                 plannedDate = new Date(video.data.items[0].liveStreamingDetails.scheduledStartTime);
             const diffTime = Math.ceil(Math.abs(plannedDate - currentDate) / 1000 / 60); // Time difference between current in minutes
@@ -122,7 +214,8 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                     setTimeout(() => {
                         checkLive(req.body.feed, subscription);
                     }, 5 * 60 * 1000);
-                })
+                });
+                scheduledStreams.push(req.body.feed.entry[0]["yt:videoId"][0]);
             } else {
                 setTimeout(() => {
                     checkLive(req.body.feed, subscription);
@@ -148,14 +241,14 @@ client.on("ready", () => {
 
 // Ping list reaction handler
 client.on('messageReactionAdd', (reaction, user) => {
-    if(user.id === client.user.id) return;
+    if (user.id === client.user.id) return;
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
             if (!doc || reaction.emoji.name !== doc.emoji) return;
             const filter = (id) => id === user.id;
             const index = doc.users.findIndex(filter);
-            if(index !== -1) return;
+            if (index !== -1) return;
             doc.users.push(user.id);
             doc.save();
             logger.debug(`${user.tag} has been added to ${doc.name}`);
@@ -164,14 +257,14 @@ client.on('messageReactionAdd', (reaction, user) => {
 });
 
 client.on('messageReactionRemove', (reaction, user) => {
-    if(user.id === client.user.id) return;
+    if (user.id === client.user.id) return;
     reaction.fetch().then((reaction) => {
         PingSubscription.findById(reaction.message.id, (err, doc) => {
             if (err) return logger.error(err);
             if (!doc || reaction.emoji.name !== doc.emoji) return;
             const filter = (id) => id === user.id;
             const index = doc.users.findIndex(filter);
-            if(index === -1) return;
+            if (index === -1) return;
             doc.users.splice(index, 1);
             doc.save();
             logger.debug(`${user.tag} has been removed from ${doc.name}`);
@@ -227,7 +320,6 @@ client.on("message", (message) => {
 })
 
 client.login(config.discord.token);
-
 
 // Functions
 function loadcmds() {
@@ -291,7 +383,16 @@ function checkLive(feed, subscription) {
         logger.debug("-----------------------------------------");
         logger.debug(JSON.stringify(video, null, 4));
         logger.debug("-----------------------------------------");
-        if (video.data.items[0].snippet.liveBroadcastContent !== "live") return logger.debug("Not a live broadcast.");
+        if (video.data.items[0].snippet.liveBroadcastContent !== "live") {
+            Livestream.findById(feed.entry[0]["yt:videoId"][0], (err2, stream) => {
+                if (err2) return logger.error(err2);
+                if (stream.retry === false) {
+                    return setTimeout(() => {
+                        checkLive(feed, subscription);
+                    }, 10 * 60 * 1000);
+                } else return logger.debug("Not a live broadcast.");
+            });
+        }
         YT.channels.list({
             auth: config.YtApiKey,
             id: feed.entry[0]["yt:channelId"][0],
@@ -306,8 +407,8 @@ function checkLive(feed, subscription) {
                                 const webhook = hooks.find(wh => wh.name.toLowerCase() === "stream notification");
                                 if (!webhook) return removedChannels.push(i);
                                 const embed = new Discord.MessageEmbed()
-                                    .setTitle(feed.entry.title)
-                                    .setURL(feed.entry.link["$"].href)
+                                    .setTitle(feed.entry[0].title[0])
+                                    .setURL(feed.entry[0].link[0]["$"].href)
                                     .setImage(video.items[0].snippet.thumbnails.maxres.url)
                                     .setColor("#FF0000")
                                     .setFooter("Powered by Suisei's Mic")
@@ -316,6 +417,10 @@ function checkLive(feed, subscription) {
                                     embeds: [embed],
                                     username: ytChannel.items[0].snippet.title,
                                     avatarURL: ytChannel.items[0].snippet.thumbnails.high
+                                }).then((msg) => {
+                                    Livestream.findByIdAndUpdate(feed.entry[0]["yt:videoId"][0], {messageID: msg.id}, (err3) => {
+                                        if (err3) logger.error(err3);
+                                    });
                                 });
                             });
                     })
@@ -328,4 +433,78 @@ function checkLive(feed, subscription) {
             }
         });
     });
+}
+
+exports.planLivestreams = async function (channelID) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    await page.goto(`https://www.youtube.com/channel/${channelID}/videos?view=2&live_view=502&flow=grid`);
+    const content = await page.content();
+
+    const matches = await content.match(/Upcoming live streams/g);
+    const isPlannedStreamPage = matches !== null && matches.length > 0;
+
+    if (!isPlannedStreamPage) return browser.close();
+
+    const rawStreams = await content.match(videoRegex);
+    let streams = [];
+
+    for (let i = 0; i < rawStreams.length; i++) {
+        const videoID = await rawStreams[i].substring("/watch?v=".length);
+        await Livestream.findById(videoID).lean().exec((err2, doc) => {
+            if (err2) return logger.error(err2);
+            if (!doc) {
+                YT.videos.list({
+                    auth: config.YtApiKey,
+                    id: videoID,
+                    part: "snippet,liveStreamingDetails"
+                }, (err3, video) => {
+                    if (err3) return logger.verbose(err3);
+                    if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
+                    streams.push({
+                        id: videoID,
+                        plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
+                        title: video.data.items[0].snippet.title
+                    });
+                    const stream = new Livestream({
+                        _id: videoID,
+                        plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
+                        title: video.data.items[0].snippet.title,
+                        ytChannelID: channelID
+                    });
+                    stream.save();
+                });
+            }
+        });
+    }
+    await browser.close();
+
+    for (let i = 0; i < streams.length; i++) {
+        const plannedDate = new Date(streams[i].plannedDate);
+        await Subscription.findById(channelID).lean().exec((err3, subscription) => {
+            const feed = { // Recreating the PubSubHubBub feed as the function is coded to use this
+                entry: [
+                    {
+                        "yt:videoId": [streams[i].id],
+                        "yt:channelId": [channelID],
+                        "title": [streams[i].title],
+                        "link": [
+                            {
+                                "$": {
+                                    "href": `https://www.youtube.com/watch?v=${streams[i]._id}`
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+            scheduleJob(plannedDate, () => {
+                setTimeout(() => {
+                    checkLive(feed, subscription);
+                }, 5 * 60 * 1000);
+            });
+            scheduledStreams.push(streams[i]._id);
+        });
+    }
 }
