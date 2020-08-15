@@ -46,7 +46,7 @@ exports.run = (client, message, args) => {
                             const existingWebhook = await hooks.find(wh => wh.name.toLowerCase() === "stream notification");
                             if (!existingWebhook) channel.createWebhook("Stream notification")
                                 .then((webhook) => {
-                                    checkExistingAndSubscribe(message, subscription, webhook, res, channel);
+                                    checkExistingAndSubscribe(message, subscription, webhook, res, channel, args.slice(2).join(" "));
                                 })
                                 .catch((err) => {
                                     if (err) {
@@ -56,7 +56,7 @@ exports.run = (client, message, args) => {
                                         });
                                     }
                                 });
-                            else checkExistingAndSubscribe(message, subscription, existingWebhook, res, channel);
+                            else checkExistingAndSubscribe(message, subscription, existingWebhook, res, channel, args.slice(2).join(" "));
                         });
                 })
                 .catch((err) => {
@@ -71,7 +71,7 @@ exports.run = (client, message, args) => {
     });
 }
 
-function checkExistingAndSubscribe(message, subscription, wh, res, channel) {
+function checkExistingAndSubscribe(message, subscription, wh, res, channel, channelMsg) {
     Subscription.findById(subscription._id, (err, sub) => {
         if (!err) {
             if (sub) {
@@ -108,7 +108,7 @@ function checkExistingAndSubscribe(message, subscription, wh, res, channel) {
                     .setColor("#FF0000")
                     .setFooter("Powered by Suisei's Mic")
 
-                wh.send(subscription.message, {
+                wh.send(channelMsg, {
                     embeds: [embed],
                     disableMentions: true,
                     username: res.data.items[0].snippet.title,
@@ -123,30 +123,23 @@ function checkExistingAndSubscribe(message, subscription, wh, res, channel) {
                                     subscription.save((err) => {
                                         if (err) message.channel.send("Something went wrong during the subscription, try again later.")
                                             .then(msg2 => {
-                                                message.delete({
-                                                    timeout: 4000,
-                                                    reason: "Automated"
-                                                });
-                                                msg2.delete({
-                                                    timeout: 4000,
-                                                    reason: "Automated"
-                                                });
+                                                message.delete({timeout: 4000, reason: "Automated"});
+                                                msg2.delete({timeout: 4000, reason: "Automated"});
                                             });
                                         else {
                                             planLivestreams(subscription._id)
                                             message.channel.send("Subscription successful.")
                                                 .then(msg2 => {
-                                                    message.delete({
-                                                        timeout: 4000,
-                                                        reason: "Automated"
-                                                    });
-                                                    msg2.delete({
-                                                        timeout: 4000,
-                                                        reason: "Automated"
-                                                    });
+                                                    message.delete({timeout: 4000, reason: "Automated"});
+                                                    msg2.delete({timeout: 4000, reason: "Automated"});
                                                 });
                                         }
                                     });
+                                } else {
+                                    msg.edit("Cancelled.");
+                                    exampleEmbed.delete({reason: "Automated"});
+                                    msg.delete({timeout: 4000, reason: "Automated"});
+                                    message.delete({timeout: 4000, reason: "Automated"});
                                 }
                             });
                     });
