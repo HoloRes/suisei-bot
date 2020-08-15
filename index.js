@@ -87,7 +87,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                 if(index === -1) streams.push(videoID);
             }
 
-            for (let i = 0; i < streams.length; i++) {streams[i
+            for (let i = 0; i < streams.length; i++) {
                 await Livestream.findById(streams[i]).lean().exec((err2, doc) => {
                     if (err2) return logger.error(err2);
                     if (!doc) {
@@ -467,7 +467,7 @@ exports.planLivestreams = async function (channelID) {
     }
 
     for (let i = 0; i < streamIDs.length; i++) {
-        Livestream.findById(streamIDs[i]).lean().exec((err2, doc) => {
+        await Livestream.findById(streamIDs[i]).lean().exec((err2, doc) => {
             if (err2) return logger.error(err2);
             if (!doc) {
                 YT.videos.list({
