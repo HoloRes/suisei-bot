@@ -227,7 +227,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                     if (diffTime >= 10) {
                         scheduleJob(plannedDate, () => {
                             setTimeout(() => {
-                                logger.debug(`Running for: ${docs[i]._id}`);
+                                logger.debug(`Running for: ${req.body.feed.entry[0]["yt:videoId"][0]}`);
                                 checkLive(req.body.feed, subscription);
                             }, 5 * 60 * 1000);
                         });
