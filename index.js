@@ -103,7 +103,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                                 _id: streams[i],
                                 plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
                                 title: video.data.items[0].snippet.title,
-                                ytChannelID: ytChannelID
+                                ytChannelID: `${docs[i]._id}`
                             });
                             stream.save((err4) => {
                                 if (err4) logger.error(err4);
