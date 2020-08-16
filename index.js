@@ -86,7 +86,6 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                 const index = streams.findIndex((id) => id === videoID);
                 if(index === -1) streams.push(videoID);
             }
-            await logger.debug(streams);
 
             for (let i = 0; i < streams.length; i++) {
                 await Livestream.findById(streams[i]).lean().exec((err2, doc) => {
@@ -98,14 +97,16 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                             part: "snippet,liveStreamingDetails"
                         }, (err3, video) => {
                             if (err3) return logger.verbose(err3);
-                            if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
+                            if (video.data.items[0].snippet.liveBroadcastContent !== "upcoming") return;
                             const stream = new Livestream({
                                 _id: streams[i],
                                 plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
                                 title: video.data.items[0].snippet.title,
                                 ytChannelID: docs[i]._id
                             });
-                            stream.save();
+                            stream.save((err4) => {
+                                if(err4) logger.error(err4);
+                            });
                         });
                     }
                 });
@@ -135,10 +136,12 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                     }
                     scheduleJob(plannedDate, () => {
                         setTimeout(() => {
+                            logger.debug(`Running for: ${docs[i]._id}`);
                             checkLive(feed, subscription);
                         }, 5 * 60 * 1000);
                     });
                     scheduledStreams.push(docs[i]._id);
+                    console.log(scheduledStreams);
                 });
             }
         });
@@ -199,39 +202,43 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     // TODO: Check if stream has ended and delete the embed.
     Livestream.findById(req.body.feed.entry[0]["yt:videoId"][0]).lean().exec((err, doc) => {
         if (err) return logger.error(err);
-        if (doc) return;
-    });
-    Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
-        if (err) return logger.verbose(err);
-        YT.videos.list({
-            auth: config.YtApiKey,
-            id: req.body.feed.entry[0]["yt:videoId"][0],
-            part: "snippet,liveStreamingDetails"
-        }, (err2, video) => {
-            if (err2) return logger.verbose(err2);
-            if (video.data.items[0].liveBroadcastContent === "none") return;
-            const stream = new Livestream({
-                _id: req.body.feed.entry[0]["yt:videoId"][0],
-                plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
-                title: video.data.items[0].snippet.title
-            });
-            stream.save();
-            const currentDate = new Date(),
-                plannedDate = new Date(video.data.items[0].liveStreamingDetails.scheduledStartTime);
-            const diffTime = Math.ceil(Math.abs(plannedDate - currentDate) / 1000 / 60); // Time difference between current in minutes
-            if (diffTime >= 10) {
-                scheduleJob(plannedDate, () => {
-                    setTimeout(() => {
-                        checkLive(req.body.feed, subscription);
-                    }, 5 * 60 * 1000);
+        if (!doc) {
+            Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
+                if (err) return logger.verbose(err);
+                YT.videos.list({
+                    auth: config.YtApiKey,
+                    id: req.body.feed.entry[0]["yt:videoId"][0],
+                    part: "snippet,liveStreamingDetails"
+                }, (err2, video) => {
+                    if (err2) return logger.verbose(err2);
+                    if (video.data.items[0].liveBroadcastContent === "none") return;
+                    const stream = new Livestream({
+                        _id: req.body.feed.entry[0]["yt:videoId"][0],
+                        plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
+                        title: video.data.items[0].snippet.title
+                    });
+                    stream.save((err3) => {
+                        if(err3) logger.error(err3);
+                    });
+                    const currentDate = new Date(),
+                        plannedDate = new Date(video.data.items[0].liveStreamingDetails.scheduledStartTime);
+                    const diffTime = Math.ceil(Math.abs(plannedDate - currentDate) / 1000 / 60); // Time difference between current in minutes
+                    if (diffTime >= 10) {
+                        scheduleJob(plannedDate, () => {
+                            setTimeout(() => {
+                                logger.debug(`Running for: ${docs[i]._id}`);
+                                checkLive(req.body.feed, subscription);
+                            }, 5 * 60 * 1000);
+                        });
+                        scheduledStreams.push(req.body.feed.entry[0]["yt:videoId"][0]);
+                    } else {
+                        setTimeout(() => {
+                            checkLive(req.body.feed, subscription);
+                        }, 5 * 60 * 1000);
+                    }
                 });
-                scheduledStreams.push(req.body.feed.entry[0]["yt:videoId"][0]);
-            } else {
-                setTimeout(() => {
-                    checkLive(req.body.feed, subscription);
-                }, 5 * 60 * 1000);
-            }
-        });
+            });
+        }
     });
 });
 
@@ -382,6 +389,7 @@ async function parseBody(req, res, next) {
 }
 
 function checkLive(feed, subscription) {
+    logger.debug(`checkLive called for: ${feed.entry[0]["yt:videoId"][0]}`)
     let removedChannels = [];
     YT.videos.list({
         auth: config.YtApiKey,
@@ -477,7 +485,7 @@ exports.planLivestreams = async function (channelID) {
                     part: "snippet,liveStreamingDetails"
                 }, (err3, video) => {
                     if (err3) return logger.verbose(err3);
-                    if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
+                    if (video.data.items[0].snippet.liveBroadcastContent !== "upcoming") return;
                     streams.push({
                         id: streamIDs[i],
                         plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
@@ -496,7 +504,6 @@ exports.planLivestreams = async function (channelID) {
     }
     await browser.close();
 
-    await logger.debug(streams);
     for (let i = 0; i < streams.length; i++) {
         const plannedDate = new Date(streams[i].plannedDate);
         await Subscription.findById(channelID).lean().exec((err3, subscription) => {
@@ -518,6 +525,7 @@ exports.planLivestreams = async function (channelID) {
             }
             scheduleJob(plannedDate, () => {
                 setTimeout(() => {
+                    logger.debug(`Running for: ${docs[i]._id}`);
                     checkLive(feed, subscription);
                 }, 5 * 60 * 1000);
             });
