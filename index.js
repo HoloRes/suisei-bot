@@ -112,40 +112,40 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                 });
             }
         }
-
-        await Livestream.find({}).lean().exec((err2, docs) => {
-            if (err2) return logger.error(err2);
-            for (let i = 0; i < docs.length; i++) {
-                const plannedDate = new Date(docs[i].plannedDate);
-                Subscription.findById(docs[i].ytChannelID).lean().exec((err3, subscription) => {
-                    const feed = { // Recreating the PubSubHubBub feed as the function is coded to use this
-                        entry: [
-                            {
-                                "yt:videoId": [docs[i]._id],
-                                "yt:channelId": [docs[i].ytChannelID],
-                                "title": [docs[i].title],
-                                "link": [
-                                    {
-                                        "$": {
-                                            "href": `https://www.youtube.com/watch?v=${docs[i]._id}`
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                    scheduleJob(plannedDate, () => {
-                        setTimeout(() => {
-                            logger.debug(`Running for: ${docs[i]._id}`);
-                            checkLive(feed, subscription);
-                        }, 5 * 60 * 1000);
-                    });
-                    scheduledStreams.push(docs[i]._id);
-                    console.log(scheduledStreams);
-                });
-            }
-        });
     }
+    await Livestream.find({}).lean().exec((err2, docs) => {
+        if (err2) return logger.error(err2);
+        for (let i = 0; i < docs.length; i++) {
+            const plannedDate = new Date(docs[i].plannedDate);
+            Subscription.findById(docs[i].ytChannelID).lean().exec((err3, subscription) => {
+                const feed = { // Recreating the PubSubHubBub feed as the function is coded to use this
+                    entry: [
+                        {
+                            "yt:videoId": [docs[i]._id],
+                            "yt:channelId": [docs[i].ytChannelID],
+                            "title": [docs[i].title],
+                            "link": [
+                                {
+                                    "$": {
+                                        "href": `https://www.youtube.com/watch?v=${docs[i]._id}`
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+                scheduleJob(plannedDate, () => {
+                    setTimeout(() => {
+                        logger.debug(`Running for: ${docs[i]._id}`);
+                        checkLive(feed, subscription);
+                    }, 5 * 60 * 1000);
+                });
+                scheduledStreams.push(docs[i]._id);
+                console.log(scheduledStreams);
+            });
+        }
+    });
+    
     await browser.close();
 });
 
