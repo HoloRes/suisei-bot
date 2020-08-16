@@ -98,11 +98,12 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                         }, (err3, video) => {
                             if (err3) return logger.verbose(err3);
                             if (video.data.items[0].snippet.liveBroadcastContent !== "upcoming") return;
+                            const ytChannelID = docs[i]._id;
                             const stream = new Livestream({
                                 _id: streams[i],
                                 plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
                                 title: video.data.items[0].snippet.title,
-                                ytChannelID: docs[i]._id
+                                ytChannelID: ytChannelID
                             });
                             stream.save((err4) => {
                                 if (err4) logger.error(err4);
