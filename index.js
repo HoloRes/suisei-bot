@@ -62,7 +62,7 @@ const YT = google.youtube("v3");
 const app = express();
 app.listen(config.PubSubHubBub.hubPort);
 
-//* Get all planned livestreams from subscriptions and add them to schedule.
+// Get all planned livestreams from subscriptions and add them to schedule.
 const videoRegex = /\/watch\?v=.{11}/g;
 Subscription.find({}).lean().exec(async (err, docs) => {
     if (err) throw new Error("Couldn't read subscriptions");
@@ -86,6 +86,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                 const index = streams.findIndex((id) => id === videoID);
                 if(index === -1) streams.push(videoID);
             }
+            await logger.debug(streams);
 
             for (let i = 0; i < streams.length; i++) {
                 await Livestream.findById(streams[i]).lean().exec((err2, doc) => {
@@ -495,6 +496,7 @@ exports.planLivestreams = async function (channelID) {
     }
     await browser.close();
 
+    await logger.debug(streams);
     for (let i = 0; i < streams.length; i++) {
         const plannedDate = new Date(streams[i].plannedDate);
         await Subscription.findById(channelID).lean().exec((err3, subscription) => {

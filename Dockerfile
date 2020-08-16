@@ -29,4 +29,4 @@ RUN npm ci
 COPY . .
 
 # Set start command
-CMD ["node", "index.js"]
+CMD ["node", "index.js", "--trace-events-enabled", "--trace-warnings"]
