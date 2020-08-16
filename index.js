@@ -392,6 +392,7 @@ async function parseBody(req, res, next) {
 function checkLive(feed, subscription) {
     logger.debug(`checkLive called for: ${feed.entry[0]["yt:videoId"][0]}`);
     logger.debug(feed.entry[0]["yt:channelId"][0]);
+    logger.debug(feed);
     let removedChannels = [];
     YT.videos.list({
         auth: config.YtApiKey,
@@ -406,10 +407,12 @@ function checkLive(feed, subscription) {
         if (video.data.items[0].snippet.liveBroadcastContent !== "live") return Livestream.findById(feed.entry[0]["yt:videoId"][0], (err2, stream) => {
             if (err2) return logger.error(err2);
             if (stream.retry === false) {
-                return setTimeout(() => {
+                setTimeout(() => {
                     checkLive(feed, subscription);
                 }, 10 * 60 * 1000);
-            } else return logger.debug("Not a live broadcast.");
+                stream.retry = true;
+                return stream.save();
+            } else return logger.debug("Not a live broadcast."); // TODO: Remove from DB
         });
         YT.channels.list({
             auth: config.YtApiKey,
