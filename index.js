@@ -211,7 +211,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                     part: "snippet,liveStreamingDetails"
                 }, (err2, video) => {
                     if (err2) return logger.verbose(err2);
-
+                    logger.debug(JSON.stringify(video.data, null, 4));
                     if (video.data.items[0].liveBroadcastContent === "none") return;
                     const stream = new Livestream({
                         _id: req.body.feed.entry[0]["yt:videoId"][0],
