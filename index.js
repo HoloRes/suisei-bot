@@ -81,10 +81,10 @@ Subscription.find({}).lean().exec(async (err, docs) => {
             const rawStreams = await content.match(videoRegex);
             let streams = [];
 
-            for(let i = 0; i < rawStreams.length; i++) {
+            for (let i = 0; i < rawStreams.length; i++) {
                 const videoID = await rawStreams[i].substring("/watch?v=".length);
                 const index = streams.findIndex((id) => id === videoID);
-                if(index === -1) streams.push(videoID);
+                if (index === -1) streams.push(videoID);
             }
 
             for (let i = 0; i < streams.length; i++) {
@@ -105,7 +105,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                                 ytChannelID: docs[i]._id
                             });
                             stream.save((err4) => {
-                                if(err4) logger.error(err4);
+                                if (err4) logger.error(err4);
                             });
                         });
                     }
@@ -141,11 +141,11 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                     }, 5 * 60 * 1000);
                 });
                 scheduledStreams.push(docs[i]._id);
-                console.log(scheduledStreams);
+                logger.debug(scheduledStreams);
             });
         }
     });
-    
+
     await browser.close();
 });
 
@@ -211,6 +211,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                     part: "snippet,liveStreamingDetails"
                 }, (err2, video) => {
                     if (err2) return logger.verbose(err2);
+
                     if (video.data.items[0].liveBroadcastContent === "none") return;
                     const stream = new Livestream({
                         _id: req.body.feed.entry[0]["yt:videoId"][0],
@@ -218,7 +219,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                         title: video.data.items[0].snippet.title
                     });
                     stream.save((err3) => {
-                        if(err3) logger.error(err3);
+                        if (err3) logger.error(err3);
                     });
                     const currentDate = new Date(),
                         plannedDate = new Date(video.data.items[0].liveStreamingDetails.scheduledStartTime);
@@ -389,7 +390,8 @@ async function parseBody(req, res, next) {
 }
 
 function checkLive(feed, subscription) {
-    logger.debug(`checkLive called for: ${feed.entry[0]["yt:videoId"][0]}`)
+    logger.debug(`checkLive called for: ${feed.entry[0]["yt:videoId"][0]}`);
+    logger.debug(feed.entry[0]["yt:channelId"][0]);
     let removedChannels = [];
     YT.videos.list({
         auth: config.YtApiKey,
@@ -401,16 +403,14 @@ function checkLive(feed, subscription) {
         logger.debug("-----------------------------------------");
         logger.debug(JSON.stringify(video, null, 4));
         logger.debug("-----------------------------------------");
-        if (video.data.items[0].snippet.liveBroadcastContent !== "live") {
-            Livestream.findById(feed.entry[0]["yt:videoId"][0], (err2, stream) => {
-                if (err2) return logger.error(err2);
-                if (stream.retry === false) {
-                    return setTimeout(() => {
-                        checkLive(feed, subscription);
-                    }, 10 * 60 * 1000);
-                } else return logger.debug("Not a live broadcast.");
-            });
-        }
+        if (video.data.items[0].snippet.liveBroadcastContent !== "live") return Livestream.findById(feed.entry[0]["yt:videoId"][0], (err2, stream) => {
+            if (err2) return logger.error(err2);
+            if (stream.retry === false) {
+                return setTimeout(() => {
+                    checkLive(feed, subscription);
+                }, 10 * 60 * 1000);
+            } else return logger.debug("Not a live broadcast.");
+        });
         YT.channels.list({
             auth: config.YtApiKey,
             id: feed.entry[0]["yt:channelId"][0],
@@ -418,6 +418,7 @@ function checkLive(feed, subscription) {
         }, (err2, ytChannel) => {
             if (err2) return logger.error(err2);
             for (let i = 0; i < subscription.channels.length; i++) {
+                logger.debug(subscription.channels[i]);
                 client.channels.fetch(subscription.channels[i])
                     .then((channel) => {
                         channel.fetchWebhooks()
@@ -431,6 +432,7 @@ function checkLive(feed, subscription) {
                                     .setColor("#FF0000")
                                     .setFooter("Powered by Suisei's Mic")
 
+                                logger.debug("Trying to send message");
                                 webhook.send(subscription.message, {
                                     embeds: [embed],
                                     username: ytChannel.items[0].snippet.title,
@@ -469,10 +471,10 @@ exports.planLivestreams = async function (channelID) {
     let streams = [];
     let streamIDs = [];
 
-    for(let i = 0; i < rawStreams.length; i++) {
+    for (let i = 0; i < rawStreams.length; i++) {
         const videoID = await rawStreams[i].substring("/watch?v=".length);
         const index = streamIDs.findIndex((id) => id === videoID);
-        if(index === -1) streamIDs.push(videoID);
+        if (index === -1) streamIDs.push(videoID);
     }
 
     for (let i = 0; i < streamIDs.length; i++) {
