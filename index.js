@@ -392,7 +392,7 @@ async function parseBody(req, res, next) {
 function checkLive(feed, subscription) {
     logger.debug(`checkLive called for: ${feed.entry[0]["yt:videoId"][0]}`);
     logger.debug(feed.entry[0]["yt:channelId"][0]);
-    logger.debug(feed);
+    logger.debug(JSON.stringify(feed, null, 4));
     let removedChannels = [];
     YT.videos.list({
         auth: config.YtApiKey,
@@ -400,7 +400,7 @@ function checkLive(feed, subscription) {
         part: "snippet,liveStreamingDetails"
     }, (err, video) => {
         if (err) return logger.error(err);
-        if (!video) return logger.verbose("Video not found");
+        if (!video || video.data.items.length === 0) return logger.verbose("Video not found");
         logger.debug("-----------------------------------------");
         logger.debug(JSON.stringify(video, null, 4));
         logger.debug("-----------------------------------------");
