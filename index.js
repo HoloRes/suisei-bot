@@ -395,6 +395,7 @@ function checkLive(feed, subscription) {
     logger.debug(`checkLive called for: ${feed.entry[0]["yt:videoId"][0]}`);
     logger.debug(feed.entry[0]["yt:channelId"][0]);
     logger.debug(JSON.stringify(feed, null, 4));
+    logger.debug(JSON.stringify(subscription, null, 4));
     let removedChannels = [];
     YT.videos.list({
         auth: config.YtApiKey,
@@ -423,8 +424,7 @@ function checkLive(feed, subscription) {
         }, (err2, ytChannel) => {
             if (err2) return logger.error(err2);
             for (let i = 0; i < subscription.channels.length; i++) {
-                logger.debug(subscription.channels[i]);
-                client.channels.fetch(subscription.channels[i])
+                client.channels.fetch(subscription.channels[i].id)
                     .then((channel) => {
                         channel.fetchWebhooks()
                             .then((hooks) => {
@@ -452,6 +452,7 @@ function checkLive(feed, subscription) {
                             });
                     })
                     .catch((err3) => {
+                        logger.error(err3);
                         if (err3) removedChannels.push(i);
                     });
             }
