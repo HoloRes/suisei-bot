@@ -98,12 +98,11 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                         }, (err3, video) => {
                             if (err3) return logger.verbose(err3);
                             if (video.data.items[0].snippet.liveBroadcastContent !== "upcoming") return;
-                            const ytChannelID = docs[i]._id;
                             const stream = new Livestream({
                                 _id: streams[i],
                                 plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
                                 title: video.data.items[0].snippet.title,
-                                ytChannelID: `${docs[i]._id}`
+                                ytChannelID: docs[i]._id
                             });
                             stream.save((err4) => {
                                 if (err4) logger.error(err4);
@@ -117,6 +116,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
     await Livestream.find({}).lean().exec((err2, docs) => {
         if (err2) return logger.error(err2);
         for (let i = 0; i < docs.length; i++) {
+            logger.debug(JSON.stringify(docs[i], null, 4));
             const plannedDate = new Date(docs[i].plannedDate);
             Subscription.findById(docs[i].ytChannelID).lean().exec((err3, subscription) => {
                 const feed = { // Recreating the PubSubHubBub feed as the function is coded to use this
