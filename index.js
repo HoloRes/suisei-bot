@@ -72,6 +72,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
 
     for (let i = 0; i < docs.length; i++) {
         await page.goto(`https://www.youtube.com/channel/${docs[i]._id}/videos?view=2&live_view=502&flow=grid`);
+        const ytChannelID = docs[i]._id;
         const content = await page.content();
 
         const matches = await content.match(/Upcoming live streams/g);
@@ -102,7 +103,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
                                 _id: streams[i],
                                 plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
                                 title: video.data.items[0].snippet.title,
-                                ytChannelID: docs[i]._id
+                                ytChannelID: ytChannelID
                             });
                             stream.save((err4) => {
                                 if (err4) logger.error(err4);
