@@ -428,6 +428,8 @@ function checkLive(feed, subscription) {
                     .then((channel) => {
                         channel.fetchWebhooks()
                             .then((hooks) => {
+                                logger.debug(hooks);
+                                logger.debug("Trying to find webhook")
                                 const webhook = hooks.find(wh => wh.name.toLowerCase() === "stream notification");
                                 if (!webhook) return removedChannels.push(i);
                                 const embed = new Discord.MessageEmbed()
