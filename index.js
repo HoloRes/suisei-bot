@@ -428,22 +428,21 @@ function checkLive(feed, subscription) {
                     .then((channel) => {
                         channel.fetchWebhooks()
                             .then((hooks) => {
-                                logger.debug(hooks);
                                 logger.debug("Trying to find webhook")
                                 const webhook = hooks.find(wh => wh.name.toLowerCase() === "stream notification");
                                 if (!webhook) return removedChannels.push(i);
                                 const embed = new Discord.MessageEmbed()
                                     .setTitle(feed.entry[0].title[0])
                                     .setURL(feed.entry[0].link[0]["$"].href)
-                                    .setImage(video.items[0].snippet.thumbnails.maxres.url)
+                                    .setImage(video.data.items[0].snippet.thumbnails.maxres.url)
                                     .setColor("#FF0000")
                                     .setFooter("Powered by Suisei's Mic")
 
                                 logger.debug("Trying to send message");
                                 webhook.send(subscription.message, {
                                     embeds: [embed],
-                                    username: ytChannel.items[0].snippet.title,
-                                    avatarURL: ytChannel.items[0].snippet.thumbnails.high
+                                    username: ytChannel.data.items[0].snippet.title,
+                                    avatarURL: ytChannel.data.items[0].snippet.thumbnails.high
                                 }).then((msg) => {
                                     Livestream.findByIdAndUpdate(feed.entry[0]["yt:videoId"][0], {messageID: msg.id}, (err3) => {
                                         if (err3) logger.error(err3);
