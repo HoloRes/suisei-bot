@@ -419,7 +419,7 @@ function checkLive(feed, subscription) {
         });
         YT.channels.list({
             auth: config.YtApiKey,
-            id: feed.entry[0]["yt:channelId"][0],
+            id: video.data.items[0].snippet.channelId,
             part: "snippet"
         }, (err2, ytChannel) => {
             if (err2) return logger.error(err2);
@@ -442,7 +442,7 @@ function checkLive(feed, subscription) {
                                 webhook.send(subscription.message, {
                                     embeds: [embed],
                                     username: ytChannel.data.items[0].snippet.title,
-                                    avatarURL: ytChannel.data.items[0].snippet.thumbnails.high
+                                    avatarURL: ytChannel.data.items[0].snippet.thumbnails.high.url
                                 }).then((msg) => {
                                     Livestream.findByIdAndUpdate(feed.entry[0]["yt:videoId"][0], {messageID: msg.id}, (err3) => {
                                         if (err3) logger.error(err3);
