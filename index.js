@@ -439,7 +439,7 @@ function checkLive(feed, subscription) {
                                     .setFooter("Powered by Suisei's Mic")
 
                                 logger.debug("Trying to send message");
-                                webhook.send(subscription.message, {
+                                webhook.send(subscription.channels[i].message, {
                                     embeds: [embed],
                                     username: ytChannel.data.items[0].snippet.title,
                                     avatarURL: ytChannel.data.items[0].snippet.thumbnails.high.url
