@@ -45,9 +45,6 @@ const logger = winston.createLogger({
 });
 exports.logger = logger;
 
-// XML Parser
-const xmlParser = new xml2js.Parser({explicitArray: false});
-
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
     useNewUrlParser: true,
@@ -66,6 +63,10 @@ app.listen(config.PubSubHubBub.hubPort);
 const videoRegex = /\/watch\?v=.{11}/g;
 Subscription.find({}).lean().exec(async (err, docs) => {
     if (err) throw new Error("Couldn't read subscriptions");
+
+    await Livestream.deleteMany({}, (err) => {
+        if(err) logger.error("Failed to remove all existing planned livestreams from the database.");
+    });
 
     const browser = await puppeteer.launch(puppeteerOptions);
     const page = await browser.newPage();
@@ -89,7 +90,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
             }
 
             for (let i = 0; i < streams.length; i++) {
-                await Livestream.findById(streams[i]).lean().exec((err2, doc) => {
+                await Livestream.exists(streams[i], (err2, doc) => {
                     if (err2) return logger.error(err2);
                     if (!doc) {
                         YT.videos.list({
@@ -202,7 +203,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     res.status(200).send("");
     if (req.body.feed["at:deleted-entry"]) return; // This means a stream/video got set to private or was deleted
     // TODO: Check if stream has ended and delete the embed.
-    Livestream.findById(req.body.feed.entry[0]["yt:videoId"][0]).lean().exec((err, doc) => {
+    Livestream.exists(req.body.feed.entry[0]["yt:videoId"][0], (err, doc) => {
         if (err) return logger.error(err);
         if (!doc) {
             Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
