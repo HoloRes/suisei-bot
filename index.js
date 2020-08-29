@@ -90,7 +90,7 @@ Subscription.find({}).lean().exec(async (err, docs) => {
             }
 
             for (let i = 0; i < streams.length; i++) {
-                await Livestream.exists(streams[i], (err2, doc) => {
+                await Livestream.exists({ _id: streams[i] }, (err2, doc) => {
                     if (err2) return logger.error(err2);
                     if (!doc) {
                         YT.videos.list({
@@ -203,7 +203,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     res.status(200).send("");
     if (req.body.feed["at:deleted-entry"]) return; // This means a stream/video got set to private or was deleted
     // TODO: Check if stream has ended and delete the embed.
-    Livestream.exists(req.body.feed.entry[0]["yt:videoId"][0], (err, doc) => {
+    Livestream.exists({_id: req.body.feed.entry[0]["yt:videoId"][0]}, (err, doc) => {
         if (err) return logger.error(err);
         if (!doc) {
             Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
