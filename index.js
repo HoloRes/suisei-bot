@@ -196,7 +196,11 @@ app.get("/ytPush/:id", (req, res) => {
 
 app.post("/ytPush/:id", parseBody, (req, res) => {
     const xhs = req.headers["x-hub-signature"] || req.headers["X-Hub-Signature"];
-    logger.debug(xhs);
+    logger.debug(`Original sign: ${xhs}`);
+    const method = xhs.split("=")[0];
+    const csign = createHmac(method, config.PubSubHubBub.secret);
+    csign.update(req.body);
+    logger.debug(`Created sign: ${method}=${csign.digest("hex")}`)
     logger.debug("-----------------------------------------");
     logger.debug(JSON.stringify(req.body.feed, null, 4));
     logger.debug("-----------------------------------------");
@@ -206,6 +210,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     Livestream.exists({_id: req.body.feed.entry[0]["yt:videoId"][0]}, (err, doc) => {
         if (err) return logger.error(err);
         if (!doc) {
+            logger.debug(`Document doesn't exist for: ${req.body.feed.entry[0]["yt:videoId"][0]}`)
             Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
                 if (err) return logger.verbose(err);
                 YT.videos.list({
@@ -215,7 +220,12 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                 }, (err2, video) => {
                     if (err2) return logger.verbose(err2);
                     logger.debug(JSON.stringify(video.data, null, 4));
-                    if (video.data.items[0].liveBroadcastContent !== "upcoming") return;
+                    if (video.data.items[0].liveBroadcastContent === "none") return;
+                    if(video.data.items[0].liveBroadcastContent === "live") {
+                        logger.debug("Checking stream (live status)");
+                        return checkLive(req.body.feed, subscription);
+                    }
+                    logger.debug(`Upcoming: ${video.data.items[0].liveBroadcastContent}`)
                     const stream = new Livestream({
                         _id: req.body.feed.entry[0]["yt:videoId"][0],
                         plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
@@ -227,7 +237,13 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                     const currentDate = new Date(),
                         plannedDate = new Date(video.data.items[0].liveStreamingDetails.scheduledStartTime);
                     const diffTime = Math.ceil(Math.abs(plannedDate - currentDate) / 1000 / 60); // Time difference between current in minutes
+
+                    logger.debug(`Current date: ${currentDate.toISOString()}`);
+                    logger.debug(`Planned date: ${plannedDate.toISOString()}`);
+                    logger.debug(`Diff time: ${diffTime}`);
+
                     if (diffTime >= 10) {
+                        logger.debug("Checking stream (diffTime >= 10)")
                         scheduleJob(plannedDate, () => {
                             setTimeout(() => {
                                 logger.debug(`Running for: ${req.body.feed.entry[0]["yt:videoId"][0]}`);
@@ -236,6 +252,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                         });
                         scheduledStreams.push(req.body.feed.entry[0]["yt:videoId"][0]);
                     } else {
+                        logger.debug("Checking stream (diffTime < 10)");
                         setTimeout(() => {
                             checkLive(req.body.feed, subscription);
                         }, 5 * 60 * 1000);
