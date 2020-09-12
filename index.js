@@ -222,12 +222,12 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                 }, (err2, video) => {
                     if (err2) return logger.verbose(err2);
                     logger.debug(JSON.stringify(video.data, null, 4));
-                    if (video.data.items[0].liveBroadcastContent === "none") return;
-                    if(video.data.items[0].liveBroadcastContent === "live") {
+                    if (video.data.items[0].snippet.liveBroadcastContent === "none") return;
+                    if(video.data.items[0].snippet.liveBroadcastContent === "live") {
                         logger.debug("Checking stream (live status)");
                         return checkLive(req.body.feed, subscription);
                     }
-                    logger.debug(`Upcoming: ${video.data.items[0].liveBroadcastContent}`)
+                    logger.debug(`Upcoming: ${video.data.items[0].snippet.liveBroadcastContent}`)
                     const stream = new Livestream({
                         _id: req.body.feed.entry[0]["yt:videoId"][0],
                         plannedDate: video.data.items[0].liveStreamingDetails.scheduledStartTime,
@@ -245,7 +245,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                     logger.debug(`Diff time: ${diffTime}`);
 
                     if (diffTime >= 10) {
-                        logger.debug("Checking stream (diffTime >= 10)")
+                        logger.debug("Plan check stream (diffTime >= 10)")
                         scheduleJob(plannedDate, () => {
                             setTimeout(() => {
                                 logger.debug(`Running for: ${req.body.feed.entry[0]["yt:videoId"][0]}`);
@@ -254,7 +254,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
                         });
                         scheduledStreams.push(req.body.feed.entry[0]["yt:videoId"][0]);
                     } else {
-                        logger.debug("Checking stream (diffTime < 10)");
+                        logger.debug("Plan check stream (diffTime < 10)");
                         setTimeout(() => {
                             checkLive(req.body.feed, subscription);
                         }, 5 * 60 * 1000);
