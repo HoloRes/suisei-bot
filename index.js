@@ -199,7 +199,8 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
     logger.debug(`Original sign: ${xhs}`);
     const method = xhs.split("=")[0];
     const csign = createHmac(method, config.PubSubHubBub.secret);
-    csign.update(req.body);
+    const raw = rawBody(req);
+    csign.update(raw);
     logger.debug(`Created sign: ${method}=${csign.digest("hex")}`)
     logger.debug("-----------------------------------------");
     logger.debug(JSON.stringify(req.body.feed, null, 4));
