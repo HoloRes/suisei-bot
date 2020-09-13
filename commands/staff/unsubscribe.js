@@ -9,7 +9,7 @@ const config = require("$/config.json"),
 const axios = require("axios");
 
 exports.run = (client, message, args, pubSubSubscriber) => {
-    if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}unsubscribe [YT channel id] [text channel id]`)
+    if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}unsubscribe <YouTube channel id> <Discord channel id>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});
@@ -27,7 +27,7 @@ exports.run = (client, message, args, pubSubSubscriber) => {
                 msg.delete({timeout: 4000, reason: "Automated"});
             });
 
-        let index = subscription.channels.findIndex(channel => channel === args[1]);
+        let index = subscription.channels.findIndex(channel => channel.id === args[1]);
         if (index === -1) return message.channel.send("That text channel isn't subscribed to this YouTube channel.")
             .then(msg => {
                 message.delete({timeout: 4000, reason: "Automated"});
