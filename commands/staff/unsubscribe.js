@@ -16,13 +16,13 @@ exports.run = (client, message, args, pubSubSubscriber) => {
             msg.delete({timeout: 4000, reason: "Automated"});
         });
     Subscription.findById(args[0], (err, subscription) => {
-        if (err) message.channel.send("Something went wrong, try again later.")
+        if (err) return message.channel.send("Something went wrong, try again later.")
             .then(msg => {
                 message.delete({timeout: 4000, reason: "Automated"});
                 msg.delete({timeout: 4000, reason: "Automated"});
             });
 
-        if (!subscription) message.channel.send("That channel doesn't exist in the database.")
+        if (!subscription) return message.channel.send("That channel doesn't exist in the database.")
             .then(msg => {
                 message.delete({timeout: 4000, reason: "Automated"});
                 msg.delete({timeout: 4000, reason: "Automated"});
