@@ -195,14 +195,17 @@ app.get("/ytPush/:id", (req, res) => {
 });
 
 app.post("/ytPush/:id", parseBody, (req, res) => {
-    const xhs = req.headers["x-hub-signature"] || req.headers["X-Hub-Signature"];
-    logger.debug(`Original sign: ${xhs}`);
-    const method = xhs.split("=")[0];
-    const csign = createHmac(method, config.PubSubHubBub.secret);
-    rawBody(req).then((raw) => {
-        csign.update(raw);
-        logger.debug(`Created sign: ${method}=${csign.digest("hex")}`);
-    });
+    async function checkSign() {
+        const xhs = req.headers["x-hub-signature"] || req.headers["X-Hub-Signature"];
+        await logger.debug(`Original sign: ${xhs}`);
+        const method = xhs.split("=")[0];
+        const csign = await createHmac(method, config.PubSubHubBub.secret);
+        const raw = await rawBody(req);
+        await csign.update(raw);
+        await logger.debug(`Created sign: ${method}=${csign.digest("hex")}`);
+    }
+    checkSign();
+
     logger.debug("-----------------------------------------");
     logger.debug(JSON.stringify(req.body.feed, null, 4));
     logger.debug("-----------------------------------------");
@@ -213,7 +216,7 @@ app.post("/ytPush/:id", parseBody, (req, res) => {
         if (err) return logger.error(err);
         if (!doc) {
             logger.debug(`Document doesn't exist for: ${req.body.feed.entry[0]["yt:videoId"][0]}`)
-            Subscription.findById(req.body.feed.entry["yt:channelId"], (err, subscription) => {
+            Subscription.findById(req.body.feed.entry[0]["yt:channelId"][0], (err, subscription) => {
                 if (err) return logger.verbose(err);
                 YT.videos.list({
                     auth: config.YtApiKey,
@@ -413,7 +416,7 @@ async function parseBody(req, res, next) {
 
 function checkLive(feed, subscription) {
     logger.debug(`checkLive called for: ${feed.entry[0]["yt:videoId"][0]}`);
-    logger.debug(feed.entry[0]["yt:channelId"][0]);
+    //logger.debug(feed.entry[0]["yt:channelId"][0]);
     logger.debug(JSON.stringify(feed, null, 4));
     logger.debug(JSON.stringify(subscription, null, 4));
     let removedChannels = [];
