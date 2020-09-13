@@ -82,7 +82,7 @@ function checkExistingAndSubscribe(message, subscription, wh, res, channel, chan
             if (sub) {
                 sub.channels.push({
                     id: channel.id,
-                    message: args.slice(2).join(" ")
+                    message: channelMsg
                 });
                 return message.channel.send(`Are you sure you want to add ${res.data.items[0].snippet.title} to ${channel.name}?`)
                     .then(msg => {
