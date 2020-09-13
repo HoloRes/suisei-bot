@@ -33,6 +33,7 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v2
         with:
+          push: true
           tags: hl-resistance/backend/discord-bot-dev:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
