@@ -17,6 +17,7 @@
     "node-schedule": "^1.3.2",
     "pubsubhubbub": "^1.0.1",
     "puppeteer": "^5.2.1",
+    "query-string": "^6.13.1",
     "raw-body": "^2.4.1",
     "shortid": "^2.2.15",
     "winston": "^3.3.3",

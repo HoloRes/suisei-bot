@@ -6,7 +6,8 @@ const config = require("$/config.json"),
     {confirmRequest} = require("$/util/functions");
 
 // Modules
-const axios = require("axios");
+const axios = require("axios"),
+    querystring = require("query-string");
 
 exports.run = (client, message, args, pubSubSubscriber) => {
     if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}unsubscribe <YouTube channel id> <Discord channel id>`)
