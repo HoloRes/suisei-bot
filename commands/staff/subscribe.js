@@ -14,6 +14,11 @@ const Discord = require("discord.js"),
 const YT = google.youtube("v3");
 
 exports.run = (client, message, args) => {
+    if(!args[0]) return message.channel.send("**Usage:** [subscribe <youtube channel id> <discord channel id> <message>")
+        .then(msg => {
+            message.delete({timeout: 4000, reason: "Automated"});
+            msg.delete({timeout: 4000, reason: "Automated"});
+        });
     YT.channels.list({
         auth: config.YtApiKey,
         id: args[0],
