@@ -4,7 +4,7 @@ const Subscription = require("$/models/subscription");
 // Local files
 const config = require("$/config.json"),
     {confirmRequest} = require("$/util/functions"),
-    {planLivestreams} = require("$/index");
+    {planLivestreams} = require("$/util/youtube");
 
 // Modules
 const Discord = require("discord.js"),
