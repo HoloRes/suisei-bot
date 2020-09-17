@@ -1,0 +1,23 @@
+name: Create development Docker image
+on:
+  push:
+    branches:
+      - '*'
+      - '!master'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    if: "!contains(github.event.head_commit.message, 'ci skip:')" # If the commit contains "ci skip" this action won't run
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          repository: hl-resistance/backend/discord-bot-dev
+          registry: docker.pkg.github.com
+          tags: latest
+          tag_with_sha: true
