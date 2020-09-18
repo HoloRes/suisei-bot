@@ -29,9 +29,7 @@
   },
   "twitter": {
     "consumer_key": "",
-    "consumer_secret": "",
-    "app_only_auth": true,
-    "strictSSL": true
+    "consumer_secret": ""
   },
   "YtApiKey": "",
   "environment": "production",

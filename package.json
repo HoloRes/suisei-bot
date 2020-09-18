@@ -20,7 +20,7 @@
     "query-string": "^6.13.2",
     "raw-body": "^2.4.1",
     "shortid": "^2.2.15",
-    "twit": "^2.2.11",
+    "twitter-lite": "^0.14.0",
     "winston": "^3.3.3",
     "xml2js": "^0.4.23"
   },

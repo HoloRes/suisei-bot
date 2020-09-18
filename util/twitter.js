@@ -4,23 +4,23 @@ const TweetSubscription = require("$/models/tweetSubscription");
 
 // Packages
 const Discord = require("discord.js"),
-    twit = require("twit");
+    Twitter = require("twitter-lite");
 
 // Local imports
 const {logger, client} = require("$/index"),
     config = require("$/config.json");
 
 // Variables
-const T = new twit(config.twitter);
+const T = new Twitter(config.twitter);
 
 // Init
 exports.init = function () {
-    const users = [];
+    let users = "";
     TweetSubscription.find({}, async (err, docs) => {
         if(err) return logger.error(err);
-        for(let i = 0; i < docs.length; i++) await users.push(docs[i]._id);
+        for(let i = 0; i < docs.length; i++) users = `${users},${docs[i]._id}`
         const stream = await T.stream("statuses/filter", { follow: users });
-        stream.on("tweet", (tweet) => {
+        stream.on("data", (tweet) => {
             logger.debug(tweet);
             // TweetSubscription.findById(/* TODO: Need to figure out how to get user id from the stream response */"", (err2, subscription) => {
             //     if(err2) return logger.error(err2);
