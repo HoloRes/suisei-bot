@@ -53,6 +53,6 @@ function start() {
 exports.init = start;
 
 exports.restart = async function () {
-    await stream.destroy();
+    if(stream) await stream.destroy();
     await setTimeout(start, 2000);
 }
