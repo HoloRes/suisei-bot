@@ -23,10 +23,11 @@ function start() {
         for(let i = 0; i < docs.length; i++) users = `${users},${docs[i]._id}`
         stream = await T.stream("statuses/filter", { follow: users });
         stream.on("data", (tweet) => {
-            TweetSubscription.findById(tweet.user.id_str, (err2, subscription) => {
+            TweetSubscription.findById(tweet.user.id_str, (err2, doc) => {
+                if(!doc) return;
                 if(err2) return logger.error(err2);
-                for(let i = 0; i < subscription.channels.length; i++) {
-                    client.channels.fetch(subscription.channels[i])
+                for(let i = 0; i < doc.channels.length; i++) {
+                    client.channels.fetch(doc.channels[i])
                         .then((channel) => {
                             channel.fetchWebhooks()
                                 .then((hooks) => {
