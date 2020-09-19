@@ -12,38 +12,47 @@ const {logger, client} = require("$/index"),
 
 // Variables
 const T = new Twitter(config.twitter);
+let stream = null;
 
-// Init
-exports.init = function () {
+// Exports
+function start() {
     let users = "";
     TweetSubscription.find({}, async (err, docs) => {
         if(err) return logger.error(err);
+        if(docs.length === 0) return logger.verbose("Not following any Twitter users.");
         for(let i = 0; i < docs.length; i++) users = `${users},${docs[i]._id}`
-        const stream = await T.stream("statuses/filter", { follow: users });
+        stream = await T.stream("statuses/filter", { follow: users });
         stream.on("data", (tweet) => {
-            logger.debug(tweet);
-            // TweetSubscription.findById(/* TODO: Need to figure out how to get user id from the stream response */"", (err2, subscription) => {
-            //     if(err2) return logger.error(err2);
-            //     client.channels.fetch(subscription.channelID)
-            //         .then((channel) => {
-            //             channel.fetchWebhooks()
-            //                 .then((hooks) => {
-            //                     logger.debug("Trying to find webhook")
-            //                     const webhook = hooks.find(wh => wh.name.toLowerCase() === "holotweeter");
-            //                     logger.debug("Trying to send message");
-            //                     webhook.send(/* TODO: Tweet URL */"", {
-            //                         username: /* TODO: Tweet user !screen name! */ "",
-            //                         avatarURL: /* TODO: Tweet user avatar */""
-            //                     })
-            //                 });
-            //         })
-            //         .catch((err3) => {
-            //             logger.error(err3);
-            //         });
-            // });
+            TweetSubscription.findById(tweet.user.id_str, (err2, subscription) => {
+                if(err2) return logger.error(err2);
+                for(let i = 0; i < subscription.channels.length; i++) {
+                    client.channels.fetch(subscription.channels[i])
+                        .then((channel) => {
+                            channel.fetchWebhooks()
+                                .then((hooks) => {
+                                    logger.debug("Trying to find Twitter webhook")
+                                    const webhook = hooks.find(wh => wh.name.toLowerCase() === "holotweeter");
+                                    if(!webhook) logger.verbose(`Cannot find Twitter webhook in ${channel.id}`);
+                                    else {
+                                        logger.debug("Trying to send Twitter message");
+                                        webhook.send(`https://twitter.com/${tweet.user.id_str}/status/${tweet.id_str}`, {
+                                            username: `\@${tweet.user.screen_name}`,
+                                            avatarURL: tweet.user.profile_image_url_https.substring(0, tweet.user.profile_image_url_https.length - "normal.jpg".length) + "400x400.jpg"
+                                        });
+                                    }
+                                });
+                        })
+                        .catch((err3) => {
+                            logger.error(err3);
+                        });
+                }
+            });
         });
     });
 }
+exports.init = start;
 
-// Code
-
+exports.restart = async function () {
+    await stream.destroy();
+    await setTimeout(start, 2000);
+}

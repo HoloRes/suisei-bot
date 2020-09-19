@@ -1,13 +1,13 @@
 // Models
-const Subscription = require("$/models/subscription"),
-    PingSubscription = require("$/models/pingSubscription"),
-    Livestream = require("$/models/stream");
+const autoPublish = require("$/models/publish"),
+    PingSubscription = require("$/models/pingSubscription");
 
 // Packages
 const fs = require("fs"),
     Discord = require("discord.js"),
     mongoose = require("mongoose"), // Library for MongoDB
     express = require("express"),
+    axios = require("axios"),
     path = require("path"),
     winston = require("winston"); // Advanced logging library
 
@@ -96,6 +96,28 @@ client.on('messageReactionRemove', (reaction, user) => {
             logger.debug(`${user.tag} has been removed from ${doc.name}`);
         });
     });
+});
+
+// Auto publish handler
+client.on("message", (message) => {
+    autoPublish.findById(message.channel.id, (err, doc) => {
+        if (err) return logger.error(err);
+        if(doc) {
+            const { options: { http } } = client;
+            if(message.channel.type === "news") {
+                axios({
+                    method: "POST",
+                    url: `${http.api}/v${http.version}/channels/${message.channel.id}/${message.id}/crospost`,
+                    headers: {
+                        'Authorization': `Bot ${config.discord.token}`,
+                    }
+                })
+            } else {
+                doc.autoPublish = false;
+                doc.save();
+            }
+        }
+    })
 });
 
 // Message handler
