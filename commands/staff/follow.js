@@ -120,7 +120,7 @@ function checkExistingAndFollow(message, subscription, wh, user) {
                                             });
                                         else {
                                             restart();
-                                            message.channel.send("Subscription successful.")
+                                            message.channel.send("Follow successful.")
                                                 .then(msg2 => {
                                                     message.delete({timeout: 4000, reason: "Automated"});
                                                     msg2.delete({timeout: 4000, reason: "Automated"});
