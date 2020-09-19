@@ -33,6 +33,7 @@ const logger = winston.createLogger({
         new winston.transports.File({filename: path.join(__dirname, "logs", "complete", `${date}.log`)})
     ]
 });
+exports.logger = logger;
 
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
@@ -210,5 +211,4 @@ function loadcmds() {
 }
 
 // Exports
-exports.logger = logger;
 exports.client = client;
