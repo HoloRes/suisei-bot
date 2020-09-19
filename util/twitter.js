@@ -15,7 +15,7 @@ const T = new Twitter(config.twitter);
 let stream = null;
 
 // Exports
-function start() {
+function start(logger) {
     let users = "";
     TweetSubscription.find({}, async (err, docs) => {
         if(err) return logger.error(err);

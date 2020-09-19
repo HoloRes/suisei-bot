@@ -31,7 +31,7 @@ const YT = google.youtube("v3");
 // Express
 const router = express.Router();
 
-exports.init = function () {
+exports.init = function (logger) {
     // Get all planned livestreams from subscriptions and add them to schedule.
     const videoRegex = /\/watch\?v=.{11}/g;
     Subscription.find({}).lean().exec(async (err, docs) => {

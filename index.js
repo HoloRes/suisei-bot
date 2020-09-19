@@ -53,8 +53,8 @@ app.use("/", youtubeNotifications.router);
 app.listen(config.PubSubHubBub.hubPort);
 
 // Notifications preparation
-youtubeNotifications.init();
-twitterNotifications.init();
+youtubeNotifications.init(logger);
+twitterNotifications.init(logger);
 
 // Code
 // Discord bot
