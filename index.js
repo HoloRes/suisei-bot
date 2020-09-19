@@ -11,17 +11,10 @@ const fs = require("fs"),
     path = require("path"),
     winston = require("winston"); // Advanced logging library
 
-// Local JS files
-const {confirmRequest} = require("$/util/functions"),
-    youtubeNotifications = require("$/util/youtube"),
-    twitterNotifications = require("$/util/twitter");
-
 // Local config files
 const config = require("$/config.json");
 
-// Variables
-
-// Init
+// Pre-init
 // Winston logger
 const date = new Date().toISOString();
 const logger = winston.createLogger({
@@ -35,6 +28,14 @@ const logger = winston.createLogger({
 });
 exports.logger = logger;
 
+// Local JS files
+const {confirmRequest} = require("$/util/functions"),
+    youtubeNotifications = require("$/util/youtube"),
+    twitterNotifications = require("$/util/twitter");
+
+// Variables
+
+// Init
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
     useNewUrlParser: true,
