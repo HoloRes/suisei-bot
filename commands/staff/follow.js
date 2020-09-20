@@ -38,8 +38,9 @@ exports.run = async (client, message, args) => {
         .then(async (channel) => {
             let subscription = new TweetSubscription({
                 _id: users[0].id_str,
-                channels: [args[1]]
+                channels: []
             });
+            subscription.channels.push(channel.id)
 
             await channel.fetchWebhooks()
                 .then(async (hooks) => {
