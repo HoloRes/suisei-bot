@@ -110,7 +110,7 @@ client.on("message", (message) => {
             if(message.channel.type === "news") {
                 axios({
                     method: "POST",
-                    url: `${http.api}/v${http.version}/channels/${message.channel.id}/messages/${message.id}/crospost`,
+                    url: `${http.api}/v${http.version}/channels/${message.channel.id}/messages/${message.id}/crosspost`,
                     headers: {
                         'Authorization': `Bot ${config.discord.token}`,
                     }
