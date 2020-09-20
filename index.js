@@ -28,6 +28,12 @@ const logger = winston.createLogger({
 });
 exports.logger = logger;
 
+// Create a Discord client
+const client = new Discord.Client({
+    partials: ['MESSAGE', 'CHANNEL', 'REACTION'] // Partials are used to be able to fetch events from non cached items
+});
+exports.client = client;
+
 // Local JS files
 const {confirmRequest} = require("$/util/functions"),
     youtubeNotifications = require("$/util/youtube"),
@@ -41,11 +47,6 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false
-});
-
-// Create a Discord client
-const client = new Discord.Client({
-    partials: ['MESSAGE', 'CHANNEL', 'REACTION'] // Partials are used to be able to fetch events from non cached items
 });
 
 // Express
@@ -210,6 +211,3 @@ function loadcmds() {
         });
     });
 }
-
-// Exports
-exports.client = client;
