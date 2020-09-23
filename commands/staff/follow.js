@@ -47,7 +47,7 @@ exports.run = async (client, message, args) => {
                     const existingWebhook = await hooks.find(wh => wh.name.toLowerCase() === "holotweeter");
                     if (!existingWebhook) channel.createWebhook("HoloTweeter")
                         .then((webhook) => {
-                            checkExistingAndFollow(message, subscription, webhook, users[0]);
+                            checkExistingAndFollow(message, subscription, channel, users[0]);
                         })
                         .catch((err) => {
                             if (err) {
@@ -57,7 +57,7 @@ exports.run = async (client, message, args) => {
                                 });
                             }
                         });
-                    else checkExistingAndFollow(message, subscription, existingWebhook, users[0]);
+                    else checkExistingAndFollow(message, subscription, channel, users[0]);
                 });
         })
         .catch((err) => {
@@ -70,7 +70,7 @@ exports.run = async (client, message, args) => {
         });
 }
 
-function checkExistingAndFollow(message, subscription, wh, user) {
+function checkExistingAndFollow(message, subscription, channel, user) {
     TweetSubscription.findById(subscription._id, (err, doc) => {
         if(!err) {
             if(doc) {
@@ -103,39 +103,32 @@ function checkExistingAndFollow(message, subscription, wh, user) {
                             });
                     });
             } else {
-                wh.send("Tweet url", {
-                    username: `\@${user.screen_name}`,
-                    avatarURL: user.profile_image_url_https.substring(0, user.profile_image_url_https.length - "normal.jpg".length) + "400x400.jpg"
-                }).then((exampleMsg) => {
-                    message.channel.send("Is this correct?").then((msg) => {
-                        confirmRequest(msg, message.author.id)
-                            .then(result => {
-                                if (result === true) {
-                                    exampleMsg.delete({reason: "Automated"});
-                                    msg.delete({timeout: 2000, reason: "Automated"});
-                                    subscription.save((err) => {
-                                        if (err) message.channel.send("Something went wrong during the subscription, try again later.")
+                message.channel.send(`Are you sure you want to add \@${user.screen_name} to ${channel.name}?`).then((msg) => {
+                    confirmRequest(msg, message.author.id)
+                        .then(result => {
+                            if (result === true) {
+                                msg.delete({timeout: 2000, reason: "Automated"});
+                                subscription.save((err) => {
+                                    if (err) message.channel.send("Something went wrong during the subscription, try again later.")
+                                        .then(msg2 => {
+                                            message.delete({timeout: 4000, reason: "Automated"});
+                                            msg2.delete({timeout: 4000, reason: "Automated"});
+                                        });
+                                    else {
+                                        restart();
+                                        message.channel.send("Follow successful.")
                                             .then(msg2 => {
                                                 message.delete({timeout: 4000, reason: "Automated"});
                                                 msg2.delete({timeout: 4000, reason: "Automated"});
                                             });
-                                        else {
-                                            restart();
-                                            message.channel.send("Follow successful.")
-                                                .then(msg2 => {
-                                                    message.delete({timeout: 4000, reason: "Automated"});
-                                                    msg2.delete({timeout: 4000, reason: "Automated"});
-                                                });
-                                        }
-                                    });
-                                } else {
-                                    msg.edit("Cancelled.");
-                                    exampleMsg.delete({reason: "Automated"});
-                                    msg.delete({timeout: 4000, reason: "Automated"});
-                                    message.delete({timeout: 4000, reason: "Automated"});
-                                }
-                            });
-                    });
+                                    }
+                                });
+                            } else {
+                                msg.edit("Cancelled.");
+                                msg.delete({timeout: 4000, reason: "Automated"});
+                                message.delete({timeout: 4000, reason: "Automated"});
+                            }
+                        });
                 });
             }
         }
