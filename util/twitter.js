@@ -53,7 +53,7 @@ function start(logger) {
 }
 exports.init = start;
 
-exports.restart = async function () {
-    if(stream) await stream.destroy();
-    await setTimeout(start, 2000);
+exports.restart = function () {
+    if(stream) stream.destroy();
+    setTimeout(() => {start()}, 2000);
 }
