@@ -80,7 +80,7 @@ function checkExistingAndSubscribe(message, subscription, wh, res, channel, chan
     Subscription.findById(subscription._id, (err, sub) => {
         if (!err) {
             if (sub) {
-                let index = subscription.channels.findIndex(docChannel => docChannel.id === channel.id);
+                let index = sub.channels.findIndex(docChannel => docChannel.id === channel.id);
                 if (index !== -1) return message.channel.send(`${channel.name} is already subscribed to ${res.data.items[0].snippet.title}.`)
                     .then(msg => {
                         message.delete({timeout: 4000, reason: "Automated"});
