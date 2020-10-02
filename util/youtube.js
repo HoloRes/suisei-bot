@@ -25,15 +25,15 @@ const puppeteerOptions = {
     args: ["--disable-dev-shm-usage", "--no-sandbox"]
 }
 // Init
+const videoRegex = /\/watch\?v=.{11}/g;
 // Google YT Data V3 API
 const YT = google.youtube("v3");
 
 // Express
 const router = express.Router();
 
-exports.init = function () {
+exports.init = function (logger) {
     // Get all planned livestreams from subscriptions and add them to schedule.
-    const videoRegex = /\/watch\?v=.{11}/g;
     Subscription.find({}).lean().exec(async (err, docs) => {
         if (err) throw new Error("Couldn't read subscriptions");
 
@@ -111,10 +111,8 @@ exports.init = function () {
                         ]
                     }
                     scheduleJob(plannedDate, () => {
-                        setTimeout(() => {
-                            logger.debug(`Running for: ${docs[i]._id}`);
-                            checkLive(feed, subscription);
-                        }, 5 * 60 * 1000);
+                        logger.debug(`Running for: ${docs[i]._id}`);
+                        checkLive(feed, subscription);
                     });
                     scheduledStreams.push(docs[i]._id);
                     logger.debug(scheduledStreams);
@@ -265,11 +263,11 @@ function checkLive(feed, subscription) {
         logger.debug("-----------------------------------------");
         if (video.data.items[0].snippet.liveBroadcastContent !== "live") return Livestream.findById(feed.entry[0]["yt:videoId"][0], (err2, stream) => {
             if (err2) return logger.error(err2);
-            if (stream.retry === false) {
+            if (stream.retry < 4) {
                 setTimeout(() => {
                     checkLive(feed, subscription);
-                }, 10 * 60 * 1000);
-                stream.retry = true;
+                }, 5 * 60 * 1000);
+                stream.retry = stream.retry + 1;
                 return stream.save();
             } else return logger.debug("Not a live broadcast."); // TODO: Remove from DB
         });

@@ -80,6 +80,12 @@ function checkExistingAndSubscribe(message, subscription, wh, res, channel, chan
     Subscription.findById(subscription._id, (err, sub) => {
         if (!err) {
             if (sub) {
+                let index = sub.channels.findIndex(docChannel => docChannel.id === channel.id);
+                if (index !== -1) return message.channel.send(`${channel.name} is already subscribed to ${res.data.items[0].snippet.title}.`)
+                    .then(msg => {
+                        message.delete({timeout: 4000, reason: "Automated"});
+                        msg.delete({timeout: 4000, reason: "Automated"});
+                    });
                 sub.channels.push({
                     id: channel.id,
                     message: channelMsg
@@ -106,48 +112,32 @@ function checkExistingAndSubscribe(message, subscription, wh, res, channel, chan
                             });
                     });
             } else {
-                const embed = new Discord.MessageEmbed()
-                    //.setTitle("Playing: A Game")
-                    .setTitle("Stream title")
-                    .setImage("https://cdn.discordapp.com/attachments/730061446108676146/741281514091708537/Example_thumbnail.png")
-                    .setColor("#FF0000")
-                    .setFooter("Powered by Suisei's Mic")
-
-                wh.send(channelMsg, {
-                    embeds: [embed],
-                    disableMentions: true,
-                    username: res.data.items[0].snippet.title,
-                    avatarURL: res.data.items[0].snippet.thumbnails.high.url
-                }).then((exampleEmbed) => {
-                    message.channel.send("Is this correct?").then((msg) => {
-                        confirmRequest(msg, message.author.id)
-                            .then(result => {
-                                if (result === true) {
-                                    exampleEmbed.delete({reason: "Automated"});
-                                    msg.delete({timeout: 2000, reason: "Automated"});
-                                    subscription.save((err) => {
-                                        if (err) message.channel.send("Something went wrong during the subscription, try again later.")
+                message.channel.send(`Adding ${res.data.items[0].snippet.title} to ${channel.name} with message \`${channelMsg}\`?`).then((msg) => {
+                    confirmRequest(msg, message.author.id)
+                        .then(result => {
+                            if (result === true) {
+                                msg.delete({timeout: 2000, reason: "Automated"});
+                                subscription.save((err) => {
+                                    if (err) message.channel.send("Something went wrong during the subscription, try again later.")
+                                        .then(msg2 => {
+                                            message.delete({timeout: 4000, reason: "Automated"});
+                                            msg2.delete({timeout: 4000, reason: "Automated"});
+                                        });
+                                    else {
+                                        planLivestreams(subscription._id)
+                                        message.channel.send("Subscription successful.")
                                             .then(msg2 => {
                                                 message.delete({timeout: 4000, reason: "Automated"});
                                                 msg2.delete({timeout: 4000, reason: "Automated"});
                                             });
-                                        else {
-                                            planLivestreams(subscription._id)
-                                            message.channel.send("Subscription successful.")
-                                                .then(msg2 => {
-                                                    message.delete({timeout: 4000, reason: "Automated"});
-                                                    msg2.delete({timeout: 4000, reason: "Automated"});
-                                                });
-                                        }
-                                    });
-                                } else {
-                                    msg.edit("Cancelled.");
-                                    exampleEmbed.delete({reason: "Automated"});
-                                    msg.delete({timeout: 4000, reason: "Automated"});
-                                    message.delete({timeout: 4000, reason: "Automated"});
-                                }
-                            });
-                    });
+                                    }
+                                });
+                            } else {
+                                msg.edit("Cancelled.");
+                                msg.delete({timeout: 4000, reason: "Automated"});
+                                message.delete({timeout: 4000, reason: "Automated"});
+                            }
+                        });
                 });
             }
         }

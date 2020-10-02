@@ -1,27 +1,21 @@
 // Models
-const Subscription = require("$/models/subscription"),
-    PingSubscription = require("$/models/pingSubscription"),
-    Livestream = require("$/models/stream");
+const autoPublish = require("$/models/publish"),
+    PingSubscription = require("$/models/pingSubscription");
 
 // Packages
 const fs = require("fs"),
     Discord = require("discord.js"),
     mongoose = require("mongoose"), // Library for MongoDB
     express = require("express"),
+    axios = require("axios"),
     path = require("path"),
+    Sentry = require("@sentry/node"),
     winston = require("winston"); // Advanced logging library
-
-// Local JS files
-const {confirmRequest} = require("$/util/functions"),
-    youtubeNotifications = require("$/util/youtube"),
-    twitterNotifications = require("$/util/twitter");
 
 // Local config files
 const config = require("$/config.json");
 
-// Variables
-
-// Init
+// Pre-init
 // Winston logger
 const date = new Date().toISOString();
 const logger = winston.createLogger({
@@ -33,6 +27,24 @@ const logger = winston.createLogger({
         new winston.transports.File({filename: path.join(__dirname, "logs", "complete", `${date}.log`)})
     ]
 });
+exports.logger = logger;
+
+// Create a Discord client
+const client = new Discord.Client({
+    partials: ['MESSAGE', 'CHANNEL', 'REACTION'] // Partials are used to be able to fetch events from non cached items
+});
+exports.client = client;
+
+// Local JS files
+const {confirmRequest} = require("$/util/functions"),
+    youtubeNotifications = require("$/util/youtube"),
+    twitterNotifications = require("$/util/twitter");
+
+// Variables
+
+// Init
+// Sentry
+Sentry.init({ dsn: config.sentryDsn })
 
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
@@ -41,19 +53,14 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
     useFindAndModify: false
 });
 
-// Create a Discord client
-const client = new Discord.Client({
-    partials: ['MESSAGE', 'CHANNEL', 'REACTION'] // Partials are used to be able to fetch events from non cached items
-});
-
 // Express
 const app = express();
 app.use("/", youtubeNotifications.router);
 app.listen(config.PubSubHubBub.hubPort);
 
 // Notifications preparation
-youtubeNotifications.init();
-twitterNotifications.init();
+youtubeNotifications.init(logger);
+twitterNotifications.init(logger);
 
 // Code
 // Discord bot
@@ -96,6 +103,28 @@ client.on('messageReactionRemove', (reaction, user) => {
             logger.debug(`${user.tag} has been removed from ${doc.name}`);
         });
     });
+});
+
+// Auto publish handler
+client.on("message", (message) => {
+    autoPublish.findById(message.channel.id, (err, doc) => {
+        if (err) return logger.error(err);
+        if(doc) {
+            const { options: { http } } = client;
+            if(message.channel.type === "news") {
+                axios({
+                    method: "POST",
+                    url: `${http.api}/v${http.version}/channels/${message.channel.id}/messages/${message.id}/crosspost`,
+                    headers: {
+                        'Authorization': `Bot ${config.discord.token}`,
+                    }
+                })
+            } else {
+                doc.autoPublish = false;
+                doc.save();
+            }
+        }
+    })
 });
 
 // Message handler
@@ -186,7 +215,3 @@ function loadcmds() {
         });
     });
 }
-
-// Exports
-exports.logger = logger;
-exports.client = client;

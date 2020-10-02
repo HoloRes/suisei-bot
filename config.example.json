@@ -30,10 +30,11 @@
   "twitter": {
     "consumer_key": "",
     "consumer_secret": "",
-    "app_only_auth": true,
-    "strictSSL": true
+    "access_token_key": "",
+    "access_token_secret": ""
   },
   "YtApiKey": "",
+  "sentryDsn": "",
   "environment": "production",
   "logLevel": "info"
 }

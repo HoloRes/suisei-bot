@@ -1,9 +1,10 @@
 {
   "name": "hlresistance-backend",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Backend for the Hololive Resistance website",
   "main": "index.js",
   "dependencies": {
+    "@sentry/node": "^5.24.2",
     "aws-sdk": "^2.751.0",
     "axios": "^0.19.2",
     "basetag": "^1.0.0",
@@ -20,7 +21,7 @@
     "query-string": "^6.13.2",
     "raw-body": "^2.4.1",
     "shortid": "^2.2.15",
-    "twit": "^2.2.11",
+    "twitter-lite": "^0.14.0",
     "winston": "^3.3.3",
     "xml2js": "^0.4.23"
   },
