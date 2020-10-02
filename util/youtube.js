@@ -25,6 +25,7 @@ const puppeteerOptions = {
     args: ["--disable-dev-shm-usage", "--no-sandbox"]
 }
 // Init
+const videoRegex = /\/watch\?v=.{11}/g;
 // Google YT Data V3 API
 const YT = google.youtube("v3");
 
@@ -33,7 +34,6 @@ const router = express.Router();
 
 exports.init = function (logger) {
     // Get all planned livestreams from subscriptions and add them to schedule.
-    const videoRegex = /\/watch\?v=.{11}/g;
     Subscription.find({}).lean().exec(async (err, docs) => {
         if (err) throw new Error("Couldn't read subscriptions");
 
