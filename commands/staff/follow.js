@@ -74,6 +74,12 @@ function checkExistingAndFollow(message, subscription, channel, user) {
     TweetSubscription.findById(subscription._id, (err, doc) => {
         if(!err) {
             if(doc) {
+                let index = doc.channels.findIndex(docChannel => docChannel.id === channel.id);
+                if (index !== -1) return message.channel.send(`${channel.name} is already following \@${user.screen_name}.`)
+                    .then(msg => {
+                        message.delete({timeout: 4000, reason: "Automated"});
+                        msg.delete({timeout: 4000, reason: "Automated"});
+                    });
                 subscription.channels.push(channel.id);
                 return message.channel.send(`Are you sure you want to add \@${user.screen_name} to ${channel.name}?`)
                     .then((msg) => {
