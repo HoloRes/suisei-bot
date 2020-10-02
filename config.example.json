@@ -34,6 +34,7 @@
     "access_token_secret": ""
   },
   "YtApiKey": "",
+  "sentryDsn": "",
   "environment": "production",
   "logLevel": "info"
 }

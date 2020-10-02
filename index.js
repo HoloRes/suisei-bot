@@ -9,6 +9,7 @@ const fs = require("fs"),
     express = require("express"),
     axios = require("axios"),
     path = require("path"),
+    Sentry = require("@sentry/node"),
     winston = require("winston"); // Advanced logging library
 
 // Local config files
@@ -42,6 +43,9 @@ const {confirmRequest} = require("$/util/functions"),
 // Variables
 
 // Init
+// Sentry
+Sentry.init({ dsn: config.sentryDsn })
+
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
     useNewUrlParser: true,
