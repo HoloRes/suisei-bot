@@ -34,7 +34,7 @@
     "url": "git+https://github.com/HL-Resistance/backend.git"
   },
   "author": "Hololive Resistance website team",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/HL-Resistance/backend/issues"
   },
