@@ -166,12 +166,12 @@ router.get("/ytPush/:id", (req, res) => { // PubSubHubBub notifications
 });
 
 router.post("/ytPush/:id", parseBody, (req, res) => {
+    if (!req.body.verified) return res.status(403).send("");
     logger.debug("-----------------------------------------");
     logger.debug(JSON.stringify(req.body.feed, null, 4));
     logger.debug("-----------------------------------------");
     res.status(200).send("");
     if (req.body.feed["at:deleted-entry"]) return; // This means a stream/video got set to private or was deleted
-    // TODO: Check if stream has ended and delete the embed. Needs to be timed to check if a notification happens if a stream ends
     Livestream.exists({_id: req.body.feed.entry[0]["yt:videoId"][0]}, (err, doc) => {
         if (err) return logger.error(err);
         if (!doc) {
@@ -233,12 +233,13 @@ router.post("/ytPush/:id", parseBody, (req, res) => {
 async function parseBody(req, res, next) {
     try {
         const xhs = req.headers["x-hub-signature"] || req.headers["X-Hub-Signature"];
-        await logger.debug(`Original sign: ${xhs}`);
+        //await logger.debug(`Original sign: ${xhs}`);
         const method = xhs.split("=")[0];
         const csign = await createHmac(method, config.PubSubHubBub.secret);
         const raw = await rawBody(req);
         await csign.update(raw);
-        await logger.debug(`Created sign: ${method}=${csign.digest("hex")}`);
+        req.body.verified = xhs === `${method}=${csign.digest("hex")}`;
+        //await logger.debug(`Created sign: ${method}=${csign.digest("hex")}`);
         req.body = await xml2js.parseStringPromise(raw);
         next();
     } catch (error) {
