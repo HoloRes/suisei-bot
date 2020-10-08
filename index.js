@@ -44,7 +44,7 @@ const {confirmRequest} = require("$/util/functions"),
 
 // Init
 // Sentry
-Sentry.init({ dsn: config.sentryDsn })
+if(config.environment === "production") Sentry.init({ dsn: config.sentryDsn });
 
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
@@ -59,8 +59,10 @@ app.use("/", youtubeNotifications.router);
 app.listen(config.PubSubHubBub.hubPort);
 
 // Notifications preparation
-youtubeNotifications.init(logger);
-twitterNotifications.init(logger);
+if(config.environment === "production") {
+    youtubeNotifications.init(logger);
+    twitterNotifications.init(logger);
+}
 
 // Code
 // Discord bot

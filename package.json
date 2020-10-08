@@ -4,6 +4,7 @@
   "description": "Backend for the Hololive Resistance website",
   "main": "index.js",
   "dependencies": {
+    "@elastic/elasticsearch": "^7.9.1",
     "@sentry/node": "^5.25.0",
     "aws-sdk": "^2.766.0",
     "axios": "^0.19.2",

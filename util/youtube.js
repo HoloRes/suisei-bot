@@ -210,11 +210,8 @@ router.post("/ytPush/:id", parseBody, (req, res) => {
                     if (diffTime >= 10) {
                         logger.debug("Plan check stream (diffTime >= 10)");
                         scheduleJob(plannedDate, () => {
-                            // TODO: Plan check immediately on scheduled time, but check 5 minutes after if it fails with tolerance of 2 failures
-                            setTimeout(() => {
-                                logger.debug(`Running for: ${req.body.feed.entry[0]["yt:videoId"][0]}`);
-                                checkLive(req.body.feed, subscription);
-                            }, 5 * 60 * 1000);
+                            logger.debug(`Running for: ${req.body.feed.entry[0]["yt:videoId"][0]}`);
+                            checkLive(req.body.feed, subscription);
                         });
                         scheduledStreams.push(req.body.feed.entry[0]["yt:videoId"][0]);
                     } else {
@@ -238,9 +235,9 @@ async function parseBody(req, res, next) {
         const csign = await createHmac(method, config.PubSubHubBub.secret);
         const raw = await rawBody(req);
         await csign.update(raw);
+        req.body = await xml2js.parseStringPromise(raw);
         req.body.verified = xhs === `${method}=${csign.digest("hex")}`;
         //await logger.debug(`Created sign: ${method}=${csign.digest("hex")}`);
-        req.body = await xml2js.parseStringPromise(raw);
         next();
     } catch (error) {
         next(error);
@@ -264,13 +261,16 @@ function checkLive(feed, subscription) {
         logger.debug("-----------------------------------------");
         if (video.data.items[0].snippet.liveBroadcastContent !== "live") return Livestream.findById(feed.entry[0]["yt:videoId"][0], (err2, stream) => {
             if (err2) return logger.error(err2);
-            if (stream.retry < 4) {
+            if (stream.retry < 6) {
                 setTimeout(() => {
                     checkLive(feed, subscription);
                 }, 5 * 60 * 1000);
                 stream.retry = stream.retry + 1;
                 return stream.save();
-            } else return logger.debug("Not a live broadcast."); // TODO: Remove from DB
+            } else {
+                Livestream.remove({ _id: stream._id });
+                return logger.debug("Not a live broadcast.");
+            }
         });
         YT.channels.list({
             auth: config.YtApiKey,
