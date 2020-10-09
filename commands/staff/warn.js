@@ -1,6 +1,8 @@
 // Imports
 // Local files
 const moderation = require("$/util/moderation"),
+    { confirmRequest } = require("$/util/functions"),
+    Discord = require("discord.js"),
     config = require("$/config.json");
 
 exports.run = (client, message, args) => {
@@ -10,26 +12,37 @@ exports.run = (client, message, args) => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});
         });
-    if(message.mentions.members.size === 1) { // TODO: Move to moderation.js as this will be used in every moderation command
-        message.channel.send(`Mention: ${message.mentions.members.array()[0].user.tag}`);
-    } else {
-        message.guild.members.fetch(args[0])
-            .then((member) => {
-                message.channel.send(`Fetch ID: ${member.user.tag}`);
-            })
-            .catch((e) => {
-                if(e) message.guild.members.fetch()
-                    .then(() => {
-                        const member = message.guild.members.cache.find(guildMember =>  guildMember.user.tag.toLowerCase() === args[0].toLowerCase());
-                        if(!member) return message.channel.send("Cannot find this user.")
-                            .then(msg => {
-                                message.delete({timeout: 4000, reason: "Automated"});
-                                msg.delete({timeout: 4000, reason: "Automated"});
-                            });
-                        message.channel.send(`Query: ${member.user.tag}`);
-                    });
-            })
-    }
+    moderation.getMemberFromMessage(message, args, (member) => {
+        const reason = args.slice(2).join(" ");
+        let isStrikeArg = args[1].toLowerCase();
+        if(isStrikeArg === "n" || isStrikeArg === "no" || isStrikeArg === "false") confirmAndWarn(message, member, reason ,false);
+        else if(isStrikeArg === "y" || isStrikeArg === "yes" || isStrikeArg === "true") confirmAndWarn(message, member, reason, true);
+        else return message.channel.send(`**USAGE:** ${config.discord.staffprefix}warn <user> <strike> <reason>`)
+                .then(msg => {
+                    message.delete({timeout: 4000, reason: "Automated"});
+                    msg.delete({timeout: 4000, reason: "Automated"});
+                });
+    });
+}
+
+// Functions
+function confirmAndWarn(message, member, reason, isStrike) {
+    const embed = new Discord.MessageEmbed()
+        .setTitle(`Warning ${member.user.tag}`)
+        .setDescription(`Reason: ${reason}\nStrike: ${(isStrike ? "yes" : "no")}`);
+    message.channel.send(embed)
+        .then((msg) => {
+            confirmRequest(msg, message.author.id)
+                .then((result) => {
+                    if(result === true) {
+                        moderation.warn(member, isStrike, reason, message.author);
+                    } else {
+                        msg.edit("Cancelled.")
+                        message.delete({timeout: 4000, reason: "Automated"});
+                        msg.delete({timeout: 4000, reason: "Automated"});
+                    }
+                });
+        });
 }
 
 exports.config = {
