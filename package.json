@@ -10,6 +10,7 @@
     "axios": "^0.19.2",
     "basetag": "^1.0.0",
     "discord.js": "^12.3.1",
+    "es-sequence": "^0.2.2",
     "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^58.0.0",
