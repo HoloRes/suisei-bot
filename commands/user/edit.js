@@ -229,5 +229,6 @@ exports.run = (client, message, args) => {
 }
 
 module.exports.config = {
-    command: "edit"
+    command: "edit",
+    limited: "musician"
 }

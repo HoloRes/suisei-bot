@@ -10,7 +10,7 @@ const axios = require("axios"),
     querystring = require("query-string");
 
 exports.run = (client, message, args, pubSubSubscriber) => {
-    if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}unsubscribe <YouTube channel id> <Discord channel id>`)
+    if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.prefix}unsubscribe <YouTube channel id> <Discord channel id>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});

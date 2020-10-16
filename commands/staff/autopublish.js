@@ -6,7 +6,7 @@ const autoPublish = require("$/models/publish");
 const config = require("$/config.json");
 
 exports.run = async (client, message, args) => {
-    if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}autopublish <Discord channel id>`)
+    if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}autopublish <Discord channel id>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});

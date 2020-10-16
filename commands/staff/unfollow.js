@@ -14,7 +14,7 @@ const config = require("$/config.json"),
 const T = new Twitter(config.twitter);
 
 exports.run = async (client, message, args) => {
-    if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}unfollow <Twitter @name (without @)> <Discord channel id>`)
+    if (!args[0] || !args[1]) return message.channel.send(`**USAGE:** ${config.discord.prefix}unfollow <Twitter @name (without @)> <Discord channel id>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});

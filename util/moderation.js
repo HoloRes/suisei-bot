@@ -12,7 +12,7 @@ const elasticClient = new ElasticClient({ node: config.elasticUrl });
 sequence.init(elasticClient)
 
 // Exports
-exports.warn = (user, strike, reason, moderator) => {
+exports.warn = (user, reason, moderator) => {
     sequence.get('case_id').then((caseID) => {
         elasticClient.index({
             id: caseID,
@@ -26,16 +26,30 @@ exports.warn = (user, strike, reason, moderator) => {
                 reason: reason
             }
         });
-        if(strike === true) elasticClient.index({
-                id: caseID,
-                index: "strikes",
-                body: {} // TODO: Empty body and let the client do another call to the moderation index or add the data another time but less requests?
-            });
     });
 }
 
-exports.mute = (user, reason, moderator) => {
-
+exports.mute = (user, strike, duration, reason, moderator) => {
+    sequence.get('case_id').then((caseID) => {
+        elasticClient.index({
+            id: caseID,
+            index: "moderation",
+            body: {
+                caseID: caseID,
+                userID: user.id,
+                lastKnownTag: user.tag,
+                type: "mute",
+                duration: duration,
+                responsibleID: moderator.id,
+                reason: reason
+            }
+        });
+        if (strike === true) elasticClient.index({
+            id: caseID,
+            index: "strikes",
+            body: {} // TODO: Empty body and let the client do another call to the moderation index or add the data another time but less requests?
+        });
+    })
 }
 
 exports.kick = (user, reason, moderator) => {
@@ -127,6 +141,7 @@ exports.firstInit = function () { // This should run when the Elasticsearch node
                     caseID: {type: "keyword"}, // Case ID is added here so it gets indexed when searched
                     userID: {type: "keyword"},
                     lastKnownTag: {type: "keyword", index: false},
+                    duration: {type: "keyword", index: false},
                     type: {type: "keyword"},
                     responsibleID: {type: "keyword"},
                     reason: {type: "text", index: false}

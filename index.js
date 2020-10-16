@@ -133,35 +133,33 @@ client.on("message", (message) => {
 client.on("message", (message) => {
     if (message.author.bot) return;
     if (message.content.startsWith(config.discord.prefix)) { // User command handler
-        if (!message.member.roles.cache.has(config.discord.roles.musician) && !message.member.roles.cache.has(config.discord.roles.staff)) return;
         let cont = message.content.slice(config.discord.prefix.length).split(" ");
         let args = cont.slice(1);
+        let staffCmd = client.staffcmds.get(cont[0]);
+        if(staffCmd && message.member.roles.cache.has(config.discord.roles.staff)) return staffCmd.run(client, message, args);
         let cmd = client.commands.get(cont[0]);
         if (!cmd) return;
-        if (!message.member.roles.cache.has(config.discord.roles.musician)) {
-            message.reply("you don't have the musician role, do you still want to perform this action?").then(msg => {
-                confirmRequest(msg, message.author.id)
-                    .then(result => {
-                        if (result === true) {
-                            msg.delete({reason: "Automated"});
-                            return cmd.run(client, message, args);
-                        } else {
-                            message.delete({reason: "Automated"});
-                            return msg.delete({reason: "Automated"});
-                        }
-                    });
-            });
+        if(cmd.config.limited === "musician") {
+            if (!message.member.roles.cache.has(config.discord.roles.musician) && !message.member.roles.cache.has(config.discord.roles.staff)) return;
+            if (!message.member.roles.cache.has(config.discord.roles.musician)) {
+                message.reply("you don't have the musician role, do you still want to perform this action?").then(msg => {
+                    confirmRequest(msg, message.author.id)
+                        .then(result => {
+                            if (result === true) {
+                                msg.delete({reason: "Automated"});
+                                return cmd.run(client, message, args);
+                            } else {
+                                message.delete({reason: "Automated"});
+                                return msg.delete({reason: "Automated"});
+                            }
+                        });
+                });
 
-        } else {
-            return cmd.run(client, message, args);
+            } else {
+                return cmd.run(client, message, args);
+            }
         }
-    } else if (message.content.startsWith(config.discord.staffprefix)) {
-        if (!message.member.roles.cache.has(config.discord.roles.staff)) return;
-        let cont = message.content.slice(config.discord.staffprefix.length).split(" ");
-        let args = cont.slice(1);
-        let cmd = client.staffcmds.get(cont[0]);
-        if (!cmd) return;
-        return cmd.run(client, message, args);
+        else return cmd.run(client, message, args);
     } else if (message.content.startsWith(config.discord.devprefix)) { // Dev command handler
         if (!message.member.roles.cache.has(config.discord.roles.dev)) return;
         let cont = message.content.slice(config.discord.devprefix.length).split(" ");

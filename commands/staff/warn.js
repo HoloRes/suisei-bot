@@ -6,36 +6,29 @@ const moderation = require("$/util/moderation"),
     config = require("$/config.json");
 
 exports.run = (client, message, args) => {
-    //* Expected syntax: [warn <userID/ping/tag> <strike (yes/no/y/n/true/false)> <reason>
-    if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}warn <user> <strike> <reason>`)
+    //* Expected syntax: [warn <userID/ping/tag> <reason>
+    if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}warn <user><reason>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});
         });
     moderation.getMemberFromMessage(message, args, (member) => {
-        const reason = args.slice(2).join(" ");
-        let isStrikeArg = args[1].toLowerCase();
-        if(isStrikeArg === "n" || isStrikeArg === "no" || isStrikeArg === "false") confirmAndWarn(message, member, reason ,false);
-        else if(isStrikeArg === "y" || isStrikeArg === "yes" || isStrikeArg === "true") confirmAndWarn(message, member, reason, true);
-        else return message.channel.send(`**USAGE:** ${config.discord.staffprefix}warn <user> <strike> <reason>`)
-                .then(msg => {
-                    message.delete({timeout: 4000, reason: "Automated"});
-                    msg.delete({timeout: 4000, reason: "Automated"});
-                });
+        const reason = args.slice(1).join(" ");
+        confirmAndWarn(message, member, reason);
     });
 }
 
 // Functions
-function confirmAndWarn(message, member, reason, isStrike) {
+function confirmAndWarn(message, member, reason) {
     const embed = new Discord.MessageEmbed()
         .setTitle(`Warning ${member.user.tag}`)
-        .setDescription(`Reason: ${reason}\nStrike: ${(isStrike ? "yes" : "no")}`);
+        .setDescription(`Reason: ${reason}`);
     message.channel.send(embed)
         .then((msg) => {
             confirmRequest(msg, message.author.id)
                 .then((result) => {
                     if(result === true) {
-                        moderation.warn(member, isStrike, reason, message.author);
+                        moderation.warn(member, reason, message.author);
                     } else {
                         msg.edit("Cancelled.")
                         message.delete({timeout: 4000, reason: "Automated"});

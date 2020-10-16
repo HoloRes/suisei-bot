@@ -160,7 +160,8 @@ exports.run = (client, message, args) => {
 }
 
 exports.config = {
-    command: "upload"
+    command: "upload",
+    limited: "musician"
 }
 
 // Functions

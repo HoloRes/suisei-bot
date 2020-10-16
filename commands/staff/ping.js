@@ -2,8 +2,7 @@
 const PingSubscription = require("$/models/pingSubscription");
 
 // Local files
-const {confirmRequest} = require("$/util/functions"),
-    {logger} = require("$/index");
+const {confirmRequest} = require("$/util/functions");
 
 exports.run = (client, message, args) => {
     client.channels.fetch(args[0])

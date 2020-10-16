@@ -14,7 +14,7 @@ const {confirmRequest} = require("$/util/functions"),
 const T = new Twitter(config.twitter);
 
 exports.run = async (client, message, args) => {
-    if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.staffprefix}follow <Twitter @name (without @)> <Discord channel id>`)
+    if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}follow <Twitter @name (without @)> <Discord channel id>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});

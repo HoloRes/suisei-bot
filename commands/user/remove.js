@@ -109,5 +109,6 @@ exports.run = (client, message, args) => {
     });
 }
 module.exports.config = {
-    command: "remove"
+    command: "remove",
+    limited: "musician"
 }
