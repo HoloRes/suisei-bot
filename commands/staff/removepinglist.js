@@ -5,7 +5,7 @@ const PingSubscription = require("$/models/pingSubscription");
 const {confirmRequest} = require("$/util/functions");
 
 exports.run = (client, message, args) => {
-    PingSubscription.findById(args[0]).lean().exec((err, doc) => {
+    PingSubscription.findById(args.join(" ")).lean().exec((err, doc) => {
         if (err) return message.channel.send("Something went wrong")
             .then((msg) => {
                 message.delete({timeout: 4000, reason: "Automated"});
@@ -23,10 +23,10 @@ exports.run = (client, message, args) => {
                         if (result === true) {
                             client.channels.fetch(doc.channelID)
                                 .then((channel) => {
-                                    channel.messages.fetch(doc._id)
+                                    channel.messages.fetch(doc.messageID)
                                         .then((reactMsg) => reactMsg.delete());
                                 });
-                            PingSubscription.findByIdAndRemove(args[0], (err) => {
+                            PingSubscription.findByIdAndRemove(args.join(" "), (err) => {
                                 if (err) msg.edit("Something went wrong");
                                 else msg.edit("Removal successful.");
                             });
