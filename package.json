@@ -4,13 +4,11 @@
   "description": "Backend for the Hololive Resistance website",
   "main": "index.js",
   "dependencies": {
-    "@elastic/elasticsearch": "^7.9.1",
     "@sentry/node": "^5.25.0",
     "aws-sdk": "^2.766.0",
     "axios": "^0.19.2",
     "basetag": "^1.0.0",
     "discord.js": "^12.3.1",
-    "es-sequence": "^0.2.2",
     "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^58.0.0",

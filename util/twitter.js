@@ -4,6 +4,7 @@ const TweetSubscription = require("$/models/tweetSubscription");
 
 // Packages
 const Discord = require("discord.js"),
+    {scheduleJob} = require("node-schedule"),
     Twitter = require("twitter-lite");
 
 // Local imports
@@ -49,6 +50,11 @@ function start(logger) {
                 }
             });
         });
+    });
+
+    scheduleJob("0 0 * * 0", () => { // Automatically restart the client every Sunday
+        if (stream) stream.destroy();
+        setTimeout(() => {start()}, 2000);
     });
 }
 exports.init = start;

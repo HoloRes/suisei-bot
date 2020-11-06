@@ -207,18 +207,18 @@ router.post("/ytPush/:id", parseBody, (req, res) => {
                     logger.debug(`Planned date: ${plannedDate.toISOString()}`);
                     logger.debug(`Diff time: ${diffTime}`);
 
-                    if (diffTime >= 10) {
+                    if (diffTime < 10 || plannedDate <= currentDate) {
+                        logger.debug("Plan check stream (diffTime < 10)");
+                        setTimeout(() => {
+                            checkLive(req.body.feed, subscription);
+                        }, 5 * 60 * 1000);
+                    } else if (diffTime >= 10) {
                         logger.debug("Plan check stream (diffTime >= 10)");
                         scheduleJob(plannedDate, () => {
                             logger.debug(`Running for: ${req.body.feed.entry[0]["yt:videoId"][0]}`);
                             checkLive(req.body.feed, subscription);
                         });
                         scheduledStreams.push(req.body.feed.entry[0]["yt:videoId"][0]);
-                    } else {
-                        logger.debug("Plan check stream (diffTime < 10)");
-                        setTimeout(() => {
-                            checkLive(req.body.feed, subscription);
-                        }, 5 * 60 * 1000);
                     }
                 });
             });
