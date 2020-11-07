@@ -38,7 +38,8 @@ exports.client = client;
 // Local JS files
 const {confirmRequest} = require("$/util/functions"),
     youtubeNotifications = require("$/util/youtube"),
-    twitterNotifications = require("$/util/twitter");
+    twitterNotifications = require("$/util/twitter"),
+    dashboardRouter = require("$/routers/dashboard");
 
 // Variables
 
@@ -55,7 +56,8 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 
 // Express
 const app = express();
-app.use("/", youtubeNotifications.router);
+app.use("/yt", youtubeNotifications.router);
+app.use("/dash", dashboardRouter);
 app.listen(config.PubSubHubBub.hubPort);
 
 // Notifications preparation

@@ -135,7 +135,7 @@ exports.init = function (logger) {
                         headers: {"content-type": "application/x-www-form-urlencoded"},
                         data: querystring.stringify({
                             "hub.mode": "subscribe",
-                            "hub.callback": `${config.PubSubHubBub.callbackUrl}/ytPush/${docs[i]._id}`,
+                            "hub.callback": `${config.PubSubHubBub.callbackUrl}/yt/push/${docs[i]._id}`,
                             "hub.topic": `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${docs[i]._id}`,
                             "hub.lease_seconds": `${60 * 60}`, // 1 hour lease
                             "hub.secret": config.PubSubHubBub.secret,
@@ -156,7 +156,7 @@ exports.init = function (logger) {
 
 // Code
 // Router
-router.get("/ytPush/:id", (req, res) => { // PubSubHubBub notifications
+router.get("/push/:id", (req, res) => { // PubSubHubBub notifications
     logger.debug(req.query["hub.challenge"]);
     if (req.query["hub.challenge"].length > 0) {
         logger.verbose(`Responding with challenge code for channel: ${req.params.id}`);
@@ -165,7 +165,7 @@ router.get("/ytPush/:id", (req, res) => { // PubSubHubBub notifications
     } else res.status(400).send("");
 });
 
-router.post("/ytPush/:id", parseBody, (req, res) => {
+router.post("/push/:id", parseBody, (req, res) => {
     if (!req.body.verified) return res.status(403).send("");
     logger.debug("-----------------------------------------");
     logger.debug(JSON.stringify(req.body.feed, null, 4));

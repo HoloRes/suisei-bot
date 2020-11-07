@@ -13,7 +13,8 @@
       "musician": "",
       "staff": "",
       "dev": ""
-    }
+    },
+    "serverId": ""
   },
   "s3": {
     "endpoint": "",
