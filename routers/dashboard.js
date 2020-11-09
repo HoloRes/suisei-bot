@@ -21,5 +21,9 @@ router.get("/checkUser/:id", (req, res) => {
         })
 });
 
+router.post("/modAction", (req, res) => {
+
+})
+
 // Exports
 module.exports = router;

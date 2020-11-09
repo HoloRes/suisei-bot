@@ -25,4 +25,4 @@ LogSchema.pre("save", (next) => {
         });
 });
 
-module.exports = mongoose.model("modLogItem", LogSchema, "modlog")
+module.exports = mongoose.model("modLogItem", LogSchema, "modlog");
