@@ -3,6 +3,6 @@ const muteSchema = new mongoose.Schema({
     expireAt: {type: Date, required: true}
 });
 
-muteSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 })
+muteSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("mute", muteSchema, "activeMutes");

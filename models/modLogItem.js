@@ -9,11 +9,11 @@ const counter = mongoose.model("counter", CounterSchema, "counters");
 
 const LogSchema = new mongoose.Schema({
     _id: {type: Number},
-    userID: {type: String, required: true},
-    lastKnownTag: {type: String, required: true},
+    userId: {type: String, required: true},
     type: {type: String, required: true, enum: ["warn", "mute", "kick", "ban"]},
-    duration: {type: String, required: true},
-    moderator: {type: String, required: true}
+    duration: {type: String},
+    moderator: {type: String, required: true},
+    reason: {type: String, required: true}
 });
 
 LogSchema.pre("save", (next) => {

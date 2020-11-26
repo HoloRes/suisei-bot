@@ -17,13 +17,15 @@ router.get("/checkUser/:id", (req, res) => {
                     if(!member) return res.send("false");
                     if(member.hasPermission("MANAGE_GUILD")) return res.send("true");
                     else return res.send("false");
-                })
-        })
+                });
+        });
 });
 
 router.post("/modAction", (req, res) => {
 
-})
+});
+
+// TODO: Add all request routes for dashboard logs
 
 // Exports
 module.exports = router;

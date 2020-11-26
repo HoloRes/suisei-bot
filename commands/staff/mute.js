@@ -7,6 +7,7 @@ const moderation = require("$/util/moderation"),
 
 exports.run = (client, message, args) => {
     //* Expected syntax: ?mute <userID/ping/tag> <duration> <strike (yes/no/y/n/true/false)> <reason>
+    // TODO: Parse duration using moment-timezone
     if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}mute <user> <duration> <strike> <reason>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
