@@ -17,7 +17,7 @@ jobs:
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          repository: hl-resistance/suisei-mic/discord-bot-dev
+          repository: HoloRes/suisei-mic/discord-bot-dev
           registry: docker.pkg.github.com
           tags: latest
           tag_with_sha: true
