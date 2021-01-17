@@ -3,12 +3,11 @@
 const TweetSubscription = require("$/models/tweetSubscription");
 
 // Packages
-const Discord = require("discord.js"),
-    {scheduleJob} = require("node-schedule"),
+const {scheduleJob} = require("node-schedule"),
     Twitter = require("twitter-lite");
 
 // Local imports
-const {logger, client} = require("$/index"),
+const {client} = require("$/index"),
     config = require("$/config.json");
 
 // Variables

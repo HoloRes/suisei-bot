@@ -21,7 +21,7 @@
     "accessKeyId": "",
     "secretAccessKey": ""
   },
-  "PubHubSubBub": {
+  "PubSubHubBub": {
     "secret": "",
     "hubPort": 80,
     "callbackUrl": "",

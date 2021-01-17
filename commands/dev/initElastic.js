@@ -6,5 +6,5 @@ exports.run = (client, message, args) => {
 }
 
 module.exports.config = {
-    command: "eval"
+    command: "initElastic"
 }

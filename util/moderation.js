@@ -1,15 +1,17 @@
 // Imports
 // Packages
-const {client} = require("$/index");
+const moment = require("moment");
 
 // Local files
 const config = require("$/config.json")
+const {client} = require("$/index");
 
 // Models
 const Mute = require("$/models/activeMute"),
     LogItem = require("$/models/modLogItem"),
     Strike = require("$/models/modStrike"),
-    User = require("$/models/modUser");
+    User = require("$/models/modUser"),
+    Setting = require("$/models/Setting");
 
 // Init
 
@@ -45,20 +47,22 @@ exports.warn = (user, reason, moderator) => {
     return {type: "success"};
 }
 
-exports.mute = (user, isStrike, duration, reason, moderator) => {
-    const expirationDate = new Date();
-    // TODO: Use moment.js to calculate expiration
+exports.mute = (user, duration, reason, moderator) => {
+    // TODO: Use node-schedule or node-cron to schedule the unmute
+    // Duration must be in minutes
+    const expirationDate = moment().add(duration, "minutes");
 
     const logItem = new LogItem({
         userId: user.id,
         type: "mute",
         reason: reason,
         moderator: moderator.id,
-        duration: duration // TODO: Use moment-timezone to convert to human readable string
+        duration: moment.duration(duration, "minutes").humanize()
     });
     logItem.save((err) => {
         if(err) return {type: "err", error: err};
     });
+    log(logItem);
 
     const mute = new Mute({
         _id: logItem._id,
@@ -68,15 +72,13 @@ exports.mute = (user, isStrike, duration, reason, moderator) => {
         if(err) return {type: "err", error: err};
     });
 
-    if(isStrike) {
-        const strike = new Strike({
-            _id: logItem._id,
-            strikeDate: new Date(Date.now()).toISOString()
-        });
-        strike.save((err) => {
-            if(err) return {type: "err", error: err};
-        });
-    }
+    const strike = new Strike({
+        _id: logItem._id,
+        strikeDate: new Date(Date.now()).toISOString()
+    });
+    strike.save((err) => {
+        if(err) return {type: "err", error: err};
+    });
 
     User.findById(user.id, (err, doc) => {
         if(err) return {type: "err", error: err};
@@ -95,6 +97,12 @@ exports.mute = (user, isStrike, duration, reason, moderator) => {
             });
         }
     });
+
+    Setting.findById("mutedRole").lean().exec((err, setting) => {
+        if(err) return {type: "err", error: err};
+        user.roles.add(setting.value, `Muted by ${moderator.tag} for ${moment.duration(duration, "minutes").humanize()}`);
+    });
+
     return {type: "success"};
 }
 
@@ -107,6 +115,10 @@ exports.ban = (user, reason, moderator) => {
 }
 
 exports.strike = (user, reason, moderator) => { // This will automatically apply the next strike
+
+}
+
+exports.revoke = (user, caseID, reason, moderator) => {
 
 }
 
@@ -140,6 +152,12 @@ exports.getMemberFromMessage = (message, args, next) => {
             });
     }
 }
+
+function log(logItem) {
+    // TODO: Publish to log channel
+}
+
+exports.log = log;
 
 exports.firstInit = function () { // This should run when the Elasticsearch node hasn't been set up beforehand
 

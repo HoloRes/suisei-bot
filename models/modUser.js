@@ -1,5 +1,7 @@
+// Packages
 const mongoose = require("mongoose");
 
+// Schema
 const userSchema = new mongoose.Schema({
     _id: {type: Number, required: true},
     notes: [{

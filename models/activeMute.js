@@ -1,3 +1,7 @@
+// Packages
+const mongoose = require("mongoose");
+
+// Schema
 const muteSchema = new mongoose.Schema({
     _id: {type: Number},
     expireAt: {type: Date, required: true}

@@ -168,11 +168,11 @@ function loadcmds() {
     });
     client.devcmds.forEach((cmd) => {
         client.devcmds.delete(cmd.config.command);
-        delete require.cache[require.resolve(`./commands/user/${cmd.config.command}.js`)];
+        delete require.cache[require.resolve(`./commands/dev/${cmd.config.command}.js`)];
     });
     client.staffcmds.forEach((cmd) => {
         client.staffcmds.delete(cmd.config.command);
-        delete require.cache[require.resolve(`./commands/user/${cmd.config.command}.js`)];
+        delete require.cache[require.resolve(`./commands/staff/${cmd.config.command}.js`)];
     });
 
     // Fetch all files, filter and load them

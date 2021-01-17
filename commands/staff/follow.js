@@ -46,7 +46,7 @@ exports.run = async (client, message, args) => {
                 .then(async (hooks) => {
                     const existingWebhook = await hooks.find(wh => wh.name.toLowerCase() === "holotweeter");
                     if (!existingWebhook) channel.createWebhook("HoloTweeter")
-                        .then((webhook) => {
+                        .then(() => {
                             checkExistingAndFollow(message, subscription, channel, users[0]);
                         })
                         .catch((err) => {

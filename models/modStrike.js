@@ -1,3 +1,7 @@
+// Packages
+const mongoose = require("mongoose");
+
+// Schema
 const strikeSchema = new mongoose.Schema({
     _id: {type: Number},
     strikeDate: {type: Date, default: new Date()}
