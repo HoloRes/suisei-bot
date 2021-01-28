@@ -8,7 +8,7 @@ exports.confirmRequest = (msg, authorId) => {
         const filter = (reaction, user) => {
             return ["726782736617963561", "726785875215777823"].includes(reaction.emoji.id) && user.id === authorId;
         };
-        const collector = msg.createReactionCollector(filter, {time: 15000});
+        const collector = msg.createReactionCollector(filter, {time: 30000});
 
         collector.on("collect", r => {
             collector.stop();

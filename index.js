@@ -176,9 +176,9 @@ function loadcmds() {
     });
 
     // Fetch all files, filter and load them
-    fs.readdir("./commands/user", (err, files) => { // Read all the files in the directory, these are commands available to Musicians. Override available for staff.
+    fs.readdir("./commands/user", (err, files) => { // Read all the files in the directory, these are commands available to normal users.
         if (err) throw (err);
-        let jsfiles = files.filter(f => f.split(".").pop() === "js");
+        const jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
             return logger.info("No user commands found.");
         }
@@ -190,7 +190,7 @@ function loadcmds() {
     });
     fs.readdir("./commands/dev", (err, files) => { // Commands only available to the developer, these can break.
         if (err) throw (err);
-        let jsfiles = files.filter(f => f.split(".").pop() === "js");
+        const jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
             return logger.info("No dev commands found.");
         }
@@ -202,7 +202,7 @@ function loadcmds() {
     });
     fs.readdir("./commands/staff", (err, files) => { // Commands only available to the staff
         if (err) throw (err);
-        let jsfiles = files.filter(f => f.split(".").pop() === "js");
+        const jsfiles = files.filter(f => f.split(".").pop() === "js");
         if (jsfiles.length <= 0) {
             return logger.info("No staff commands found.");
         }

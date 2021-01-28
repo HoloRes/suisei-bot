@@ -35,7 +35,6 @@
   },
   "YtApiKey": "",
   "sentryDsn": "",
-  "elasticUrl": "",
   "environment": "production",
   "logLevel": "info"
 }
