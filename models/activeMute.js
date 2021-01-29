@@ -3,8 +3,9 @@ const mongoose = require("mongoose");
 
 // Schema
 const muteSchema = new mongoose.Schema({
-    _id: {type: Number},
-    expireAt: {type: Date, required: true}
+    _id: Number,
+    expireAt: {type: Date, required: true},
+    userId: {type: String, required: true}
 });
 
 //muteSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });

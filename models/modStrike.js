@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 // Schema
 const strikeSchema = new mongoose.Schema({
-    _id: {type: Number},
+    _id: Number,
     strikeDate: {type: Date, default: new Date()}
 });
 

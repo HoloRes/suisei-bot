@@ -2,11 +2,12 @@
 // Packages
 const moment = require("moment"),
     {scheduleJob} = require("node-schedule"),
-    {MessageEmbed} = require("discord.js");
+    {MessageEmbed} = require("discord.js"),
+    humanizeDuration = require("humanize-duration");
 
 // Local files
 const config = require("$/config.json");
-const {client} = require("$/index");
+const {client, logger} = require("$/index");
 
 // Models
 const Mute = require("$/models/activeMute"),
@@ -64,8 +65,6 @@ exports.warn = (member, reason, moderator) => {
 }
 
 exports.mute = (member, duration, reason, moderator) => {
-    // TODO: Add role to member, with try catch block
-    // Duration must be in minutes
     const expirationDate = moment().add(duration, "minutes");
 
     const logItem = new LogItem({
@@ -73,43 +72,44 @@ exports.mute = (member, duration, reason, moderator) => {
         type: "mute",
         reason: reason,
         moderator: moderator.id,
-        duration: moment.duration(duration, "minutes").humanize()
+        duration: humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())
     });
     logItem.save((err) => {
         if (err) return {type: "err", error: err};
-    });
-    log(logItem);
+        log(logItem);
 
-    const mute = new Mute({
-        _id: logItem._id,
-        expireAt: expirationDate
-    });
-    mute.save((err) => {
-        if (err) return {type: "err", error: err};
-    });
+        const strike = new Strike({
+            _id: logItem._id,
+            strikeDate: new Date()
+        });
+        strike.save((err) => {
+            if (err) return {type: "err", error: err};
+        });
 
-    const strike = new Strike({
-        _id: logItem._id,
-        strikeDate: new Date(Date.now()).toISOString()
-    });
-    strike.save((err) => {
-        if (err) return {type: "err", error: err};
+        const mute = new Mute({
+            _id: logItem._id,
+            expireAt: expirationDate.toISOString(),
+            userId: member.id
+        });
+        mute.save((err) => {
+            if (err) return {type: "err", error: err};
+        });
     });
 
     Setting.findById("mutedRole", async (err, doc) => {
         if (err) return {type: "err", error: err};
-        if(!doc) return {type: "err", error: "noRole"}
+        if (!doc) return {type: "err", error: "noRole"}
         member.roles.add(doc.value)
             .catch((e) => {
                 return {type: "err", error: e};
             });
     });
 
-    plannedUnmutes[logItem._id] = scheduleJob(expirationDate, () => {
-        unmute(member, "Automatic unmute", client.user.tag)
+    plannedUnmutes[logItem._id] = scheduleJob(expirationDate.toDate(), () => {
+        unmute(member);
     });
 
-    User.findById(user.id, (err, doc) => {
+    User.findById(member.id, (err, doc) => {
         if (err) return {type: "err", error: err};
         if (!doc) {
             const user = new User({
@@ -129,38 +129,76 @@ exports.mute = (member, duration, reason, moderator) => {
 
     Setting.findById("mutedRole").lean().exec((err, setting) => {
         if (err) return {type: "err", error: err};
-        member.roles.add(setting.value, `Muted by ${moderator.tag} for ${moment.duration(duration, "minutes").humanize()}`);
+        member.roles.add(setting.value, `Muted by ${moderator.tag} for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}`);
     });
+
+    const embed = new MessageEmbed()
+        .setTitle("Mute")
+        .setDescription(`You have been muted for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}\nReason: ${reason}`)
+        .setFooter(`Issued by: ${moderator.user.tag}`)
+        .setTimestamp()
+
+    member.send(embed)
+        .catch(() => {
+            return {type: "success", "info": "Failed to send DM"};
+        })
 
     return {type: "success"};
 }
 
-function unmute(user, reason, moderator) {
-
+function unmute(member, reason, moderator) {
+    Setting.findById("mutedRole").lean().exec((err, setting) => {
+        if (err) return {type: "err", error: err};
+        member.roles.remove(setting.value);
+        if (reason && moderator) {
+            log({
+                userId: member.id,
+                type: "unmute",
+                reason: reason,
+                moderator: moderator.id
+            });
+        } else {
+            log({
+                userId: member.id,
+                type: "unmute",
+                reason: "Automatic unmute",
+                moderator: client.user.id
+            });
+        }
+        Mute.findOneAndDelete({userId: member.id}, (err2) => {
+            if(err2) logger.error(err2);
+        });
+        return {type: "success"};
+    });
 }
+
 exports.unmute = unmute;
 
-exports.kick = (user, reason, moderator) => {
+exports.kick = (member, reason, moderator) => {
 
 }
 
-exports.ban = (user, reason, moderator) => {
+exports.ban = (member, reason, moderator) => {
 
 }
 
-exports.strike = (user, reason, moderator) => { // This will automatically apply the next strike
+exports.strike = (member, reason, moderator) => { // This will automatically apply the next strike
 
 }
 
-exports.revoke = (user, caseID, reason, moderator) => {
+exports.revoke = (member, caseID, reason, moderator) => {
 
 }
 
-exports.getModLogByUserID = (user) => {
+exports.getModLogsByUserID = (userID) => {
 
 }
 
 exports.getModLogByCaseID = (caseID) => {
+
+}
+
+exports.getUserData = (userID) => {
 
 }
 
@@ -188,13 +226,51 @@ exports.getMemberFromMessage = (message, args, next) => { // TODO: Check if memb
 }
 
 function log(logItem) {
-    // TODO: Publish to log channel
+    client.users.fetch(logItem.userId)
+        .then((offender) => {
+            client.users.fetch(logItem.moderator)
+                .then((moderator) => {
+                    const embed = new MessageEmbed()
+                        .setTitle(`${logItem.type}${logItem._id ? ` | case ${logItem._id}` : ""}`)
+                        .setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ""}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.tag}`)
+                        .setFooter(logItem.userId)
+                        .setTimestamp();
+                    Setting.findById("modLogChannel", (err, doc) => {
+                        if (err) return logger.error(err);
+                        if (!doc) return;
+                        client.channels.fetch(doc.value)
+                            .then((channel) => {
+                                channel.send(embed);
+                            });
+                    })
+                });
+        });
 }
 
 exports.log = log;
 
 exports.init = function () { // Should run on every bot start
     Mute.find({}, (err, docs) => {
-        // TODO: Schedule unmute (role removal and db document removal)
+        if (err) return logger.error(err);
+        docs.forEach((doc) => {
+            LogItem.findById(doc._id, (err2, logDoc) => {
+                if (err2) return logger.error(err2);
+                client.guilds.fetch(config.discord.serverId)
+                    .then((guild) => {
+                        guild.members.fetch(logDoc.userId)
+                            .then((member) => {
+                                plannedUnmutes[doc._id] = scheduleJob(new Date(doc.expirationDate), () => {
+                                    unmute(member);
+                                });
+                            })
+                            .catch((e) => {
+                                logger.error(e);
+                            });
+                    })
+                    .catch((e) => {
+                        logger.error(e);
+                    });
+            })
+        })
     });
 }

@@ -35,10 +35,15 @@ const client = new Discord.Client({
 });
 exports.client = client;
 
+// Mongoose sequence
+const AutoIncrement = require("mongoose-sequence")(mongoose);
+exports.AutoIncrement = AutoIncrement;
+
 // Local JS files
 const youtubeNotifications = require("$/util/youtube"),
     twitterNotifications = require("$/util/twitter"),
-    dashboardRouter = require("$/routers/dashboard");
+    dashboardRouter = require("$/routers/dashboard"),
+    moderation = require("$/util/moderation");
 
 // Variables
 
@@ -64,6 +69,9 @@ if(config.environment === "production") {
     youtubeNotifications.init(logger);
     twitterNotifications.init(logger);
 }
+
+// Moderation
+moderation.init();
 
 // Code
 // Discord bot
@@ -139,6 +147,7 @@ client.on("message", (message) => {
         let args = cont.slice(1);
 
         let staffCmd = client.staffcmds.get(cont[0]);
+        // TODO: Check for MANAGE_GUILD permission instead of role
         if(staffCmd && message.member.roles.cache.has(config.discord.roles.staff)) return staffCmd.run(client, message, args);
         let cmd = client.commands.get(cont[0]);
 

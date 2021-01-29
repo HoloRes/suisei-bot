@@ -1,10 +1,14 @@
 // Imports
+// Packages
+const Discord = require("discord.js"),
+    config = require("$/config.json"),
+    parse = require("parse-duration")
+    moment = require("moment")
+    humanizeDuration = require("humanize-duration");
+
 // Local files
 const moderation = require("$/util/moderation"),
-    { confirmRequest } = require("$/util/functions"),
-    Discord = require("discord.js"),
-    config = require("$/config.json"),
-    parse = require("parse-duration");
+    { confirmRequest } = require("$/util/functions");
 
 exports.run = (client, message, args) => {
     //* Expected syntax: ?mute <userID/ping/tag> <duration> <strike (yes/no/y/n/true/false)> <reason>
@@ -29,14 +33,14 @@ exports.run = (client, message, args) => {
 // Functions
 function confirmAndMute(message, duration, member, reason) {
     const embed = new Discord.MessageEmbed()
-        .setTitle(`Muting ${member.user.tag} for ${duration}`)
+        .setTitle(`Muting ${member.user.tag} for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}`)
         .setDescription(`Reason: ${reason}`);
     message.channel.send(embed)
         .then((msg) => {
             confirmRequest(msg, message.author.id)
                 .then((result) => {
                     if(result === true) {
-                        moderation.mute(member, duration, reason, message.author);
+                        moderation.mute(member, duration, reason, message.member);
                     } else {
                         msg.edit("Cancelled.")
                         message.delete({timeout: 4000, reason: "Automated"});
