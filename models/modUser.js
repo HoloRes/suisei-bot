@@ -11,4 +11,4 @@ const userSchema = new mongoose.Schema({
     lastKnownTag: {type: String, required: true}
 });
 
-module.exports = mongoose.model("user", userSchema, "modusers");
+module.exports = mongoose.model("User", userSchema, "modusers");

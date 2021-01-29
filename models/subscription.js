@@ -3,10 +3,10 @@ const mongoose = require("mongoose");
 
 // Schema
 const Subscription = new mongoose.Schema({
-    "_id": String,
-    "channels": [{
-        "id": String,
-        "message": String
+    _id: String,
+    channels: [{
+        id: String,
+        message: String
     }]
 });
 

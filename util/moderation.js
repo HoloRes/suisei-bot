@@ -13,7 +13,7 @@ const Mute = require("$/models/activeMute"),
     LogItem = require("$/models/modLogItem"),
     Strike = require("$/models/modStrike"),
     User = require("$/models/modUser"),
-    Setting = require("$/models/Setting");
+    Setting = require("$/models/setting");
 
 // Init
 let plannedUnmutes = {};

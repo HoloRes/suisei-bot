@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 
 // Schema
 const autoPublish = new mongoose.Schema({
-    "_id": String,
+    _id: String,
     autoPublish: Boolean
 });
 
-module.exports = mongoose.model("autoPublish", autoPublish, "autoPublish");
+module.exports = mongoose.model("AutoPublish", autoPublish, "autoPublish");

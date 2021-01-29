@@ -7,4 +7,4 @@ const strikeSchema = new mongoose.Schema({
     strikeDate: {type: Date, default: new Date()}
 });
 
-module.exports = mongoose.model("strike", strikeSchema, "strikes");
+module.exports = mongoose.model("Strike", strikeSchema, "strikes");

@@ -9,4 +9,4 @@ const muteSchema = new mongoose.Schema({
 
 //muteSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
 
-module.exports = mongoose.model("mute", muteSchema, "activeMutes");
+module.exports = mongoose.model("Mute", muteSchema, "activeMutes");
