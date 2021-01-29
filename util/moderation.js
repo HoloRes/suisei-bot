@@ -165,8 +165,9 @@ function unmute(member, reason, moderator) {
                 moderator: client.user.id
             });
         }
-        Mute.findOneAndDelete({userId: member.id}, (err2) => {
+        Mute.findOneAndDelete({userId: member.id}, (err2, doc) => {
             if(err2) logger.error(err2);
+            plannedUnmutes[doc._id].cancel();
         });
         return {type: "success"};
     });
