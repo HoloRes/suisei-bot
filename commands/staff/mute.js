@@ -10,24 +10,29 @@ const Discord = require("discord.js"),
 const moderation = require("$/util/moderation"),
     { confirmRequest } = require("$/util/functions");
 
-exports.run = (client, message, args) => {
-    //* Expected syntax: ?mute <userID/ping/tag> <duration> <strike (yes/no/y/n/true/false)> <reason>
-    // TODO: Parse duration using parse-duration
+exports.run = async (client, message, args) => {
     if(args.length < 3) return message.channel.send(`**USAGE:** ${config.discord.prefix}mute <user> <duration> <reason>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});
         });
-    moderation.getMemberFromMessage(message, args, (member) => {
-        const reason = args.slice(2).join(" ");
-        const duration = parse(args[1], "m"); // Parse into minutes
-        if (isNaN(duration)) return message.channel.send("Invalid duration")
-            .then((msg) => {
-                message.delete({timeout: 4000, reason: "Automated"});
-                msg.delete({timeout: 4000, reason: "Automated"});
-            });
-        confirmAndMute(message, duration, member, reason);
-    });
+
+    const member = await moderation.getMemberFromMessage(message, args)
+        .catch(() => {
+            return message.channel.send("Member not found")
+                .then((msg) => {
+                    message.delete({timeout: 4000, reason: "Automated"});
+                    msg.delete({timeout: 4000, reason: "Automated"});
+                });
+        });
+    const reason = await args.slice(2).join(" ");
+    const duration = await parse(args[1], "m"); // Parse into minutes
+    if (isNaN(duration) || duration === 0) return message.channel.send("Invalid duration")
+        .then((msg) => {
+            message.delete({timeout: 4000, reason: "Automated"});
+            msg.delete({timeout: 4000, reason: "Automated"});
+        });
+    confirmAndMute(message, duration, member, reason);
 }
 
 // Functions
@@ -40,7 +45,18 @@ function confirmAndMute(message, duration, member, reason) {
             confirmRequest(msg, message.author.id)
                 .then((result) => {
                     if(result === true) {
-                        moderation.mute(member, duration, reason, message.member);
+                        moderation.mute(member, duration, reason, message.member)
+                            .then((status) => {
+                                if(status.info) message.channel.send(`Mute succeeded, but ${status.info}`);
+                                else message.channel.send(`**${member.user.tag}** has been muted`)
+                            })
+                            .catch(() => {
+                                return message.channel.send("Something went wrong, please try again.")
+                                    .then((msg) => {
+                                        message.delete({timeout: 4000, reason: "Automated"});
+                                        msg.delete({timeout: 4000, reason: "Automated"});
+                                    });
+                            });
                     } else {
                         msg.edit("Cancelled.")
                         message.delete({timeout: 4000, reason: "Automated"});

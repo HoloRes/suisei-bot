@@ -30,7 +30,7 @@ exports.warn = (member, reason, moderator) => {
     logItem.save((err) => {
         if (err) return {type: "err", error: err};
     });
-    log(logItem);
+    log(logItem, "#f54242");
 
     User.findById(member.id, (err, doc) => {
         if (err) return {type: "err", error: err};
@@ -65,111 +65,115 @@ exports.warn = (member, reason, moderator) => {
 }
 
 exports.mute = (member, duration, reason, moderator) => {
-    const expirationDate = moment().add(duration, "minutes");
+    return new Promise((resolve, reject) => {
+        const expirationDate = moment().add(duration, "minutes");
 
-    const logItem = new LogItem({
-        userId: member.id,
-        type: "mute",
-        reason: reason,
-        moderator: moderator.id,
-        duration: humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())
-    });
-    logItem.save((err) => {
-        if (err) return {type: "err", error: err};
-        log(logItem);
-
-        const strike = new Strike({
-            _id: logItem._id,
-            strikeDate: new Date()
+        const logItem = new LogItem({
+            userId: member.id,
+            type: "mute",
+            reason: reason,
+            moderator: moderator.id,
+            duration: humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())
         });
-        strike.save((err) => {
-            if (err) return {type: "err", error: err};
+        logItem.save((err) => {
+            if (err) reject({type: "err", error: err});
+            log(logItem, "#f54242");
+
+            const strike = new Strike({
+                _id: logItem._id,
+                strikeDate: new Date()
+            });
+            strike.save((err) => {
+                if (err) reject({type: "err", error: err});
+            });
+
+            const mute = new Mute({
+                _id: logItem._id,
+                expireAt: expirationDate.toISOString(),
+                userId: member.id
+            });
+            mute.save((err) => {
+                if (err) reject({type: "err", error: err});
+            });
+
+            plannedUnmutes[logItem._id] = scheduleJob(expirationDate.toDate(), () => {
+                unmute(member);
+            });
         });
 
-        const mute = new Mute({
-            _id: logItem._id,
-            expireAt: expirationDate.toISOString(),
-            userId: member.id
+        Setting.findById("mutedRole", async (err, doc) => {
+            if (err) reject({type: "err", error: err});
+            if (!doc) reject({type: "err", error: "noRole"});
+            member.roles.add(doc.value)
+                .catch((e) => {
+                    reject({type: "err", error: e});
+                });
         });
-        mute.save((err) => {
-            if (err) return {type: "err", error: err};
+
+        User.findById(member.id, (err, doc) => {
+            if (err) reject({type: "err", error: err});
+            if (!doc) {
+                const user = new User({
+                    _id: member.id,
+                    lastKnownTag: member.user.tag
+                });
+                user.save((err) => {
+                    if (err) reject({type: "err", error: err});
+                });
+            } else {
+                doc.lastKnownTag = member.user.tag;
+                doc.save((err) => {
+                    if (err) reject({type: "err", error: err});
+                });
+            }
         });
+
+        Setting.findById("mutedRole").lean().exec((err, setting) => {
+            if (err) reject({type: "err", error: err});
+            member.roles.add(setting.value, `Muted by ${moderator.tag} for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}`);
+        });
+
+        const embed = new MessageEmbed()
+            .setTitle("Mute")
+            .setDescription(`You have been muted for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}\nReason: ${reason}`)
+            .setFooter(`Issued by: ${moderator.user.tag}`)
+            .setTimestamp()
+
+        member.send(embed)
+            .catch(() => {
+                resolve({type: "success", "info": "failed to send DM"});
+            })
+
+        resolve({type: "success"});
     });
-
-    Setting.findById("mutedRole", async (err, doc) => {
-        if (err) return {type: "err", error: err};
-        if (!doc) return {type: "err", error: "noRole"}
-        member.roles.add(doc.value)
-            .catch((e) => {
-                return {type: "err", error: e};
-            });
-    });
-
-    plannedUnmutes[logItem._id] = scheduleJob(expirationDate.toDate(), () => {
-        unmute(member);
-    });
-
-    User.findById(member.id, (err, doc) => {
-        if (err) return {type: "err", error: err};
-        if (!doc) {
-            const user = new User({
-                _id: member.id,
-                lastKnownTag: member.user.tag
-            });
-            user.save((err) => {
-                if (err) return {type: "err", error: err};
-            });
-        } else {
-            doc.lastKnownTag = member.user.tag;
-            doc.save((err) => {
-                if (err) return {type: "err", error: err};
-            });
-        }
-    });
-
-    Setting.findById("mutedRole").lean().exec((err, setting) => {
-        if (err) return {type: "err", error: err};
-        member.roles.add(setting.value, `Muted by ${moderator.tag} for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}`);
-    });
-
-    const embed = new MessageEmbed()
-        .setTitle("Mute")
-        .setDescription(`You have been muted for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}\nReason: ${reason}`)
-        .setFooter(`Issued by: ${moderator.user.tag}`)
-        .setTimestamp()
-
-    member.send(embed)
-        .catch(() => {
-            return {type: "success", "info": "Failed to send DM"};
-        })
-
-    return {type: "success"};
 }
 
 function unmute(member, reason, moderator) {
-    Setting.findById("mutedRole").lean().exec((err, setting) => {
-        if (err) return {type: "err", error: err};
-        member.roles.remove(setting.value);
-        if (reason && moderator) {
-            log({
-                userId: member.id,
-                type: "unmute",
-                reason: reason,
-                moderator: moderator.id
+    return new Promise((resolve, reject) => {
+        Setting.findById("mutedRole").lean().exec((err, setting) => {
+            if (err) reject({type: "err", error: err});
+            member.roles.remove(setting.value);
+            if (reason && moderator) {
+                log({
+                    userId: member.id,
+                    type: "unmute",
+                    reason: reason,
+                    moderator: moderator.id
+                }, "#2bad64");
+            } else {
+                log({
+                    userId: member.id,
+                    type: "unmute",
+                    reason: "Automatic unmute",
+                    moderator: client.user.id
+                }, "#2bad64");
+            }
+            Mute.findOneAndDelete({userId: member.id}, (err2, doc) => {
+                if(err2) logger.error(err2);
+                if(doc && plannedUnmutes[doc._id]) plannedUnmutes[doc._id].cancel();
             });
-        } else {
-            log({
-                userId: member.id,
-                type: "unmute",
-                reason: "Automatic unmute",
-                moderator: client.user.id
-            });
-        }
-        Mute.findOneAndDelete({userId: member.id}, (err2, doc) => {
-            if(err2) logger.error(err2);
-            plannedUnmutes[doc._id].cancel();
+            resolve({type: "success"});
         });
-        return {type: "success"};
     });
 }
 
@@ -203,30 +207,28 @@ exports.getUserData = (userID) => {
 
 }
 
-exports.getMemberFromMessage = (message, args, next) => { // TODO: Check if member is a moderator or bot
-    if (message.mentions.members.size === 1) {
-        return next(message.mentions.members.array()[0]);
-    } else {
-        message.guild.members.fetch(args[0])
-            .then((member) => {
-                return next(member);
-            })
-            .catch(() => {
-                message.guild.members.fetch()
-                    .then(() => {
-                        const member = message.guild.members.cache.find(guildMember => guildMember.user.tag.toLowerCase() === args[0].toLowerCase());
-                        if (!member) return message.channel.send("Cannot find this user.")
-                            .then(msg => {
-                                message.delete({timeout: 4000, reason: "Automated"});
-                                msg.delete({timeout: 4000, reason: "Automated"});
-                            });
-                        return next(member);
-                    });
-            });
-    }
+exports.getMemberFromMessage = (message, args) => { // TODO: Check if member is a moderator or bot
+    return new Promise((resolve, reject) => {
+        if (message.mentions.members.size > 0) {
+            resolve(message.mentions.members.array()[0]);
+        } else {
+            message.guild.members.fetch(args[0])
+                .then((member) => {
+                    resolve(member);
+                })
+                .catch(() => {
+                    message.guild.members.fetch()
+                        .then(() => {
+                            const member = message.guild.members.cache.find(guildMember => guildMember.user.tag.toLowerCase() === args[0].toLowerCase());
+                            if (!member) reject("Member not found");
+                            return resolve(member);
+                        });
+                });
+        }
+    });
 }
 
-function log(logItem) {
+function log(logItem, color) {
     client.users.fetch(logItem.userId)
         .then((offender) => {
             client.users.fetch(logItem.moderator)
@@ -234,7 +236,8 @@ function log(logItem) {
                     const embed = new MessageEmbed()
                         .setTitle(`${logItem.type}${logItem._id ? ` | case ${logItem._id}` : ""}`)
                         .setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ""}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.tag}`)
-                        .setFooter(logItem.userId)
+                        .setFooter(`ID: ${logItem.userId}`)
+                        .setColor(color)
                         .setTimestamp();
                     Setting.findById("modLogChannel", (err, doc) => {
                         if (err) return logger.error(err);
@@ -261,7 +264,10 @@ exports.init = function () { // Should run on every bot start
                         guild.members.fetch(logDoc.userId)
                             .then((member) => {
                                 plannedUnmutes[doc._id] = scheduleJob(new Date(doc.expirationDate), () => {
-                                    unmute(member);
+                                    unmute(member)
+                                        .catch((e) => {
+                                            logger.error(e);
+                                        });
                                 });
                             })
                             .catch((e) => {
