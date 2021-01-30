@@ -1,12 +1,14 @@
 // Imports
+// Packages
+const {MessageEmbed} = require("discord.js");
+
 // Local files
 const moderation = require("$/util/moderation"),
-    { confirmRequest } = require("$/util/functions"),
-    Discord = require("discord.js"),
+    {confirmRequest} = require("$/util/functions"),
     config = require("$/config.json");
 
 exports.run = async (client, message, args) => {
-    if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}warn <user><reason>`)
+    if (!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}warn <user><reason>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});
@@ -27,25 +29,22 @@ exports.run = async (client, message, args) => {
 
 // Functions
 function confirmAndWarn(message, member, reason) {
-    const embed = new Discord.MessageEmbed()
-        .setTitle(`Warning ${member.user.tag}`)
+    const embed = new MessageEmbed()
+        .setTitle(`Warning **${member.user.tag}**`)
         .setDescription(`Reason: ${reason}`);
+
     message.channel.send(embed)
         .then((msg) => {
             confirmRequest(msg, message.author.id)
                 .then((result) => {
-                    if(result === true) {
+                    if (result === true) {
                         moderation.warn(member, reason, message.member)
                             .then((status) => {
-                                if(status.info) message.channel.send(`Warn succeeded, but ${status.info}`);
+                                if (status.info) message.channel.send(`Warn succeeded, but ${status.info}`);
                                 else message.channel.send(`**${member.user.tag}** has been warned`)
                             })
                             .catch(() => {
-                                return message.channel.send("Something went wrong, please try again.")
-                                    .then((msg) => {
-                                        message.delete({timeout: 4000, reason: "Automated"});
-                                        msg.delete({timeout: 4000, reason: "Automated"});
-                                    });
+                                return message.channel.send("Something went wrong, please try again.");
                             });
                     } else {
                         msg.edit("Cancelled.")

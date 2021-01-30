@@ -139,8 +139,8 @@ function unmute(member, reason, moderator) {
                 }, "#2bad64");
             }
             Mute.findOneAndDelete({userId: member.id}, (err2, doc) => {
-                if(err2) logger.error(err2);
-                if(doc && plannedUnmutes[doc._id]) plannedUnmutes[doc._id].cancel();
+                if (err2) logger.error(err2);
+                if (doc && plannedUnmutes[doc._id]) plannedUnmutes[doc._id].cancel();
             });
             resolve({type: "success"});
         });
@@ -150,11 +150,89 @@ function unmute(member, reason, moderator) {
 exports.unmute = unmute;
 
 exports.kick = (member, reason, moderator) => {
+    return new Promise(async (resolve, reject) => {
+        const logItem = new LogItem({
+            userId: member.id,
+            type: "kick",
+            reason: reason,
+            moderator: moderator.id
+        });
+        await logItem.save((err) => {
+            if (err) reject({type: "err", error: err});
+            log(logItem, "#f54242");
 
+            const strike = new Strike({
+                _id: logItem._id,
+                strikeDate: new Date()
+            });
+            strike.save((err) => {
+                if (err) reject({type: "err", error: err});
+            });
+        });
+
+        updateMember(member);
+
+        const embed = new MessageEmbed()
+            .setTitle("Kick")
+            .setDescription(`You have been kicked for: ${reason}`)
+            .setFooter(`Issued by: ${moderator.user.tag}`)
+            .setTimestamp()
+
+        await member.send(embed)
+            .catch(() => {
+                resolve({type: "success", info: "failed to send DM"});
+            })
+
+        await member.kick(reason)
+            .catch((err) => {
+                reject({type: "err", error: err});
+            });
+
+        resolve({type: "success"});
+    });
 }
 
 exports.ban = (member, reason, moderator) => {
+    return new Promise(async (resolve, reject) => {
+        const logItem = new LogItem({
+            userId: member.id,
+            type: "ban",
+            reason: reason,
+            moderator: moderator.id
+        });
+        await logItem.save((err) => {
+            if (err) reject({type: "err", error: err});
+            log(logItem, "#f54242");
 
+            const strike = new Strike({
+                _id: logItem._id,
+                strikeDate: new Date()
+            });
+            strike.save((err) => {
+                if (err) reject({type: "err", error: err});
+            });
+        });
+
+        updateMember(member);
+
+        const embed = new MessageEmbed()
+            .setTitle("Ban")
+            .setDescription(`You have been banned for: ${reason}`)
+            .setFooter(`Issued by: ${moderator.user.tag}`)
+            .setTimestamp()
+
+        await member.send(embed)
+            .catch(() => {
+                resolve({type: "success", info: "failed to send DM"});
+            })
+
+        await member.ban({reason})
+            .catch((err) => {
+                reject({type: "err", error: err});
+            });
+
+        resolve({type: "success"});
+    });
 }
 
 exports.strike = (member, reason, moderator) => { // This will automatically apply the next strike
@@ -184,8 +262,8 @@ exports.getMemberFromMessage = (message, args) => {
         } else {
             message.guild.members.fetch(args[0])
                 .then((member) => {
-                    if(member.hasPermission("MANAGE_GUILD")) reject("This member is a moderator")
-                    if(member.user.bot) reject("This user is a bot")
+                    if (member.hasPermission("MANAGE_GUILD")) reject("This member is a moderator")
+                    if (member.user.bot) reject("This user is a bot")
                     resolve(member);
                 })
                 .catch(() => {

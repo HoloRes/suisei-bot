@@ -1,15 +1,13 @@
 // Imports
-// Packages
-const config = require("$/config.json");
-
 // Local files
-const moderation = require("$/util/moderation");
+const moderation = require("$/util/moderation"),
+    config = require("$/config.json");
 
 // Models
 const Setting = require("$/models/setting");
 
 exports.run = async (client, message, args) => {
-    if(args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}unmute <user> <reason>`)
+    if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}unmute <user> <reason>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});
@@ -32,13 +30,13 @@ exports.run = async (client, message, args) => {
                 msg.delete({timeout: 4000, reason: "Automated"});
             });
 
-        if(!doc) return message.channel.send("There's no mute role defined, please set one via the settings command")
+        if (!doc) return message.channel.send("There's no mute role defined, please set one via the settings command")
             .then((msg) => {
                 message.delete({timeout: 4000, reason: "Automated"});
                 msg.delete({timeout: 4000, reason: "Automated"});
             });
 
-        if(!member.roles.cache.has(doc.value)) return message.channel.send("This member is not muted, unable to unmute.")
+        if (!member.roles.cache.has(doc.value)) return message.channel.send("This member is not muted, unable to unmute.")
             .then((msg) => {
                 message.delete({timeout: 4000, reason: "Automated"});
                 msg.delete({timeout: 4000, reason: "Automated"});
@@ -50,11 +48,7 @@ exports.run = async (client, message, args) => {
             message.channel.send(`**${member.user.tag}** has been unmuted`);
         })
         .catch(() => {
-            return message.channel.send("Something went wrong, please try again.")
-                .then((msg) => {
-                    message.delete({timeout: 4000, reason: "Automated"});
-                    msg.delete({timeout: 4000, reason: "Automated"});
-                });
+            return message.channel.send("Something went wrong, please try again.");
         });
 }
 
