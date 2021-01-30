@@ -177,13 +177,15 @@ exports.getUserData = (userID) => {
 
 }
 
-exports.getMemberFromMessage = (message, args) => { // TODO: Check if member is a moderator or bot
+exports.getMemberFromMessage = (message, args) => {
     return new Promise((resolve, reject) => {
         if (message.mentions.members.size > 0) {
             resolve(message.mentions.members.array()[0]);
         } else {
             message.guild.members.fetch(args[0])
                 .then((member) => {
+                    if(member.hasPermission("MANAGE_GUILD")) reject("This member is a moderator")
+                    if(member.user.bot) reject("This user is a bot")
                     resolve(member);
                 })
                 .catch(() => {

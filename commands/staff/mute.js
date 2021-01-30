@@ -18,8 +18,8 @@ exports.run = async (client, message, args) => {
         });
 
     const member = await moderation.getMemberFromMessage(message, args)
-        .catch(() => {
-            return message.channel.send("Member not found")
+        .catch((e) => {
+            return message.channel.send(e)
                 .then((msg) => {
                     message.delete({timeout: 4000, reason: "Automated"});
                     msg.delete({timeout: 4000, reason: "Automated"});
