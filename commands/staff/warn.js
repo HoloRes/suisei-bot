@@ -37,7 +37,7 @@ function confirmAndWarn(message, member, reason) {
                     if(result === true) {
                         moderation.warn(member, reason, message.member)
                             .then((status) => {
-                                if(status.info) message.channel.send(`Warned succeeded, but ${status.info}`);
+                                if(status.info) message.channel.send(`Warn succeeded, but ${status.info}`);
                                 else message.channel.send(`**${member.user.tag}** has been warned`)
                             })
                             .catch(() => {
