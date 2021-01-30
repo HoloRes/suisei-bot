@@ -5,17 +5,24 @@ const moderation = require("$/util/moderation"),
     Discord = require("discord.js"),
     config = require("$/config.json");
 
-exports.run = (client, message, args) => {
-    //* Expected syntax: [warn <userID/ping/tag> <reason>
+exports.run = async (client, message, args) => {
     if(!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}warn <user><reason>`)
         .then(msg => {
             message.delete({timeout: 4000, reason: "Automated"});
             msg.delete({timeout: 4000, reason: "Automated"});
         });
-    moderation.getMemberFromMessage(message, args, (member) => {
-        const reason = args.slice(1).join(" ");
-        confirmAndWarn(message, member, reason);
-    });
+
+    const reason = await args.slice(1).join(" ");
+    const member = await moderation.getMemberFromMessage(message, args)
+        .catch(() => {
+            return message.channel.send("Member not found")
+                .then((msg) => {
+                    message.delete({timeout: 4000, reason: "Automated"});
+                    msg.delete({timeout: 4000, reason: "Automated"});
+                });
+        });
+
+    confirmAndWarn(message, member, reason);
 }
 
 // Functions
@@ -28,7 +35,18 @@ function confirmAndWarn(message, member, reason) {
             confirmRequest(msg, message.author.id)
                 .then((result) => {
                     if(result === true) {
-                        moderation.warn(member, reason, message.author);
+                        moderation.warn(member, reason, message.member)
+                            .then((status) => {
+                                if(status.info) message.channel.send(`Warned succeeded, but ${status.info}`);
+                                else message.channel.send(`**${member.user.tag}** has been warned`)
+                            })
+                            .catch(() => {
+                                return message.channel.send("Something went wrong, please try again.")
+                                    .then((msg) => {
+                                        message.delete({timeout: 4000, reason: "Automated"});
+                                        msg.delete({timeout: 4000, reason: "Automated"});
+                                    });
+                            });
                     } else {
                         msg.edit("Cancelled.")
                         message.delete({timeout: 4000, reason: "Automated"});

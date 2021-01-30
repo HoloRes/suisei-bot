@@ -24,7 +24,7 @@ exports.run = async (client, message, args) => {
 
     moderation.unmute(member, reason, message.member)
         .then(() => {
-            message.channel.send(`**${member.user.tag}** has been unmuted`)
+            message.channel.send(`**${member.user.tag}** has been unmuted`);
         })
         .catch(() => {
             return message.channel.send("Something went wrong, please try again.")

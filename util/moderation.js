@@ -21,51 +21,37 @@ let plannedUnmutes = {};
 
 // Exports
 exports.warn = (member, reason, moderator) => {
-    const logItem = new LogItem({
-        userId: member.id,
-        type: "warn",
-        reason: reason,
-        moderator: moderator.id
+    return new Promise(async (resolve, reject) => {
+        const logItem = new LogItem({
+            userId: member.id,
+            type: "warn",
+            reason: reason,
+            moderator: moderator.id
+        });
+        await logItem.save((err) => {
+            if (err) reject({type: "err", error: err});
+            log(logItem, "#f54242");
+        });
+
+        updateMember(member);
+
+        const embed = new MessageEmbed()
+            .setTitle("Warn")
+            .setDescription(`You have been warned for: ${reason}\n\nNote: Warns do **NOT** count as strikes`)
+            .setFooter(`Issued by: ${moderator.user.tag}`)
+            .setTimestamp()
+
+        await member.send(embed)
+            .catch(() => {
+                resolve({type: "success", info: "failed to send DM"});
+            })
+
+        resolve({type: "success"});
     });
-    logItem.save((err) => {
-        if (err) return {type: "err", error: err};
-    });
-    log(logItem, "#f54242");
-
-    User.findById(member.id, (err, doc) => {
-        if (err) return {type: "err", error: err};
-        if (!doc) {
-            const user = new User({
-                _id: member.id,
-                lastKnownTag: member.user.tag
-            });
-            user.save((err) => {
-                if (err) return {type: "err", error: err};
-            });
-        } else {
-            doc.lastKnownTag = member.user.tag;
-            doc.save((err) => {
-                if (err) return {type: "err", error: err};
-            });
-        }
-    });
-
-    const embed = new MessageEmbed()
-        .setTitle("Warn")
-        .setDescription(`You have been warned for: ${reason}\n\nNote: Warns do **NOT** count as strikes`)
-        .setFooter(`Issued by: ${moderator.user.tag}`)
-        .setTimestamp()
-
-    member.send(embed)
-        .catch(() => {
-            return {type: "success", "info": "Failed to send DM"};
-        })
-
-    return {type: "success"};
 }
 
 exports.mute = (member, duration, reason, moderator) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const expirationDate = moment().add(duration, "minutes");
 
         const logItem = new LogItem({
@@ -75,7 +61,7 @@ exports.mute = (member, duration, reason, moderator) => {
             moderator: moderator.id,
             duration: humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())
         });
-        logItem.save((err) => {
+        await logItem.save((err) => {
             if (err) reject({type: "err", error: err});
             log(logItem, "#f54242");
 
@@ -101,7 +87,7 @@ exports.mute = (member, duration, reason, moderator) => {
             });
         });
 
-        Setting.findById("mutedRole", async (err, doc) => {
+        await Setting.findById("mutedRole", async (err, doc) => {
             if (err) reject({type: "err", error: err});
             if (!doc) reject({type: "err", error: "noRole"});
             member.roles.add(doc.value)
@@ -110,25 +96,9 @@ exports.mute = (member, duration, reason, moderator) => {
                 });
         });
 
-        User.findById(member.id, (err, doc) => {
-            if (err) reject({type: "err", error: err});
-            if (!doc) {
-                const user = new User({
-                    _id: member.id,
-                    lastKnownTag: member.user.tag
-                });
-                user.save((err) => {
-                    if (err) reject({type: "err", error: err});
-                });
-            } else {
-                doc.lastKnownTag = member.user.tag;
-                doc.save((err) => {
-                    if (err) reject({type: "err", error: err});
-                });
-            }
-        });
+        updateMember(member);
 
-        Setting.findById("mutedRole").lean().exec((err, setting) => {
+        await Setting.findById("mutedRole").lean().exec((err, setting) => {
             if (err) reject({type: "err", error: err});
             member.roles.add(setting.value, `Muted by ${moderator.tag} for ${humanizeDuration(moment.duration(duration, "minutes").asMilliseconds())}`);
         });
@@ -139,9 +109,9 @@ exports.mute = (member, duration, reason, moderator) => {
             .setFooter(`Issued by: ${moderator.user.tag}`)
             .setTimestamp()
 
-        member.send(embed)
+        await member.send(embed)
             .catch(() => {
-                resolve({type: "success", "info": "failed to send DM"});
+                resolve({type: "success", info: "failed to send DM"});
             })
 
         resolve({type: "success"});
@@ -279,5 +249,27 @@ exports.init = function () { // Should run on every bot start
                     });
             })
         })
+    });
+}
+
+function updateMember(member) {
+    User.findById(member.id, (err, doc) => {
+        if (err) logger.error(err);
+        else {
+            if (!doc) {
+                const user = new User({
+                    _id: member.id,
+                    lastKnownTag: member.user.tag
+                });
+                user.save((err) => {
+                    if (err) logger.error(err);
+                });
+            } else {
+                doc.lastKnownTag = member.user.tag;
+                doc.save((err) => {
+                    if (err) logger.error(err);
+                });
+            }
+        }
     });
 }
