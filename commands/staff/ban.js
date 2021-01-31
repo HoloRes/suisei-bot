@@ -43,7 +43,7 @@ function confirmAndBan(message, member, reason) {
                                 if (status.info) message.channel.send(`Ban succeeded, but ${status.info}`);
                                 else message.channel.send(`**${member.user.tag}** has been banned`);
                             })
-                            .catch((e) => {
+                            .catch(() => {
                                 return message.channel.send("Something went wrong, please try again.");
                             });
                     } else {

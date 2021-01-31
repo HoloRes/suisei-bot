@@ -204,7 +204,7 @@ function setSetting(setting, value) {
 function getUser(message, arg) {
     return new Promise((resolve) => {
         if (message.mentions.members.size === 1) {
-            resolve(message.mentions.members.array()[0]);
+            resolve(message.mentions.members.first());
         } else {
             message.guild.members.fetch(arg)
                 .then((member) => {
@@ -224,7 +224,7 @@ function getUser(message, arg) {
 function getRole(message, arg) {
     return new Promise((resolve) => {
         if (message.mentions.roles.size === 1) {
-            resolve(message.mentions.roles.array()[0]);
+            resolve(message.mentions.roles.first());
         } else {
             message.guild.roles.fetch(arg)
                 .then((role) => {
@@ -244,7 +244,7 @@ function getRole(message, arg) {
 function getChannel(message, arg) {
     return new Promise((resolve) => {
         if (message.mentions.channels.size === 1) {
-            resolve(message.mentions.channels.array()[0]);
+            resolve(message.mentions.channels.first());
         } else {
             message.guild.channels.fetch(arg)
                 .then((channel) => {

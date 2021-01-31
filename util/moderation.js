@@ -50,9 +50,10 @@ exports.warn = (member, reason, moderator) => {
     });
 }
 
-exports.mute = (member, duration, reason, moderator) => {
+function mute(member, duration, reason, moderator) {
     return new Promise(async (resolve, reject) => {
         const expirationDate = moment().add(duration, "minutes");
+        console.log(expirationDate.toDate().toISOString());
 
         const logItem = new LogItem({
             userId: member.id,
@@ -67,7 +68,7 @@ exports.mute = (member, duration, reason, moderator) => {
 
             const strike = new Strike({
                 _id: logItem._id,
-                strikeDate: new Date()
+                userId: member.id
             });
             strike.save((err) => {
                 if (err) reject({type: "err", error: err});
@@ -118,6 +119,8 @@ exports.mute = (member, duration, reason, moderator) => {
     });
 }
 
+exports.mute = mute;
+
 function unmute(member, reason, moderator) {
     return new Promise((resolve, reject) => {
         Setting.findById("mutedRole").lean().exec((err, setting) => {
@@ -149,7 +152,7 @@ function unmute(member, reason, moderator) {
 
 exports.unmute = unmute;
 
-exports.kick = (member, reason, moderator) => {
+function kick(member, reason, moderator) {
     return new Promise(async (resolve, reject) => {
         const logItem = new LogItem({
             userId: member.id,
@@ -163,7 +166,7 @@ exports.kick = (member, reason, moderator) => {
 
             const strike = new Strike({
                 _id: logItem._id,
-                strikeDate: new Date()
+                userId: member.id
             });
             strike.save((err) => {
                 if (err) reject({type: "err", error: err});
@@ -192,7 +195,9 @@ exports.kick = (member, reason, moderator) => {
     });
 }
 
-exports.ban = (member, reason, moderator) => {
+exports.kick = kick;
+
+function ban(member, reason, moderator) {
     return new Promise(async (resolve, reject) => {
         const logItem = new LogItem({
             userId: member.id,
@@ -206,7 +211,7 @@ exports.ban = (member, reason, moderator) => {
 
             const strike = new Strike({
                 _id: logItem._id,
-                strikeDate: new Date()
+                userId: member.id
             });
             strike.save((err) => {
                 if (err) reject({type: "err", error: err});
@@ -235,8 +240,28 @@ exports.ban = (member, reason, moderator) => {
     });
 }
 
-exports.strike = (member, reason, moderator) => { // This will automatically apply the next strike
+exports.ban = ban;
 
+exports.strike = (member, reason, moderator) => { // This will automatically apply the next strike
+    return new Promise((resolve, reject) => {
+        Strike.find({userId: member.id}, (err, docs) => {
+            if (err) reject({type: "err", error: err});
+            if (docs.length === 0) {
+                mute(member, 24 * 60, reason, moderator)
+                    .then(resolve)
+                    .catch(reject);
+            } else {
+                const activeStrikes = docs.filter((doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30).length;
+
+                if (activeStrikes === 1) mute(member, 7 * 24 * 60, reason, moderator)
+                    .then(resolve)
+                    .catch(reject);
+                else if (activeStrikes >= 2) ban(member, reason, moderator)
+                    .then(resolve)
+                    .catch(reject);
+            }
+        });
+    });
 }
 
 exports.revoke = (member, caseID, reason, moderator) => {
@@ -258,12 +283,15 @@ exports.getUserData = (userID) => {
 exports.getMemberFromMessage = (message, args) => {
     return new Promise((resolve, reject) => {
         if (message.mentions.members.size > 0) {
-            resolve(message.mentions.members.array()[0]);
+            const member = message.mentions.members.first();
+            if (member.hasPermission("MANAGE_GUILD")) reject("This member is a moderator");
+            if (member.user.bot) reject("This user is a bot");
+            resolve(member);
         } else {
             message.guild.members.fetch(args[0])
                 .then((member) => {
-                    if (member.hasPermission("MANAGE_GUILD")) reject("This member is a moderator")
-                    if (member.user.bot) reject("This user is a bot")
+                    if (member.hasPermission("MANAGE_GUILD")) reject("This member is a moderator");
+                    if (member.user.bot) reject("This user is a bot");
                     resolve(member);
                 })
                 .catch(() => {
@@ -271,6 +299,9 @@ exports.getMemberFromMessage = (message, args) => {
                         .then(() => {
                             const member = message.guild.members.cache.find(guildMember => guildMember.user.tag.toLowerCase() === args[0].toLowerCase());
                             if (!member) reject("Member not found");
+
+                            if (member.hasPermission("MANAGE_GUILD")) reject("This member is a moderator");
+                            if (member.user.bot) reject("This user is a bot");
                             return resolve(member);
                         });
                 });
