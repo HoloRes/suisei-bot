@@ -1,13 +1,13 @@
 // Packages
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Schema
 const Subscription = new mongoose.Schema({
-    _id: String,
-    channels: [{
-        id: String,
-        message: String
-    }]
+	_id: String,
+	channels: [{
+		id: String,
+		message: String,
+	}],
 });
 
-module.exports = mongoose.model("Subscription", Subscription, "subscriptions");
+module.exports = mongoose.model('Subscription', Subscription, 'subscriptions');

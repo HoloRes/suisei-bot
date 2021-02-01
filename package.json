@@ -30,10 +30,15 @@
     "winston": "^3.3.3",
     "xml2js": "^0.4.23"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^7.19.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1"
+  },
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint --fix ."
   },
   "repository": {
     "type": "git",

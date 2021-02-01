@@ -1,10 +1,10 @@
 // Packages
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Schema
 const Setting = new mongoose.Schema({
-    _id: String,
-    value: mongoose.Mixed
+	_id: String,
+	value: mongoose.Mixed,
 });
 
-module.exports = mongoose.model("Setting", Setting, "settings");
+module.exports = mongoose.model('Setting', Setting, 'settings');

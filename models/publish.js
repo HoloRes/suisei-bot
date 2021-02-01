@@ -1,10 +1,10 @@
 // Packages
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Schema
 const autoPublish = new mongoose.Schema({
-    _id: String,
-    autoPublish: Boolean
+	_id: String,
+	autoPublish: Boolean,
 });
 
-module.exports = mongoose.model("AutoPublish", autoPublish, "autoPublish");
+module.exports = mongoose.model('AutoPublish', autoPublish, 'autoPublish');
