@@ -99,6 +99,7 @@ exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject
 function unmute(member, reason, moderator) {
 	return new Promise((resolve, reject) => {
 		Setting.findById('mutedRole').lean().exec((err, setting) => {
+			// eslint-disable-next-line prefer-promise-reject-errors
 			if (err) reject({ type: 'err', error: err });
 			member.roles.remove(setting.value);
 			if (reason && moderator) {
@@ -223,8 +224,9 @@ function kick(member, reason, moderator) {
 				_id: logItem._id,
 				userId: member.id,
 			});
-			strike.save((err) => {
-				if (err) reject({ type: 'err', error: err });
+			strike.save((err2) => {
+				// eslint-disable-next-line prefer-promise-reject-errors
+				if (err) reject({ type: 'err', error: err2 });
 			});
 		});
 

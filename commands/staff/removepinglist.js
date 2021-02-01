@@ -30,8 +30,8 @@ exports.run = (client, message, args) => {
 									channel.messages.fetch(doc.messageID)
 										.then((reactMsg) => reactMsg.delete());
 								});
-							PingSubscription.findByIdAndRemove(args.join(' '), (err) => {
-								if (err) msg.edit('Something went wrong');
+							PingSubscription.findByIdAndRemove(args.join(' '), (err2) => {
+								if (err2) msg.edit('Something went wrong');
 								else msg.edit('Removal successful.');
 							});
 						} else msg.edit('Cancelled.');

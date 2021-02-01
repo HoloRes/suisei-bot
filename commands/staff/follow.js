@@ -35,7 +35,7 @@ function checkExistingAndFollow(message, subscription, channel, user) {
 			if (result === true) {
 				doc.save((err2) => {
 					if (err2) {
-						logger.error(errMsg);
+						logger.error(err2);
 						message.channel.send('Something went wrong saving to the database.')
 							.then((errMsg) => {
 								message.delete({ timeout: 4000, reason: 'Automated' });

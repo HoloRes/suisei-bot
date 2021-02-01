@@ -31,6 +31,7 @@ function start(logger) {
 				if (err2) return logger.error(err2);
 				// eslint-disable-next-line no-plusplus
 				for (let i = 0; i < doc.channels.length; i++) {
+					// eslint-disable-next-line no-await-in-loop
 					const channel = await client.channels.fetch(doc.channels[i])
 						.catch((err3) => {
 							logger.error(err3);
