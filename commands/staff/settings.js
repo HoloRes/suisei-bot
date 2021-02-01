@@ -101,6 +101,7 @@ function getRole(message, arg) {
 }
 
 function getChannel(message, arg) {
+	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve) => {
 		if (message.mentions.channels.size === 1) {
 			resolve(message.mentions.channels.first());
