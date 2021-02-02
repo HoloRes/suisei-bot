@@ -139,7 +139,7 @@ exports.run = (client, message, args) => {
 							const existingWebhook = await hooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
 							if (!existingWebhook) {
 								channel.createWebhook('Stream notification')
-									.then((webhook) => {
+									.then(() => {
 										checkExistingAndSubscribe(message, subscription, res, channel, args.slice(2).join(' '));
 									})
 									.catch((err2) => {
