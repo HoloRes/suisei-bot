@@ -139,7 +139,7 @@ exports.run = async (client, message, args) => {
 	}
 
 	let settings = '';
-	await availableSettings.forEach((setting, index) => {
+	availableSettings.forEach((setting, index) => {
 		settings += `${setting.name}${index !== availableSettings.length - 1 ? ', ' : ''}`;
 	});
 
@@ -170,7 +170,6 @@ exports.run = async (client, message, args) => {
 					break;
 				case 'user':
 					send(message, setting, `<@${doc.value}>`);
-					send();
 					break;
 				case 'role':
 					send(message, setting, `<@&${doc.value}>`);

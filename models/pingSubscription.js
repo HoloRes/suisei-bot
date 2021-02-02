@@ -5,9 +5,9 @@ const mongoose = require('mongoose');
 const pingSubscription = new mongoose.Schema({
 	_id: String,
 	users: [String],
-	emoji: String,
-	messageID: String,
-	channelID: String,
+	emoji: { type: String, required: true },
+	messageID: { type: String, required: true },
+	channelID: { type: String, required: true },
 });
 
 module.exports = mongoose.model('PingSubscription', pingSubscription, 'pingSubscriptions');

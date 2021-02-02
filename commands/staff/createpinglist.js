@@ -8,7 +8,7 @@ const unicodeEmojis = require('$/util/unicodeEmojis.json');
 const { logger } = require('$/index');
 
 // Functions
-function createList(message, channel, emoji, emojiText, emojiName, name) {
+function createList(message, channel, emoji, emojiName, name) {
 	message.reply(`are you sure you want to create a new ping list with the name ${name}?`)
 		.then((msg) => {
 			confirmRequest(msg, message.author.id)
@@ -68,7 +68,7 @@ exports.run = async (client, message, args) => {
 
 	if (unicodeEmojis[args[1].toLowerCase()]) {
 		const emoji = unicodeEmojis[args[1].toLowerCase()];
-		createList(message, channel, emoji, emoji, emoji, name);
+		createList(message, channel, emoji, emoji, name);
 	} else {
 		const emoji = message.guild.emojis.resolve(args[1]);
 		if (!emoji) {
@@ -78,7 +78,7 @@ exports.run = async (client, message, args) => {
 					errMsg.delete({ timeout: 4000, reason: 'Automated' });
 				});
 		}
-		createList(message, channel, emoji, `<:${emoji.name}:${emoji.id}>`, emoji.name, name);
+		createList(message, channel, emoji, `<:${emoji.name}:${emoji.id}>`, name);
 	}
 };
 

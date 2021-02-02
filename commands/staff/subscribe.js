@@ -14,7 +14,7 @@ const { planLivestreams } = require('$/util/youtube');
 const YT = google.youtube('v3');
 
 // Functions
-function checkExistingAndSubscribe(message, subscription, wh, res, channel, channelMsg) {
+function checkExistingAndSubscribe(message, subscription, res, channel, channelMsg) {
 	Subscription.findById(subscription._id, async (err, sub) => {
 		if (!err) {
 			if (sub) {
@@ -140,7 +140,7 @@ exports.run = (client, message, args) => {
 							if (!existingWebhook) {
 								channel.createWebhook('Stream notification')
 									.then((webhook) => {
-										checkExistingAndSubscribe(message, subscription, webhook, res, channel, args.slice(2).join(' '));
+										checkExistingAndSubscribe(message, subscription, res, channel, args.slice(2).join(' '));
 									})
 									.catch((err2) => {
 										logger.error(err2);
@@ -149,7 +149,7 @@ exports.run = (client, message, args) => {
 											msg.delete({ timeout: 4000, reason: 'Automated' });
 										});
 									});
-							} else checkExistingAndSubscribe(message, subscription, existingWebhook, res, channel, args.slice(2).join(' '));
+							} else checkExistingAndSubscribe(message, subscription, res, channel, args.slice(2).join(' '));
 						});
 				})
 				.catch((err2) => {

@@ -5,10 +5,10 @@ const mongoose = require('mongoose');
 const stream = new mongoose.Schema({
 	_id: String,
 	retry: { type: Number, default: 0 },
-	ytChannelID: String,
-	title: String,
-	plannedDate: String,
-	messageID: String,
+	ytChannelID: { type: String, required: true },
+	title: { type: String, required: true },
+	plannedDate: { type: String, required: true },
+	messageID: { type: String, required: true },
 });
 
 module.exports = mongoose.model('Livestream', stream, 'livestreams');
