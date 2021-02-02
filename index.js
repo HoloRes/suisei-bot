@@ -1,6 +1,4 @@
-// Models
-
-// Packages
+// Imports
 const fs = require('fs');
 const Discord = require('discord.js');
 const mongoose = require('mongoose'); // Library for MongoDB
@@ -10,8 +8,10 @@ const path = require('path');
 const Sentry = require('@sentry/node');
 const winston = require('winston'); // Advanced logging library
 const sequence = require('mongoose-sequence');
+const moment = require('moment');
+const Mute = require('$/models/activeMute');
+const AutoPublish = require('$/models/publish');
 const PingSubscription = require('$/models/pingSubscription');
-const autoPublish = require('$/models/publish');
 
 // Local config files
 const config = require('$/config.json');
@@ -32,7 +32,7 @@ exports.logger = logger;
 
 // Create a Discord client
 const client = new Discord.Client({
-	partials: ['MESSAGE', 'CHANNEL', 'REACTION'], // Partials are used to be able to fetch events from non cached items
+	partials: ['MESSAGE', 'CHANNEL', 'REACTION', 'GUILD_MEMBER'], // Partials are used to be able to fetch events from non cached items
 });
 exports.client = client;
 
@@ -141,6 +141,9 @@ client.on('ready', () => {
 	client.devcmds = new Discord.Collection();
 	client.staffcmds = new Discord.Collection();
 	loadcmds();
+	client.guilds.fetch(config.discord.serverId)
+		.then((mainGuild) => mainGuild.members.fetch())
+		.catch((e) => logger.error(e));
 	logger.info('Bot online');
 });
 
@@ -177,9 +180,39 @@ client.on('messageReactionRemove', (reaction, user) => {
 	});
 });
 
+// Mute evasion handler
+client.on('guildMemberRemove', async (member) => {
+	Mute.findOne({ userId: member.id }, (err, doc) => {
+		if (err) return logger.error(err);
+		if (!doc) return;
+
+		// eslint-disable-next-line no-param-reassign
+		doc.leftAt = new Date();
+		moderation.unplanMute(doc._id);
+		doc.save((e) => {
+			if (e) logger.error(e);
+		});
+	});
+});
+
+client.on('guildMemberAdd', async (member) => {
+	if (member.partial) await member.fetch();
+	const mainGuild = await client.guilds.fetch(config.discord.serverId);
+	const clientMember = await mainGuild.members.fetch(client.user.id);
+
+	Mute.findOneAndDelete({ userId: member.id }, (err, doc) => {
+		if (err) return logger.error(err);
+
+		if (!doc || !doc.leftAt) return;
+		const timeLeftAtLeave = doc.expireAt - doc.leftAt;
+		const timeLeft = moment.duration(timeLeftAtLeave, 'ms').asMinutes();
+		moderation.mute(member, timeLeft, 'Mute evasion prevention\nAdded strike', clientMember);
+	});
+});
+
 // Auto publish handler
 client.on('message', (message) => {
-	autoPublish.findById(message.channel.id, (err, doc) => {
+	AutoPublish.findById(message.channel.id, (err, doc) => {
 		if (err) return logger.error(err);
 		if (doc) {
 			const { options: { http } } = client;

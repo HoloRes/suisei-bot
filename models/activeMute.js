@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const muteSchema = new mongoose.Schema({
 	_id: Number,
 	expireAt: { type: Date, required: true },
+	leftAt: Date,
 	userId: { type: String, required: true },
 });
 

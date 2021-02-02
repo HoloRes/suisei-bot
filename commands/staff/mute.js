@@ -57,7 +57,7 @@ exports.run = async (client, message, args) => {
 
 	const reason = await args.slice(2).join(' ');
 	const duration = await parse(args[1], 'm'); // Parse into minutes
-	if (Number.isNaN(duration) || duration === 0) {
+	if (Number.isNaN(duration) || duration === 0 || duration === null || duration === undefined) {
 		return message.channel.send('Invalid duration')
 			.then((errMsg) => {
 				message.delete({ timeout: 4000, reason: 'Automated' });

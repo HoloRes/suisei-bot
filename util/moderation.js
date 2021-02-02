@@ -138,7 +138,7 @@ function mute(member, duration, reason, moderator) {
 			type: 'mute',
 			reason,
 			moderator: moderator.id,
-			duration: humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds()),
+			duration: humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds(), { largest: 2, round: true }),
 		});
 		await logItem.save((err) => {
 			// eslint-disable-next-line prefer-promise-reject-errors
@@ -152,6 +152,18 @@ function mute(member, duration, reason, moderator) {
 			strike.save((err2) => {
 				// eslint-disable-next-line prefer-promise-reject-errors
 				if (err2) reject({ type: 'err', error: err2 });
+			});
+
+			Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
+				if (err2) logger.error(err2);
+
+				if (!err2 && doc) {
+					try {
+						plannedUnmutes[doc._id].cancel();
+					} catch (e) {
+						logger.error(e);
+					}
+				}
 			});
 
 			const muteDoc = new Mute({
@@ -230,6 +242,18 @@ function kick(member, reason, moderator) {
 			});
 		});
 
+		Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
+			if (err2) logger.error(err2);
+
+			if (!err2 && doc) {
+				try {
+					plannedUnmutes[doc._id].cancel();
+				} catch (e) {
+					logger.error(e);
+				}
+			}
+		});
+
 		updateMember(member);
 
 		const embed = new MessageEmbed()
@@ -279,6 +303,18 @@ function ban(member, reason, moderator) {
 			});
 		});
 
+		Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
+			if (err2) logger.error(err2);
+
+			if (!err2 && doc) {
+				try {
+					plannedUnmutes[doc._id].cancel();
+				} catch (e) {
+					logger.error(e);
+				}
+			}
+		});
+
 		updateMember(member);
 
 		const embed = new MessageEmbed()
@@ -318,7 +354,11 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 				(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
 			).length;
 
-			if (activeStrikes === 1) {
+			if (activeStrikes === 0) {
+				mute(member, 24 * 60, reason, moderator)
+					.then(resolve)
+					.catch(reject);
+			} else if (activeStrikes === 1) {
 				mute(member, 7 * 24 * 60, reason, moderator)
 					.then(resolve)
 					.catch(reject);
@@ -349,22 +389,23 @@ exports.getUserData = (userID) => {
 };
 /* eslint-enable no-unused-vars */
 
-exports.getMemberFromMessage = (message, args) => new Promise((resolve, reject) => {
+// eslint-disable-next-line no-async-promise-executor
+exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, reject) => {
 	if (message.mentions.members.size > 0) {
-		const member = message.mentions.members.first();
+		const member = await message.mentions.members.first().fetch();
 		// eslint-disable-next-line prefer-promise-reject-errors
 		if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
 		// eslint-disable-next-line prefer-promise-reject-errors
-		if (member.user.bot) reject('This user is a bot');
-		resolve(member);
+		else if (member.user.bot) reject('This user is a bot');
+		else resolve(member);
 	} else {
 		message.guild.members.fetch(args[0])
 			.then((member) => {
 				// eslint-disable-next-line prefer-promise-reject-errors
 				if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
 				// eslint-disable-next-line prefer-promise-reject-errors
-				if (member.user.bot) reject('This user is a bot');
-				resolve(member);
+				else if (member.user.bot) reject('This user is a bot');
+				else resolve(member);
 			})
 			.catch(() => {
 				message.guild.members.fetch()
@@ -376,10 +417,10 @@ exports.getMemberFromMessage = (message, args) => new Promise((resolve, reject) 
 						if (!member) reject('Member not found');
 
 						// eslint-disable-next-line prefer-promise-reject-errors
-						if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
+						else if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
 						// eslint-disable-next-line prefer-promise-reject-errors
-						if (member.user.bot) reject('This user is a bot');
-						return resolve(member);
+						else if (member.user.bot) reject('This user is a bot');
+						else return resolve(member);
 					});
 			});
 	}
@@ -388,26 +429,26 @@ exports.getMemberFromMessage = (message, args) => new Promise((resolve, reject) 
 exports.init = () => { // Should run on every bot start
 	Mute.find({}, (err, docs) => {
 		if (err) return logger.error(err);
-		docs.forEach((doc) => {
-			LogItem.findById(doc._id, async (err2, logDoc) => {
-				if (err2) return logger.error(err2);
-				const guild = await client.guilds.fetch(config.discord.serverId)
-					.catch((e) => {
-						logger.error(e);
-					});
+		docs.forEach(async (doc) => {
+			if (doc.leftAt) return;
+			const guild = await client.guilds.fetch(config.discord.serverId)
+				.catch((e) => logger.error(e));
 
-				const member = await guild.members.fetch(logDoc.userId)
-					.catch((e) => {
-						logger.error(e);
-					});
+			const member = await guild.members.fetch(doc.userId)
+				.catch((e) => logger.error(e));
 
-				plannedUnmutes[doc._id] = scheduleJob(new Date(doc.expirationDate), () => {
-					unmute(member)
-						.catch((e) => {
-							logger.error(e);
-						});
-				});
+			plannedUnmutes[doc._id] = scheduleJob(doc.expireAt, () => {
+				unmute(member)
+					.catch((e) => logger.error(e));
 			});
 		});
 	});
+};
+
+exports.unplanMute = (id) => {
+	try {
+		plannedUnmutes[id].cancel();
+	} catch (e) {
+		logger.error(e);
+	}
 };
