@@ -29,7 +29,7 @@ exports.run = async (client, message, args) => {
 		.setDescription(`Total strikes: **${data.strikes}** | Active strikes: **${data.activeStrikes}**`)
 		.setTimestamp();
 
-	if (data.logs.length === 0) embed.addField('No notes found for this user');
+	if (data.logs.length === 0) embed.addField('No logs found for this user', '\u3164');
 	else {
 		data.logs.forEach((log) => {
 			embed.addField(`#${log._id} | ${log.type}`, log.reason, true);
