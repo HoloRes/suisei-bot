@@ -1,10 +1,10 @@
 // Packages
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Schema
 const tweetSubscription = new mongoose.Schema({
-    "_id": String,
-    channels: [String]
+	_id: String,
+	channels: [String],
 });
 
-module.exports = mongoose.model("tweetSubscription", tweetSubscription, "tweetSubscriptions");
+module.exports = mongoose.model('TweetSubscription', tweetSubscription, 'tweetSubscriptions');

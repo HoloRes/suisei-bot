@@ -10,10 +10,9 @@
     "prefix": "",
     "devprefix": "",
     "roles": {
-      "musician": "",
-      "staff": "",
       "dev": ""
-    }
+    },
+    "serverId": ""
   },
   "s3": {
     "endpoint": "",
@@ -21,7 +20,7 @@
     "accessKeyId": "",
     "secretAccessKey": ""
   },
-  "PubHubSubBub": {
+  "PubSubHubBub": {
     "secret": "",
     "hubPort": 80,
     "callbackUrl": "",
