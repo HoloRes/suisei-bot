@@ -106,6 +106,6 @@ exports.run = (client, message, args) => {
 	});
 };
 
-module.exports.config = {
+exports.config = {
 	command: 'unsubscribe',
 };

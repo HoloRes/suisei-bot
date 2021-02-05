@@ -66,6 +66,7 @@ exports.run = async (client, message, args) => {
 	}
 	if (member) confirmAndMute(message, duration, member, reason);
 };
+
 exports.config = {
 	command: 'mute',
 };

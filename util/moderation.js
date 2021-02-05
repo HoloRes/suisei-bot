@@ -376,7 +376,7 @@ exports.revoke = (member, caseID, reason, moderator) => {
 
 };
 
-exports.getModLogsByUserID = (userID) => {
+exports.getMemberModLogs = (member) => {
 
 };
 
@@ -384,10 +384,67 @@ exports.getModLogByCaseID = (caseID) => {
 
 };
 
-exports.getUserData = (userID) => {
+exports.getUserData = (member) => {
 
 };
 /* eslint-enable no-unused-vars */
+
+// eslint-disable-next-line no-async-promise-executor
+exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
+	await updateMember(member);
+
+	User.findById(member.id, (err, doc) => {
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (err) reject({ type: 'err', error: err });
+
+		doc.notes.push({
+			_id: doc.notes.length === 0 ? 1 : doc.notes[doc.notes.length - 1]._id + 1,
+			value: note,
+		});
+		doc.save((err2) => {
+			if (err2) {
+				logger.error(err2);
+				// eslint-disable-next-line prefer-promise-reject-errors
+				reject({ type: 'err', error: err2 });
+			} else resolve({ type: 'success' });
+		});
+	});
+});
+
+// eslint-disable-next-line no-async-promise-executor
+exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => {
+	await updateMember(member);
+
+	User.findById(member.id, (err, doc) => {
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (err) reject({ type: 'err', error: err });
+
+		const index = doc.notes.findIndex((note) => note._id === noteID);
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (index === -1) reject({ type: 'err', info: 'Note not found' });
+		doc.notes.splice(index, 1);
+		doc.save((err2) => {
+			if (err2) {
+				logger.error(err2);
+				// eslint-disable-next-line prefer-promise-reject-errors
+				reject({ type: 'err', error: err2 });
+			} else resolve({ type: 'success' });
+		});
+	});
+});
+
+exports.getNotes = (member) => new Promise((resolve, reject) => {
+	User.findById(member.id, (err, doc) => {
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (err) reject({ type: 'err', error: err });
+
+		if (!doc || !doc.notes) {
+			if (!doc.notes) updateMember(member);
+			// eslint-disable-next-line prefer-promise-reject-errors
+			reject({ type: 'err', info: 'No user notes found' });
+		} else resolve({ type: 'success', data: doc.notes });
+	});
+});
 
 // eslint-disable-next-line no-async-promise-executor
 exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, reject) => {
