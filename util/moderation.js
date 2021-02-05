@@ -45,26 +45,37 @@ function log(logItem, color) {
 
 exports.log = log;
 
-function updateMember(member) {
+const updateMember = (member) => new Promise((resolve, reject) => {
 	User.findById(member.id, (err, doc) => {
-		if (err) logger.error(err);
+		if (err) {
+			reject(err);
+			logger.error(err);
+		}
 		else if (!doc) {
 			const user = new User({
 				_id: member.id,
 				lastKnownTag: member.user.tag,
 			});
 			user.save((err2) => {
-				if (err2) logger.error(err2);
+				if (err2) {
+					reject(err2);
+					logger.error(err2);
+				}
+				else resolve();
 			});
 		} else {
 			// eslint-disable-next-line no-param-reassign
 			doc.lastKnownTag = member.user.tag;
 			doc.save((err2) => {
-				if (err2) logger.error(err2);
+				if (err2) {
+					reject(err2);
+					logger.error(err2);
+				}
+				else resolve();
 			});
 		}
 	});
-}
+});
 
 // eslint-disable-next-line no-async-promise-executor
 exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject) => {
@@ -435,7 +446,7 @@ exports.getModLogByCaseID = (caseID) => new Promise((resolve, reject) => {
 
 // eslint-disable-next-line no-async-promise-executor
 exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
-	updateMember(member);
+	await updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
 		// eslint-disable-next-line prefer-promise-reject-errors
@@ -457,7 +468,7 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 
 // eslint-disable-next-line no-async-promise-executor
 exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => {
-	updateMember(member);
+	await updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
 		// eslint-disable-next-line prefer-promise-reject-errors
@@ -483,7 +494,7 @@ exports.getNotes = (member) => new Promise((resolve, reject) => {
 		if (err) reject({ type: 'err', error: err });
 
 		if (!doc || !doc.notes) {
-			if (!doc.notes) updateMember(member);
+			updateMember(member);
 			// eslint-disable-next-line prefer-promise-reject-errors
 			reject({ type: 'err', info: 'No user notes found' });
 		} else resolve({ type: 'success', data: doc.notes });
