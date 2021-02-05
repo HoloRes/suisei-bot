@@ -8,6 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-20.04
     if: "!contains(github.event.head_commit.message, 'ci skip:')" # If the commit contains "ci skip" this action won't run
+    steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
