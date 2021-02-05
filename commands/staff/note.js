@@ -59,7 +59,7 @@ exports.run = async (client, message, args) => {
 			});
 	} else if (args[1] === 'remove') {
 		const noteId = Number.parseInt(args[2], 10) - 1;
-		if (Number.isNaN(noteId) || noteId === undefined || noteId === null || noteId < 0) {
+		if (Number.isNaN(noteId) || noteId < 0) {
 			return message.channel.send('Invalid note id')
 				.then((errMsg) => {
 					message.delete({ timeout: 4000, reason: 'Automated' });

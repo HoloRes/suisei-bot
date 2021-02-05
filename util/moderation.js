@@ -391,7 +391,7 @@ exports.getUserData = (member) => {
 
 // eslint-disable-next-line no-async-promise-executor
 exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
-	await updateMember(member);
+	updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
 		// eslint-disable-next-line prefer-promise-reject-errors
@@ -413,7 +413,7 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 
 // eslint-disable-next-line no-async-promise-executor
 exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => {
-	await updateMember(member);
+	updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
 		// eslint-disable-next-line prefer-promise-reject-errors
