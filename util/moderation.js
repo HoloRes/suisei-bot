@@ -48,8 +48,8 @@ exports.log = log;
 const updateMember = (member) => new Promise((resolve, reject) => {
 	User.findById(member.id, (err, doc) => {
 		if (err) {
-			reject(err);
 			logger.error(err);
+			reject(err);
 		}
 		else if (!doc) {
 			const user = new User({
@@ -58,8 +58,8 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 			});
 			user.save((err2) => {
 				if (err2) {
-					reject(err2);
 					logger.error(err2);
+					reject(err2);
 				}
 				else resolve();
 			});
@@ -68,8 +68,8 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 			doc.lastKnownTag = member.user.tag;
 			doc.save((err2) => {
 				if (err2) {
-					reject(err2);
 					logger.error(err2);
+					reject(err2);
 				}
 				else resolve();
 			});
