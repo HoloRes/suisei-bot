@@ -17,6 +17,14 @@ exports.run = async (client, message, args) => {
 	}
 
 	const reason = (args[1] ? args.slice(1).join(' ') : 'N/A');
+	if (reason.length > 1000) {
+		return message.channel.send('Error: Reason is over 1000 characters')
+			.then((errMsg) => {
+				message.delete({ timeout: 4000, reason: 'Automated' });
+				errMsg.delete({ timeout: 4000, reason: 'Automated' });
+			});
+	}
+
 	const member = await moderation.getMemberFromMessage(message, args)
 		.catch((err) => message.channel.send(err)
 			.then((errMsg) => {

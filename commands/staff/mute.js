@@ -56,6 +56,14 @@ exports.run = async (client, message, args) => {
 		});
 
 	const reason = await args.slice(2).join(' ');
+	if (reason.length > 1000) {
+		return message.channel.send('Error: Reason is over 1000 characters')
+			.then((errMsg) => {
+				message.delete({ timeout: 4000, reason: 'Automated' });
+				errMsg.delete({ timeout: 4000, reason: 'Automated' });
+			});
+	}
+
 	const duration = await parse(args[1], 'm'); // Parse into minutes
 	if (Number.isNaN(duration) || duration === 0 || duration === null || duration === undefined) {
 		return message.channel.send('Invalid duration')

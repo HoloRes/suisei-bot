@@ -50,6 +50,13 @@ exports.run = async (client, message, args) => {
 				errMsg.delete({ timeout: 4000, reason: 'Automated' });
 			}));
 	const reason = await args.slice(1).join(' ');
+	if (reason.length > 1000) {
+		return message.channel.send('Error: Reason is over 1000 characters')
+			.then((errMsg) => {
+				message.delete({ timeout: 4000, reason: 'Automated' });
+				errMsg.delete({ timeout: 4000, reason: 'Automated' });
+			});
+	}
 
 	confirmAndKick(message, member, reason);
 };

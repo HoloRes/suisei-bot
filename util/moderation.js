@@ -371,23 +371,67 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 	});
 });
 
-/* eslint-disable no-unused-vars */
-exports.revoke = (member, caseID, reason, moderator) => {
+exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) => {
+	Strike.findById(caseID, (err, doc) => {
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (err) reject({ type: 'err', error: err });
 
-};
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (!doc) reject({ type: 'err', info: 'Strike not found' });
+		else {
+			Strike.findByIdAndDelete(caseID, (err2, strike) => {
+				// eslint-disable-next-line prefer-promise-reject-errors
+				if (err2) reject({ type: 'err', error: err2 });
 
-exports.getMemberModLogs = (member) => {
+				log({
+					_id: strike._id,
+					userId: strike.userId,
+					type: 'revoke',
+					reason,
+					moderator: moderator.id,
+				}, '#2bad64');
+				resolve({ type: 'success' });
+			});
+		}
+	});
+});
 
-};
+exports.getMemberModLogs = (member) => new Promise((resolve, reject) => {
+	LogItem.find({ userId: member.id }, (err, docs) => {
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (err) reject({ type: 'err', error: err });
 
-exports.getModLogByCaseID = (caseID) => {
+		Strike.find({ userId: member.id }, (err2, strikes) => {
+			// eslint-disable-next-line prefer-promise-reject-errors
+			if (err2) reject({ type: 'err', error: err2 });
 
-};
+			const activeStrikes = strikes.filter(
+				(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
+			).length;
 
-exports.getUserData = (member) => {
+			resolve({
+				type: 'success',
+				data: {
+					logs: docs,
+					strikes: strikes.length,
+					activeStrikes,
+				},
+			});
+		});
+	});
+});
 
-};
-/* eslint-enable no-unused-vars */
+exports.getModLogByCaseID = (caseID) => new Promise((resolve, reject) => {
+	LogItem.findById(caseID, (err, doc) => {
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (err) reject({ type: 'err', error: err });
+
+		// eslint-disable-next-line prefer-promise-reject-errors
+		if (err) reject({ type: 'err', info: 'Moderation action not found' });
+
+		resolve({ type: 'success', data: doc });
+	});
+});
 
 // eslint-disable-next-line no-async-promise-executor
 exports.addNote = (member, note) => new Promise(async (resolve, reject) => {

@@ -1,5 +1,7 @@
 // Imports
 const { MessageEmbed } = require('discord.js');
+
+// Local files
 const { logger } = require('$/index');
 const moderation = require('$/util/moderation');
 const config = require('$/config.json');
