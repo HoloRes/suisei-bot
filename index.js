@@ -62,14 +62,13 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 
 // Express
 const app = express();
-app.use('/yt', youtubeNotifications.router);
 app.use('/dash', dashboardRouter);
 app.listen(config.PubSubHubBub.hubPort);
 
 // Notifications preparation
 if (config.environment === 'production') {
-	youtubeNotifications.init(logger);
-	twitterNotifications.init(logger);
+	youtubeNotifications.init();
+	twitterNotifications.init();
 }
 
 // Moderation
