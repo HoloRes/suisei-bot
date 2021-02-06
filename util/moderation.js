@@ -192,12 +192,12 @@ function mute(member, duration, reason, moderator) {
 			});
 		});
 
-		await Setting.findById('mutedRole', async (err, doc) => {
+		await Setting.findById('mutedRole', async (err, setting) => {
 			// eslint-disable-next-line prefer-promise-reject-errors
 			if (err) reject({ type: 'err', error: err });
 			// eslint-disable-next-line prefer-promise-reject-errors
-			if (!doc) reject({ type: 'err', error: 'noRole' });
-			member.roles.add(doc.value)
+			if (!setting) reject({ type: 'err', error: 'noRole' });
+			member.roles.add(setting.value, `Muted by ${moderator.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`)
 				.catch((e) => {
 					// eslint-disable-next-line prefer-promise-reject-errors
 					reject({ type: 'err', error: e });
@@ -205,12 +205,6 @@ function mute(member, duration, reason, moderator) {
 		});
 
 		updateMember(member);
-
-		await Setting.findById('mutedRole').lean().exec((err, setting) => {
-			// eslint-disable-next-line prefer-promise-reject-errors
-			if (err) reject({ type: 'err', error: err });
-			member.roles.add(setting.value, `Muted by ${moderator.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`);
-		});
 
 		const embed = new MessageEmbed()
 			.setTitle('Mute')
