@@ -43,23 +43,6 @@ exports.run = async (client, message, args) => {
 			});
 	}
 
-	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((err) => {
-			if (err === 'Member not found') {
-				message.guild.members.ban(args[0])
-					.catch(() => message.channel.send('User not found or something went wrong.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						}));
-			} else {
-				message.channel.send(err)
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
-			}
-		});
 	const reason = await args.slice(1).join(' ');
 	if (reason.length > 1000) {
 		return message.channel.send('Error: Reason is over 1000 characters')
@@ -68,6 +51,32 @@ exports.run = async (client, message, args) => {
 				errMsg.delete({ timeout: 4000, reason: 'Automated' });
 			});
 	}
+
+	const member = await moderation.getMemberFromMessage(message, args)
+		.catch((err) => {
+			if (err === 'Member not found') {
+				return message.guild.members.ban(args[0])
+					.then((user) => {
+						moderation.log({
+							userId: user.id,
+							type: 'ban | pre-emptive',
+							reason,
+							moderator: message.author.id,
+						}, '#f54242');
+						message.channel.send(`**${user.tag}** has been banned`);
+					})
+					.catch(() => message.channel.send('User not found or something went wrong.')
+						.then((errMsg) => {
+							message.delete({ timeout: 4000, reason: 'Automated' });
+							errMsg.delete({ timeout: 4000, reason: 'Automated' });
+						}));
+			}
+			message.channel.send(err)
+				.then((errMsg) => {
+					message.delete({ timeout: 4000, reason: 'Automated' });
+					errMsg.delete({ timeout: 4000, reason: 'Automated' });
+				});
+		});
 
 	confirmAndBan(message, member, reason);
 };
