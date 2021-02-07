@@ -50,8 +50,7 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 		if (err) {
 			logger.error(err);
 			reject(err);
-		}
-		else if (!doc) {
+		} else if (!doc) {
 			const user = new User({
 				_id: member.id,
 				lastKnownTag: member.user.tag,
@@ -60,8 +59,7 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 				if (err2) {
 					logger.error(err2);
 					reject(err2);
-				}
-				else resolve();
+				} else resolve();
 			});
 		} else {
 			// eslint-disable-next-line no-param-reassign
@@ -70,8 +68,7 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 				if (err2) {
 					logger.error(err2);
 					reject(err2);
-				}
-				else resolve();
+				} else resolve();
 			});
 		}
 	});
@@ -88,7 +85,7 @@ exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject
 	await logItem.save((err) => {
 		// eslint-disable-next-line prefer-promise-reject-errors
 		if (err) reject({ type: 'err', error: err });
-		log(logItem, '#f54242');
+		log(logItem, '#ffde26');
 	});
 
 	updateMember(member);
@@ -154,7 +151,7 @@ function mute(member, duration, reason, moderator) {
 		await logItem.save((err) => {
 			// eslint-disable-next-line prefer-promise-reject-errors
 			if (err) reject({ type: 'err', error: err });
-			log(logItem, '#f54242');
+			log(logItem, '#ff9c24');
 
 			const strike = new Strike({
 				_id: logItem._id,

@@ -32,7 +32,7 @@ exports.run = async (client, message, args) => {
 	if (data.logs.length === 0) embed.addField('No logs found for this user', '\u3164');
 	else {
 		data.logs.forEach((log) => {
-			embed.addField(`#${log._id} | ${log.type}`, log.reason, true);
+			embed.addField(`#${log._id} | ${log.type}${log.duration ? ` | ${log.duration}` : ''}`, log.reason, true);
 		});
 	}
 

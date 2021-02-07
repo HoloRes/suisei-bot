@@ -44,12 +44,21 @@ exports.run = async (client, message, args) => {
 	}
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((e) => {
-			message.channel.send(e)
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
+		.catch((err) => {
+			if (err === 'Member not found') {
+				message.guild.members.ban(args[0])
+					.catch(() => message.channel.send('User not found or something went wrong.')
+						.then((errMsg) => {
+							message.delete({ timeout: 4000, reason: 'Automated' });
+							errMsg.delete({ timeout: 4000, reason: 'Automated' });
+						}));
+			} else {
+				message.channel.send(err)
+					.then((errMsg) => {
+						message.delete({ timeout: 4000, reason: 'Automated' });
+						errMsg.delete({ timeout: 4000, reason: 'Automated' });
+					});
+			}
 		});
 	const reason = await args.slice(1).join(' ');
 	if (reason.length > 1000) {
