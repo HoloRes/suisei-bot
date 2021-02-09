@@ -1,10 +1,16 @@
 // Imports
 const { scheduleJob } = require('node-schedule');
 const { MessageEmbed } = require('discord.js');
+const { google } = require('googleapis');
 
 // Models
 const Subscription = require('$/models/subscription');
 const Livestream = require('$/models/stream');
+
+// Local files
+const config = require('$/config.json');
+
+const YT = google.youtube('v3');
 
 async function fetchLivestreams(logger, holoClient, client) {
 	const streams = await holoClient.videos.getLivestreams(undefined, 72, 0, true);
@@ -42,10 +48,13 @@ async function fetchLivestreams(logger, holoClient, client) {
 				 */
 				return;
 			}
+			const ytChannel = await YT.channels.list({ auth: config.YtApiKey, id: ls.channel.youtubeId, part: 'snippet' })
+				.catch((err) => logger.error(err));
+
 			const msg = await webhook.send(ch.message, {
 				embeds: [embed],
-				username: ls.channel.username,
-				avatarURL: ls.channel.photo,
+				username: ytChannel.data.items[0].snippet.title,
+				avatarURL: ytChannel.data.items[0].snippet.thumbnails.high.url,
 			});
 			const livestream = new Livestream({
 				_id: ls.youtubeId,
