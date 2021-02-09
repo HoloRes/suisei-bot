@@ -12,6 +12,7 @@
     "discord.js": "^12.5.1",
     "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
+    "googleapis": "^67.0.0",
     "humanize-duration": "^3.25.1",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.32",
