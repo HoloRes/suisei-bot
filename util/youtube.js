@@ -7,12 +7,12 @@ const Subscription = require('$/models/subscription');
 const Livestream = require('$/models/stream');
 
 async function fetchLivestreams(logger, holoClient, client) {
-	const { live, upcoming } = await holoClient.videos.getLivestreams(undefined, 72, 0, true);
+	const streams = await holoClient.videos.getLivestreams(undefined, 72, 0, true);
 
 	const updatedChannels = [];
 
 	// noinspection ES6MissingAwait
-	live.forEach(async (ls) => {
+	streams.live.forEach(async (ls) => {
 		const sub = await Subscription.findById(ls.channel.youtubeId).exec()
 			.catch((err) => logger.error(err));
 		if (!sub) return;
@@ -21,7 +21,7 @@ async function fetchLivestreams(logger, holoClient, client) {
 		sub.channels.forEach(async (ch) => {
 			const channel = await client.channels.fetch(ch.id);
 			if (updatedChannels.findIndex((id) => id === channel.id) === -1) {
-				channel.setTopic(`Currently live: ${live.length} | Planned livestreams in next 3 days: ${upcoming.length}`);
+				channel.setTopic(`Currently live: ${streams.live.length} | Planned livestreams in next 3 days: ${streams.upcoming.length}`);
 				updatedChannels.push(channel.id);
 			}
 			const hooks = await channel.fetchWebhooks();
