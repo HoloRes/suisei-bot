@@ -4,6 +4,7 @@ const express = require('express');
 // Local imports
 const { client } = require('$/index');
 const config = require('$/config.json');
+const moderation = require('$/util/moderation');
 
 // Init
 const router = new express.Router();
