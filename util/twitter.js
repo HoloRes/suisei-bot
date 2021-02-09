@@ -7,7 +7,7 @@ const Twitter = require('twitter-lite');
 const TweetSubscription = require('$/models/tweetSubscription');
 
 // Local imports
-const { client } = require('$/index');
+const { client, logger } = require('$/index');
 const config = require('$/config.json');
 
 // Variables
@@ -15,7 +15,7 @@ const T = new Twitter(config.twitter);
 let stream = null;
 
 // Exports
-function start(logger) {
+function start() {
 	let users = '';
 	TweetSubscription.find({}, async (err, docs) => {
 		if (err) return logger.error(err);

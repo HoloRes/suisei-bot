@@ -20,19 +20,13 @@
     "accessKeyId": "",
     "secretAccessKey": ""
   },
-  "PubSubHubBub": {
-    "secret": "",
-    "hubPort": 80,
-    "callbackUrl": "",
-    "hubUrl": ""
-  },
   "twitter": {
     "consumer_key": "",
     "consumer_secret": "",
     "access_token_key": "",
     "access_token_secret": ""
   },
-  "YtApiKey": "",
+  "expressPort": 80,
   "sentryDsn": "",
   "environment": "production",
   "logLevel": "info"
