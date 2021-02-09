@@ -7,7 +7,7 @@ const humanizeDuration = require('humanize-duration');
 
 // Local files
 const config = require('$/config.json');
-const { client, logger } = require('$/index');
+const { client, logger, socket } = require('$/index');
 
 // Models
 const Mute = require('$/models/activeMute');
@@ -25,6 +25,16 @@ function log(logItem, color) {
 		.then((offender) => {
 			client.users.fetch(logItem.moderator)
 				.then((moderator) => {
+					socket.emit('log', {
+						id: logItem._id || undefined,
+						type: logItem.type,
+						offender: offender.tag,
+						duration: logItem.duration || undefined,
+						reason: logItem.reason,
+						moderator: moderator.tag,
+						offenderId: offender.id,
+					});
+
 					const embed = new MessageEmbed()
 						.setTitle(`${logItem.type}${logItem._id ? ` | case ${logItem._id}` : ''}`)
 						.setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ''}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.tag}`)

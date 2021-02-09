@@ -10,6 +10,7 @@ const winston = require('winston'); // Advanced logging library
 const sequence = require('mongoose-sequence');
 const moment = require('moment');
 const HoloApiClient = require('@holores/holoapi');
+const { Server: SocketIO } = require('socket.io');
 const PingSubscription = require('$/models/pingSubscription');
 const AutoPublish = require('$/models/publish');
 const Mute = require('$/models/activeMute');
@@ -67,8 +68,13 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 
 // Express
 const app = express();
+app.use(express.json());
+
 app.use('/dash', dashboardRouter);
-app.listen(config.expressPort);
+
+const socket = new SocketIO();
+const server = app.listen(config.expressPort, () => socket.attach(server, { serveClient: false }));
+exports.socket = socket;
 
 // Notifications preparation
 if (config.environment === 'production') {

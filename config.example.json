@@ -27,6 +27,7 @@
     "access_token_secret": ""
   },
   "expressPort": 80,
+  "apiToken": "",
   "sentryDsn": "",
   "environment": "production",
   "logLevel": "info"
