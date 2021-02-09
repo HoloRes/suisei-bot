@@ -1,10 +1,16 @@
 // Imports
 const express = require('express');
 
+// Models
+const User = require('$/models/modUser');
+const Strike = require('$/models/modStrike');
+const ModLog = require('$/models/modLogItem');
+
 // Local imports
 const { client } = require('$/index');
 const config = require('$/config.json');
 const moderation = require('$/util/moderation');
+const { logger } = require('$/index');
 
 // Init
 const router = new express.Router();
@@ -20,12 +26,12 @@ async function getModData(req, res, next) {
 	req.data.guild = guild;
 
 	req.data.moderator = await guild.members.fetch(req.body.moderator)
-		.catch(() => res.status(500).end());
+		.catch(() => res.status(404).send('Moderator not found'));
 
 	req.data.offender = await guild.members.fetch(req.body.offender)
-		.catch(() => res.status(500).end());
+		.catch(() => res.status(404).end('Offender not found'));
 
-	if (req.data.offender.hasPermission('MANAGE_GUILD') || req.data.offender.bot) res.status(400).send("Can't take moderation action against this user");
+	if (req.data.offender.hasPermission('MANAGE_GUILD') || req.data.offender.bot) return res.status(400).send("Can't take moderation action against this user");
 
 	req.data.offenderId = req.body.offenderId;
 	req.data.reason = req.body.reason;
@@ -94,6 +100,89 @@ router.post('/modAction/ban', getModData, (req, res) => {
 		.catch(() => {
 			res.status(500).end();
 		});
+});
+
+/* eslint-disable */
+router.post('/notes/:userid', (req, res) => {
+
+});
+
+router.patch('/notes/:userid/:noteid', (req, res) => {
+
+});
+
+router.delete('/notes/:userid/:noteid', (req, res) => {
+
+});
+/* eslint-enable */
+
+router.get('/modlogs', async (req, res) => {
+	const offset = parseInt(req.query.offset, 10) || 0;
+	// eslint-disable-next-line no-nested-ternary
+	const count = parseInt(req.query.count, 10) || 25;
+	const options = req.query.userid ? { userId: req.query.userid } : {};
+
+	if (req.query.userid) {
+		const guild = await client.guilds.fetch(config.discord.serverId)
+			.catch(() => res.status(500).end());
+
+		const member = await guild.members.fetch(req.query.userid)
+			.catch(() => res.status(404).send('Member not found'));
+
+		if (member.hasPermission('MANAGE_GUILD') || member.user.bot) return res.status(400).send('No data for this member is available');
+	}
+
+	const logs = await ModLog.find(options).skip(offset).skip(offset).limit(count)
+		.sort({ _id: 'desc' })
+		.lean()
+		.exec()
+		.catch(() => res.status(500).end());
+
+	res.status(200).json(logs);
+});
+
+router.get('/userinfo/:userid', async (req, res) => {
+	const guild = await client.guilds.fetch(config.discord.serverId)
+		.catch(() => res.status(500).end());
+
+	const member = await guild.members.fetch(req.params.userid)
+		.catch(() => res.status(404).end('Member not found'));
+
+	if (!member) return res.status(404).end();
+	if (member.hasPermission('MANAGE_GUILD') || member.user.bot) return res.status(400).send('No data for this member is available');
+
+	const strikes = await Strike.find({ userId: member.id }).exec()
+		.catch(() => res.status(500).end());
+
+	const activeStrikes = strikes.filter(
+		(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
+	).length;
+
+	User.findById(member.id, async (err, doc) => {
+		if (err) res.status(500).end();
+		if (!doc) {
+			const user = new User({
+				_id: member.id,
+				notes: [],
+				lastKnownTag: member.user.tag,
+			});
+			await user.save()
+				.catch((err2) => { logger.error(err2); });
+
+			return res.status(200).json({
+				userData: user,
+				member,
+				activeStrikes,
+				strikes: strikes.length,
+			});
+		}
+		res.status(200).json({
+			userData: doc,
+			member,
+			activeStrikes,
+			strikes: strikes.length,
+		});
+	});
 });
 
 // Exports

@@ -523,9 +523,7 @@ exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, re
 			.catch(() => {
 				message.guild.members.fetch()
 					.then(() => {
-						const member = message.guild.members.cache.find(
-							(guildMember) => guildMember.user.tag.toLowerCase() === args[0].toLowerCase(),
-						);
+						const member = message.guild.members.fetch({ query: args[0], limit: 1 });
 						// eslint-disable-next-line prefer-promise-reject-errors
 						if (!member) reject('Member not found');
 
