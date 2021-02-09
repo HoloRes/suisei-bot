@@ -50,8 +50,7 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 		if (err) {
 			logger.error(err);
 			reject(err);
-		}
-		else if (!doc) {
+		} else if (!doc) {
 			const user = new User({
 				_id: member.id,
 				lastKnownTag: member.user.tag,
@@ -60,8 +59,7 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 				if (err2) {
 					logger.error(err2);
 					reject(err2);
-				}
-				else resolve();
+				} else resolve();
 			});
 		} else {
 			// eslint-disable-next-line no-param-reassign
@@ -70,8 +68,7 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 				if (err2) {
 					logger.error(err2);
 					reject(err2);
-				}
-				else resolve();
+				} else resolve();
 			});
 		}
 	});

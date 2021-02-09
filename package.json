@@ -4,6 +4,7 @@
   "description": "A custom bot for the Hololive Resort Discord",
   "main": "index.js",
   "dependencies": {
+    "@holores/holoapi": "^1.0.4",
     "@sentry/node": "^5.25.0",
     "aws-sdk": "^2.766.0",
     "axios": "^0.21.1",

@@ -9,9 +9,10 @@ const Sentry = require('@sentry/node');
 const winston = require('winston'); // Advanced logging library
 const sequence = require('mongoose-sequence');
 const moment = require('moment');
-const Mute = require('$/models/activeMute');
-const AutoPublish = require('$/models/publish');
+const HoloApiClient = require('@holores/holoapi');
 const PingSubscription = require('$/models/pingSubscription');
+const AutoPublish = require('$/models/publish');
+const Mute = require('$/models/activeMute');
 
 // Local config files
 const config = require('$/config.json');
@@ -41,6 +42,10 @@ const AutoIncrement = sequence(mongoose);
 
 exports.AutoIncrement = AutoIncrement;
 
+// HoloAPI client
+const holoClient = new HoloApiClient();
+exports.holoClient = holoClient;
+
 // Local JS files
 const youtubeNotifications = require('$/util/youtube');
 const twitterNotifications = require('$/util/twitter');
@@ -63,13 +68,15 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 // Express
 const app = express();
 app.use('/dash', dashboardRouter);
-app.listen(config.PubSubHubBub.hubPort);
+app.listen(config.expressPort);
 
 // Notifications preparation
 if (config.environment === 'production') {
-	youtubeNotifications.init();
 	twitterNotifications.init();
 }
+
+// YouTube
+youtubeNotifications.init(logger, holoClient, client);
 
 // Moderation
 moderation.init();
