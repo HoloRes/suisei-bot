@@ -21,7 +21,9 @@ function authCheck(req, res, next) {
 router.use(authCheck);
 
 async function getModData(req, res, next) {
-	if (!req.body.moderator || !req.body.offender || !req.body.offenderId || !req.body.reason) res.status(400).end();
+	if (!req.body.moderator || !req.body.offender || !req.body.offenderId || !req.body.reason) {
+		res.status(400).end();
+	}
 	const guild = await client.guilds.fetch(config.discord.serverId)
 		.catch(() => res.status(500).end());
 	req.data.guild = guild;
