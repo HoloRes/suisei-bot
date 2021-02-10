@@ -29,8 +29,6 @@ function confirmAndMute(message, duration, member, reason) {
 							.catch(() => message.channel.send('Something went wrong, please try again.'));
 					} else {
 						msg.edit('Cancelled.');
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						msg.delete({ timeout: 4000, reason: 'Automated' });
 					}
 				});
 		});
@@ -38,40 +36,17 @@ function confirmAndMute(message, duration, member, reason) {
 
 // Command
 exports.run = async (client, message, args) => {
-	if (args.length < 3) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}mute <user> <duration> <reason>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (args.length < 3) return message.channel.send(`**USAGE:** ${config.discord.prefix}mute <user> <duration> <reason>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((e) => {
-			message.channel.send(e)
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		});
+		.catch((e) => message.channel.send(e));
 
 	const reason = await args.slice(2).join(' ');
-	if (reason.length > 1000) {
-		return message.channel.send('Error: Reason is over 1000 characters')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
 	const duration = await parse(args[1], 'm'); // Parse into minutes
-	if (Number.isNaN(duration) || duration === 0 || duration === null || duration === undefined) {
-		return message.channel.send('Invalid duration')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (Number.isNaN(duration) || duration === 0 || duration === null || duration === undefined) return message.channel.send('Invalid duration');
+
 	if (member) confirmAndMute(message, duration, member, reason);
 };
 

@@ -5,31 +5,13 @@ const config = require('$/config.json');
 
 // Command
 exports.run = async (client, message, args) => {
-	if (args.length < 2) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}revoke <case id> <reason>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (args.length < 2) return message.channel.send(`**USAGE:** ${config.discord.prefix}revoke <case id> <reason>`);
 
 	const reason = await args.slice(1).join(' ');
-	if (reason.length > 1000) {
-		return message.channel.send('Error: Reason is over 1000 characters')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
 	const caseId = Number.parseInt(args[0], 10);
-	if (Number.isNaN(caseId) || caseId < 1) {
-		return message.channel.send('Invalid case id')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (Number.isNaN(caseId) || caseId < 1) return message.channel.send('Invalid case id');
 
 	moderation.revoke(caseId, reason, message.member)
 		.then(() => {

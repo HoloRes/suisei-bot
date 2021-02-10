@@ -26,8 +26,6 @@ function confirmAndKick(message, member, reason) {
 							.catch(() => message.channel.send('Something went wrong, please try again.'));
 					} else {
 						msg.edit('Cancelled.');
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						msg.delete({ timeout: 4000, reason: 'Automated' });
 					}
 				});
 		});
@@ -35,28 +33,13 @@ function confirmAndKick(message, member, reason) {
 
 // Command
 exports.run = async (client, message, args) => {
-	if (args.length < 2) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}strike <user> <reason>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (args.length < 2) return message.channel.send(`**USAGE:** ${config.discord.prefix}strike <user> <reason>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((e) => message.channel.send(e)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			}));
+		.catch((e) => message.channel.send(e));
+
 	const reason = await args.slice(1).join(' ');
-	if (reason.length > 1000) {
-		return message.channel.send('Error: Reason is over 1000 characters')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
 	confirmAndKick(message, member, reason);
 };

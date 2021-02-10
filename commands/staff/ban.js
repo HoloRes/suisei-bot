@@ -26,8 +26,6 @@ function confirmAndBan(message, member, reason) {
 							.catch(() => message.channel.send('Something went wrong, please try again.'));
 					} else {
 						msg.edit('Cancelled.');
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						msg.delete({ timeout: 4000, reason: 'Automated' });
 					}
 				});
 		});

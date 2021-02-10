@@ -6,20 +6,10 @@ const moderation = require('$/util/moderation');
 const config = require('$/config.json');
 
 exports.run = async (client, message, args) => {
-	if (args.length < 1) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}modlog <member>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}modlog <member>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((err) => message.channel.send(err)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			}));
+		.catch((err) => message.channel.send(err));
 
 	const { data } = await moderation.getMemberModLogs(member)
 		.catch(() => message.channel.send('Something went wrong, please try again.'));
