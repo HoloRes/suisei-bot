@@ -21,6 +21,7 @@ function authCheck(req, res, next) {
 router.use(authCheck);
 
 async function getModData(req, res, next) {
+	if (!req.body.moderator || !req.body.offender || !req.body.offenderId || !req.body.reason) res.status(400).end();
 	const guild = await client.guilds.fetch(config.discord.serverId)
 		.catch(() => res.status(500).end());
 	req.data.guild = guild;
@@ -41,6 +42,7 @@ async function getModData(req, res, next) {
 
 // Routes
 router.get('/checkUser/:id', async (req, res) => {
+	if (!req.params.id) res.status(400).end();
 	const guild = await client.guilds.fetch(config.discord.serverId)
 		.catch(() => res.send('false'));
 
@@ -73,6 +75,7 @@ router.post('/modAction/warn', getModData, (req, res) => {
 });
 
 router.post('/modAction/mute', getModData, (req, res) => {
+	if (!req.data.duration) res.status(400).end();
 	moderation.mute(req.data.member, req.data.duration, req.data.reason, req.data.moderator)
 		.then((result) => {
 			res.status(200).json(result);
@@ -102,19 +105,36 @@ router.post('/modAction/ban', getModData, (req, res) => {
 		});
 });
 
-/* eslint-disable */
-router.post('/notes/:userid', (req, res) => {
+router.post('/notes/:userid', async (req, res) => {
+	const guild = await client.guilds.fetch(config.discord.serverId)
+		.catch(() => res.status(500).end());
 
+	const member = await guild.members.fetch(req.params.userid)
+		.catch(() => res.status(404).send('Member not found'));
+
+	if (member.hasPermission('MANAGE_GUILD') || member.user.bot) return res.status(400).send("Can't add notes to this user");
+
+	moderation.addNote(member, req.body.note)
+		.then((result) => res.status(201).json(result))
+		.catch((err) => res.status(500).json(err));
 });
 
-router.patch('/notes/:userid/:noteid', (req, res) => {
+router.delete('/notes/:userid/:noteid', async (req, res) => {
+	const guild = await client.guilds.fetch(config.discord.serverId)
+		.catch(() => res.status(500).end());
 
+	const member = await guild.members.fetch(req.params.userid)
+		.catch(() => res.status(404).send('Member not found'));
+
+	if (member.hasPermission('MANAGE_GUILD') || member.user.bot) return res.status(400).send("Can't add notes to this user");
+
+	moderation.removeNote(member, parseInt(req.params.noteid, 10))
+		.then((result) => res.status(200).json(result))
+		.catch((err) => {
+			if (err.info) return res.status(400).json(err);
+			res.status(500).json(err);
+		});
 });
-
-router.delete('/notes/:userid/:noteid', (req, res) => {
-
-});
-/* eslint-enable */
 
 router.get('/modlogs', async (req, res) => {
 	const offset = parseInt(req.query.offset, 10) || 0;

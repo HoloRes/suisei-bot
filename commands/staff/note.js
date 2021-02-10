@@ -60,7 +60,7 @@ exports.run = async (client, message, args) => {
 					});
 			});
 	} else if (args[1] === 'remove') {
-		const noteId = Number.parseInt(args[2], 10) - 1;
+		const noteId = Number.parseInt(args[2], 10);
 		if (Number.isNaN(noteId) || noteId < 0) {
 			return message.channel.send('Invalid note id')
 				.then((errMsg) => {

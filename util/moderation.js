@@ -478,14 +478,16 @@ exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => 
 		const index = doc.notes.findIndex((note) => note._id === noteID);
 		// eslint-disable-next-line prefer-promise-reject-errors
 		if (index === -1) reject({ type: 'err', info: 'Note not found' });
-		doc.notes.splice(index, 1);
-		doc.save((err2) => {
-			if (err2) {
-				logger.error(err2);
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err2 });
-			} else resolve({ type: 'success' });
-		});
+		else {
+			doc.notes.splice(index, 1);
+			doc.save((err2) => {
+				if (err2) {
+					logger.error(err2);
+					// eslint-disable-next-line prefer-promise-reject-errors
+					reject({ type: 'err', error: err2 });
+				} else resolve({ type: 'success' });
+			});
+		}
 	});
 });
 
