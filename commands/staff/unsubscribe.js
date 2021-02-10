@@ -1,6 +1,4 @@
 // Models
-const axios = require('axios');
-const querystring = require('query-string');
 const Subscription = require('$/models/subscription');
 
 // Local files
@@ -9,29 +7,11 @@ const { confirmRequest } = require('$/util/functions');
 const { logger } = require('$/index');
 
 exports.run = (client, message, args) => {
-	if (!args[0] || !args[1]) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}unsubscribe <YouTube channel id> <Discord channel id>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
-	Subscription.findById(args[0], async (err, subscription) => {
-		if (err) {
-			return message.channel.send('Something went wrong, try again later.')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+	if (args.length < 2) return message.channel.send(`**USAGE:** ${config.discord.prefix}unsubscribe <YouTube channel id> <Discord channel id>`);
 
-		if (!subscription) {
-			return message.channel.send("That channel doesn't exist in the database.")
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+	Subscription.findById(args[0], async (err, subscription) => {
+		if (err) return message.channel.send('Something went wrong, try again later.');
+		if (!subscription) return message.channel.send("That channel doesn't exist in the database.");
 
 		const index = subscription.channels.findIndex((channel) => channel.id === args[1]);
 		if (index === -1) {
@@ -51,51 +31,17 @@ exports.run = (client, message, args) => {
 					if (subscription.channels.length === 0) {
 						Subscription.findByIdAndDelete(subscription._id, (err2) => {
 							if (err2) {
-								message.channel.send('Something went wrong during deletion, try again later.')
-									.then((errMsg) => {
-										message.delete({ timeout: 4000, reason: 'Automated' });
-										errMsg.delete({ timeout: 4000, reason: 'Automated' });
-									});
+								logger.error(err2);
+								message.channel.send('Something went wrong during deletion, try again later.');
 							} else {
-								axios({
-									url: 'http://pubsubhubbub.appspot.com/',
-									method: 'POST',
-									headers: { 'content-type': 'application/x-www-form-urlencoded' },
-									data: querystring.stringify({
-										'hub.mode': 'unsubscribe',
-										'hub.callback': config.PubSubHubBub.callbackUrl,
-										'hub.topic': `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${subscription._id}`,
-									}),
-								}).then((res) => {
-									if (res.status === 202) logger.debug(`Unsubscription to ${subscription._id} successful.`);
-									else logger.error(`Subscription to ${subscription._id} gave response: ${res.status}`);
-
-									message.channel.send('Subscription removal successful.')
-										.then((errMsg) => {
-											message.delete({ timeout: 4000, reason: 'Automated' });
-											errMsg.delete({ timeout: 4000, reason: 'Automated' });
-										});
-								}).catch((err3) => {
-									if (err3) {
-										logger.error(`Error: ${err3.response.status}, unsubscription unsuccessful.`);
-										message.channel.send("Something went wrong during unsubscription, notifications won't be sent anymore but do notify the Website Team of this issue.")
-											.then((errMsg) => {
-												message.delete({ timeout: 4000, reason: 'Automated' });
-												errMsg.delete({ timeout: 4000, reason: 'Automated' });
-											});
-									}
-								});
+								message.channel.send('Subscription removal successful.');
 							}
 						});
 					} else {
 						subscription.save((err2) => {
 							if (err2) {
 								logger.error(err2);
-								message.channel.send('Something went wrong during the subscription removal, try again later.')
-									.then((errMsg) => {
-										message.delete({ timeout: 4000, reason: 'Automated' });
-										errMsg.delete({ timeout: 4000, reason: 'Automated' });
-									});
+								message.channel.send('Something went wrong during the subscription removal, try again later.');
 							} else {
 								message.channel.send('Subscription removal successful.');
 							}

@@ -20,13 +20,8 @@ function checkExistingAndFollow(message, subscription, channel, user) {
 		if (err) return logger.error(err);
 		if (doc) {
 			const index = await doc.channels.findIndex((docChannel) => docChannel.id === channel.id);
-			if (index !== -1) {
-				return message.channel.send(`${channel.name} is already following @${user.screen_name}.`)
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
-			}
+			if (index !== -1) return message.channel.send(`${channel.name} is already following @${user.screen_name}.`);
+
 			doc.channels.push(channel.id);
 			const msg = await message.channel.send(`Are you sure you want to add @${user.screen_name} to ${channel.name}?`);
 			const result = await confirmRequest(msg, message.author.id);
@@ -36,25 +31,13 @@ function checkExistingAndFollow(message, subscription, channel, user) {
 				doc.save((err2) => {
 					if (err2) {
 						logger.error(err2);
-						message.channel.send('Something went wrong saving to the database.')
-							.then((errMsg) => {
-								message.delete({ timeout: 4000, reason: 'Automated' });
-								errMsg.delete({ timeout: 4000, reason: 'Automated' });
-							});
+						message.channel.send('Something went wrong saving to the database.');
 					} else {
-						message.channel.send('Subscription successful.')
-							.then((errMsg) => {
-								message.delete({ timeout: 4000, reason: 'Automated' });
-								errMsg.delete({ timeout: 4000, reason: 'Automated' });
-							});
+						message.channel.send('Subscription successful.');
 					}
 				});
 			} else {
-				message.channel.send('Cancelled.')
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
+				message.channel.send('Cancelled.');
 			}
 		}
 		const msg = await message.channel.send(`Are you sure you want to add @${user.screen_name} to ${channel.name}?`);
@@ -65,24 +48,14 @@ function checkExistingAndFollow(message, subscription, channel, user) {
 			subscription.save((err2) => {
 				if (err2) {
 					logger.error(err2);
-					message.channel.send('Something went wrong during the subscription, try again later.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						});
+					message.channel.send('Something went wrong during the subscription, try again later.');
 				} else {
 					restart();
-					message.channel.send('Follow successful.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						});
+					message.channel.send('Follow successful.');
 				}
 			});
 		} else {
 			await msg.edit('Cancelled.');
-			msg.delete({ timeout: 4000, reason: 'Automated' });
-			message.delete({ timeout: 4000, reason: 'Automated' });
 		}
 	});
 }
@@ -90,41 +63,18 @@ function checkExistingAndFollow(message, subscription, channel, user) {
 // Command
 exports.run = async (client, message, args) => {
 	if (!args[0]) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}follow <Twitter @name (without @)> <Discord channel id>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
+		return message.channel.send(`**USAGE:** ${config.discord.prefix}follow <Twitter @name (without @)> <Discord channel id>`);
 	}
 	const users = await T.get('users/lookup', { screen_name: args[0] })
-		.catch((e) => {
-			if (e) {
-				return message.channel.send("Couldn't find this user, please try again.")
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
-			}
+		.catch((err) => {
+			logger.error(err);
+			return message.channel.send("Couldn't find this user, please try again.");
 		});
 
-	if (!users[0]) {
-		return message.channel.send("Couldn't find this user, please try again.")
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (!users[0]) return message.channel.send("Couldn't find this user, please try again.");
 
 	const channel = await client.channels.fetch(args[1])
-		.catch((err) => {
-			if (err) {
-				message.channel.send("That channel doesn't exist.")
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
-			}
-		});
+		.catch(() => message.channel.send("That channel doesn't exist."));
 
 	const subscription = new TweetSubscription({
 		_id: users[0].id_str,
@@ -138,11 +88,7 @@ exports.run = async (client, message, args) => {
 			if (!existingWebhook) {
 				await channel.createWebhook('HoloTweeter').catch((err) => {
 					logger.error(err);
-					return message.channel.send('Unable to create a webhook in that channel, please create one with the name `HoloTweeter` and run this command again.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						});
+					return message.channel.send('Unable to create a webhook in that channel, please create one with the name `HoloTweeter` and run this command again.');
 				});
 			}
 			checkExistingAndFollow(message, subscription, channel, users[0]);

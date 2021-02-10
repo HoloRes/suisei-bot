@@ -7,20 +7,10 @@ const moderation = require('$/util/moderation');
 const config = require('$/config.json');
 
 exports.run = async (client, message, args) => {
-	if (args.length < 1) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/remove/list> <note/noteid>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/remove/list> <note/noteid>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((err) => message.channel.send(err)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			}));
+		.catch((err) => message.channel.send(err));
 
 	if (!args[1] || args[1].toLowerCase() === 'list') {
 		const { data: notes } = await moderation.getNotes(member);
@@ -39,13 +29,7 @@ exports.run = async (client, message, args) => {
 		message.channel.send(embed);
 	} else if (args[1] === 'add') {
 		const note = args.slice(2).join(' ');
-		if (note.length > 1000) {
-			return message.channel.send('Error: Note is over 1000 characters')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (note.length > 1000) return message.channel.send('Error: Note is over 1000 characters');
 
 		moderation.addNote(member, note)
 			.then(() => {
@@ -53,21 +37,11 @@ exports.run = async (client, message, args) => {
 			})
 			.catch((err) => {
 				logger.error(err);
-				return message.channel.send('Something went wrong, please try again.')
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
+				return message.channel.send('Something went wrong, please try again.');
 			});
 	} else if (args[1] === 'remove') {
 		const noteId = Number.parseInt(args[2], 10) - 1;
-		if (Number.isNaN(noteId) || noteId < 0) {
-			return message.channel.send('Invalid note id')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (Number.isNaN(noteId) || noteId < 0) return message.channel.send('Invalid note id');
 
 		moderation.removeNote(member, noteId)
 			.then(() => {
@@ -75,18 +49,10 @@ exports.run = async (client, message, args) => {
 			})
 			.catch((err) => {
 				logger.error(err);
-				return message.channel.send(err.info ? err.info : 'Something went wrong, please try again.')
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
+				return message.channel.send(err.info ? err.info : 'Something went wrong, please try again.');
 			});
 	} else {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/remove/list> <note/noteid>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
+		return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/remove/list> <note/noteid>`);
 	}
 };
 

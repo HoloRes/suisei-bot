@@ -6,20 +6,9 @@ const { confirmRequest } = require('$/util/functions');
 
 exports.run = (client, message, args) => {
 	PingSubscription.findById(args.join(' ')).lean().exec((err, doc) => {
-		if (err) {
-			return message.channel.send('Something went wrong')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
-		if (!doc) {
-			return message.channel.send("That list doesn't exist.")
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (err) return message.channel.send('Something went wrong');
+		if (!doc) return message.channel.send("That list doesn't exist.");
+
 		message.channel.send('Are you sure you want to delete this list?')
 			.then((msg) => {
 				confirmRequest(msg, message.author.id)
@@ -35,8 +24,6 @@ exports.run = (client, message, args) => {
 								else msg.edit('Removal successful.');
 							});
 						} else msg.edit('Cancelled.');
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						msg.delete({ timeout: 4000, reason: 'Automated' });
 					});
 			});
 	});

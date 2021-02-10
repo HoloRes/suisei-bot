@@ -26,8 +26,6 @@ function confirmAndWarn(message, member, reason) {
 							.catch(() => message.channel.send('Something went wrong, please try again.'));
 					} else {
 						msg.edit('Cancelled.');
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						msg.delete({ timeout: 4000, reason: 'Automated' });
 					}
 				});
 		});
@@ -35,29 +33,13 @@ function confirmAndWarn(message, member, reason) {
 
 // Command
 exports.run = async (client, message, args) => {
-	if (!args[0]) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}warn <user> <reason>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}warn <user> <reason>`);
 
 	const reason = await args.slice(1).join(' ');
-	if (reason.length > 1000) {
-		return message.channel.send('Error: Reason is over 1000 characters')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch(() => message.channel.send('Member not found')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			}));
+		.catch(() => message.channel.send('Member not found'));
 
 	confirmAndWarn(message, member, reason);
 };
