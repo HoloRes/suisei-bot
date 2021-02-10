@@ -7,7 +7,7 @@ const humanizeDuration = require('humanize-duration');
 
 // Local files
 const config = require('$/config.json');
-const { client, logger } = require('$/index');
+const { client, logger, socket } = require('$/index');
 
 // Models
 const Mute = require('$/models/activeMute');
@@ -25,6 +25,16 @@ function log(logItem, color) {
 		.then((offender) => {
 			client.users.fetch(logItem.moderator)
 				.then((moderator) => {
+					socket.emit('log', {
+						id: logItem._id || undefined,
+						type: logItem.type,
+						offender: offender.tag,
+						duration: logItem.duration || undefined,
+						reason: logItem.reason,
+						moderator: moderator.tag,
+						offenderId: offender.id,
+					});
+
 					const embed = new MessageEmbed()
 						.setTitle(`${logItem.type}${logItem._id ? ` | case ${logItem._id}` : ''}`)
 						.setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ''}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.tag}`)
@@ -468,14 +478,16 @@ exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => 
 		const index = doc.notes.findIndex((note) => note._id === noteID);
 		// eslint-disable-next-line prefer-promise-reject-errors
 		if (index === -1) reject({ type: 'err', info: 'Note not found' });
-		doc.notes.splice(index, 1);
-		doc.save((err2) => {
-			if (err2) {
-				logger.error(err2);
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err2 });
-			} else resolve({ type: 'success' });
-		});
+		else {
+			doc.notes.splice(index, 1);
+			doc.save((err2) => {
+				if (err2) {
+					logger.error(err2);
+					// eslint-disable-next-line prefer-promise-reject-errors
+					reject({ type: 'err', error: err2 });
+				} else resolve({ type: 'success' });
+			});
+		}
 	});
 });
 
@@ -513,9 +525,7 @@ exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, re
 			.catch(() => {
 				message.guild.members.fetch()
 					.then(() => {
-						const member = message.guild.members.cache.find(
-							(guildMember) => guildMember.user.tag.toLowerCase() === args[0].toLowerCase(),
-						);
+						const member = message.guild.members.fetch({ query: args[0], limit: 1 });
 						// eslint-disable-next-line prefer-promise-reject-errors
 						if (!member) reject('Member not found');
 
