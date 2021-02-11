@@ -48,8 +48,16 @@ const app = express();
 app.use(express.json());
 
 const server = app.listen(config.expressPort);
-const socket = new SocketIO(server, { serveClient: false, cors: { origin: config.panelUrl } });
-exports.socket = socket;
+
+const io = new SocketIO(server, { serveClient: false, cors: { origin: config.panelUrl } });
+io.use((socket, next) => {
+	if (socket.handshake.auth && socket.handshake.auth.token === config.socketToken) next();
+	else next(new Error('Authentication error'));
+}).on('connection', (socket) => {
+	const ns = socket.nsp;
+	ns.emit('welcome', { status: 200, msg: 'Connection successful.' });
+});
+exports.socket = io;
 
 // HoloAPI client
 const holoClient = new HoloApiClient();
