@@ -32,7 +32,7 @@ function log(logItem, color) {
 						duration: logItem.duration || undefined,
 						reason: logItem.reason,
 						moderator: moderator.tag,
-						offenderId: offender.id,
+						userId: offender.id,
 					});
 
 					const embed = new MessageEmbed()

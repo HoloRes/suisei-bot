@@ -160,7 +160,27 @@ router.get('/modlogs', async (req, res) => {
 		.exec()
 		.catch(() => res.status(500).end());
 
-	res.status(200).json(logs);
+	// eslint-disable-next-line array-callback-return
+	const promises = logs.map(async (log) => {
+		const doc = await User.findById(log.userId).exec().catch(() => {});
+		if (!doc) {
+			const user = await client.users.fetch(log.userId)
+				.catch(() => {});
+			new User({
+				_id: log.userId,
+				lastKnownTag: user.tag,
+			}).save();
+			// eslint-disable-next-line no-param-reassign
+			log.offender = user.tag;
+			return log;
+		}
+		// eslint-disable-next-line no-param-reassign
+		log.offender = doc.lastKnownTag;
+		return log;
+	});
+	const modLogs = await Promise.all(promises);
+
+	res.status(200).json(modLogs);
 });
 
 router.get('/userinfo/:userid', async (req, res) => {
