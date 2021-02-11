@@ -29,6 +29,7 @@
   "YtApiKey": "",
   "expressPort": 80,
   "apiToken": "",
+  "panelUrl": "",
   "sentryDsn": "",
   "environment": "production",
   "logLevel": "info"
