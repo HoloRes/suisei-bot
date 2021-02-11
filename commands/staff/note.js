@@ -40,7 +40,7 @@ exports.run = async (client, message, args) => {
 				return message.channel.send('Something went wrong, please try again.');
 			});
 	} else if (args[1] === 'remove') {
-		const noteId = Number.parseInt(args[2], 10) - 1;
+		const noteId = Number.parseInt(args[2], 10);
 		if (Number.isNaN(noteId) || noteId < 0) return message.channel.send('Invalid note id');
 
 		moderation.removeNote(member, noteId)
