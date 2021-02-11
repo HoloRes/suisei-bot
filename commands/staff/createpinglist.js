@@ -29,13 +29,9 @@ function createList(message, channel, emoji, emojiName, name) {
 								});
 								ping.save();
 								msg.edit('New list created');
-								message.delete({ timeout: 4000, reason: 'Automated' });
-								msg.delete({ timeout: 4000, reason: 'Automated' });
 							});
 					} else {
 						msg.edit('Action cancelled');
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						msg.delete({ timeout: 4000, reason: 'Automated' });
 					}
 				});
 		});
@@ -44,26 +40,12 @@ function createList(message, channel, emoji, emojiName, name) {
 // Command
 exports.run = async (client, message, args) => {
 	const channel = await client.channels.fetch(args[0])
-		.catch((err) => {
-			if (err) {
-				return message.reply("That channel doesn't exist.")
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
-			}
-		});
+		.catch(() => message.reply("That channel doesn't exist."));
 
 	const name = args.slice(2).join(' ');
 	await PingSubscription.findById(name).lean().exec((err, doc) => {
 		if (err) logger.error(err);
-		if (doc) {
-			return message.reply('That list already exists.')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (doc) return message.reply('That list already exists.');
 	});
 
 	if (unicodeEmojis[args[1].toLowerCase()]) {
@@ -71,13 +53,8 @@ exports.run = async (client, message, args) => {
 		createList(message, channel, emoji, emoji, name);
 	} else {
 		const emoji = message.guild.emojis.resolve(args[1]);
-		if (!emoji) {
-			return message.reply("That emote doesn't exist.")
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (!emoji) return message.reply("That emote doesn't exist.");
+
 		createList(message, channel, emoji, `<:${emoji.name}:${emoji.id}>`, name);
 	}
 };

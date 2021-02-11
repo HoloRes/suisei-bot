@@ -43,6 +43,14 @@ const AutoIncrement = sequence(mongoose);
 
 exports.AutoIncrement = AutoIncrement;
 
+// Express
+const app = express();
+app.use(express.json());
+
+const server = app.listen(config.expressPort);
+const socket = new SocketIO(server, { serveClient: false, cors: { origin: config.panelUrl } });
+exports.socket = socket;
+
 // HoloAPI client
 const holoClient = new HoloApiClient();
 exports.holoClient = holoClient;
@@ -66,20 +74,13 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 	useFindAndModify: false,
 });
 
-// Express
-const app = express();
-app.use(express.json());
-
-app.use('/dash', dashboardRouter);
-
-const socket = new SocketIO();
-const server = app.listen(config.expressPort, () => socket.attach(server, { serveClient: false }));
-exports.socket = socket;
-
 // Notifications preparation
 if (config.environment === 'production') {
 	twitterNotifications.init();
 }
+
+// Routers
+app.use('/dash', dashboardRouter);
 
 // YouTube
 youtubeNotifications.init(logger, holoClient, client);

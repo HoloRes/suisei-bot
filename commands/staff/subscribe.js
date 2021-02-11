@@ -7,42 +7,24 @@ const { logger, holoClient } = require('$/index');
 const { confirmRequest } = require('$/util/functions');
 
 exports.run = async (client, message, args) => {
-	if (!args[0]) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}subscribe <YouTube channel id> <Discord channel id> <message>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (!args.length < 3) return message.channel.send(`**USAGE:** ${config.discord.prefix}subscribe <YouTube channel id> <Discord channel id> <message>`);
 
 	const channel = await holoClient.channels.getByYouTubeId(args[0])
 		.catch((err) => {
 			logger.error(err);
-			return message.channel.send('YouTube channel not found')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
+			return message.channel.send('YouTube channel not found');
 		});
 
 	const discordChannel = await client.channels.fetch(args[1])
 		.catch((err) => {
 			logger.error(err);
-			return message.channel.send('Discord channel not found')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
+			return message.channel.send('Discord channel not found');
 		});
 
 	const existingSub = await Subscription.findById(channel.youtubeId).exec()
 		.catch((err) => {
 			logger.error(err);
-			return message.channel.send('Something went wrong, please try again.')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
+			return message.channel.send('Something went wrong, please try again.');
 		});
 
 	const channelMsg = args.slice(2).join(' ');
@@ -53,23 +35,14 @@ exports.run = async (client, message, args) => {
 
 	if (!webhook) {
 		await discordChannel.createWebhook('Stream notification')
-			.catch(() => message.channel.send('Unable to create a webhook in that channel, please create one with the name `Stream notification`').then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			}));
+			.catch(() => message.channel.send('Unable to create a webhook in that channel, please create one with the name `Stream notification`'));
 	}
 
 	if (existingSub) {
 		// eslint-disable-next-line max-len
 		const index = existingSub.channels.findIndex((docChannel) => docChannel.id === discordChannel.id);
 
-		if (index !== -1) {
-			return message.channel.send(`${discordChannel.name} is already subscribed to ${channel.name}.`)
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (index !== -1) return message.channel.send(`${discordChannel.name} is already subscribed to ${channel.name}.`);
 
 		existingSub.channels.push({
 			id: discordChannel.id,
@@ -85,23 +58,13 @@ exports.run = async (client, message, args) => {
 					existingSub.save((err) => {
 						if (err) {
 							logger.error(err);
-							message.channel.send('Something went wrong saving to the database.')
-								.then((errMsg) => {
-									message.delete({ timeout: 4000, reason: 'Automated' });
-									errMsg.delete({ timeout: 4000, reason: 'Automated' });
-								});
+							message.channel.send('Something went wrong saving to the database.');
 						} else {
-							message.channel.send('Subscription successful.')
-								.then((errMsg) => {
-									message.delete({ timeout: 4000, reason: 'Automated' });
-									errMsg.delete({ timeout: 4000, reason: 'Automated' });
-								});
+							message.channel.send('Subscription successful.');
 						}
 					});
 				} else {
 					msg.edit('Cancelled.');
-					msg.delete({ timeout: 4000, reason: 'Automated' });
-					message.delete({ timeout: 4000, reason: 'Automated' });
 				}
 			});
 	} else {
@@ -122,23 +85,13 @@ exports.run = async (client, message, args) => {
 					subscription.save((err) => {
 						if (err) {
 							logger.error(err);
-							message.channel.send('Something went wrong saving to the database.')
-								.then((errMsg) => {
-									message.delete({ timeout: 4000, reason: 'Automated' });
-									errMsg.delete({ timeout: 4000, reason: 'Automated' });
-								});
+							message.channel.send('Something went wrong saving to the database.');
 						} else {
-							message.channel.send('Subscription successful.')
-								.then((errMsg) => {
-									message.delete({ timeout: 4000, reason: 'Automated' });
-									errMsg.delete({ timeout: 4000, reason: 'Automated' });
-								});
+							message.channel.send('Subscription successful.');
 						}
 					});
 				} else {
 					msg.edit('Cancelled.');
-					msg.delete({ timeout: 4000, reason: 'Automated' });
-					message.delete({ timeout: 4000, reason: 'Automated' });
 				}
 			});
 	}

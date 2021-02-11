@@ -20,10 +20,8 @@ function setSetting(message, setting, value) {
 		Setting.findById(setting, (err, doc) => {
 			if (err) {
 				return message.channel.send('Something went wrong, please try again.')
-					.then((msg) => {
+					.then(() => {
 						resolve(false);
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						msg.delete({ timeout: 4000, reason: 'Automated' });
 					});
 			}
 
@@ -35,11 +33,7 @@ function setSetting(message, setting, value) {
 				settingDoc.save((err2) => {
 					if (err2) {
 						resolve(false);
-						return message.channel.send('Something went wrong, please try again.')
-							.then((msg) => {
-								message.delete({ timeout: 4000, reason: 'Automated' });
-								msg.delete({ timeout: 4000, reason: 'Automated' });
-							});
+						return message.channel.send('Something went wrong, please try again.');
 					} resolve(true);
 				});
 			} else {
@@ -48,11 +42,7 @@ function setSetting(message, setting, value) {
 				doc.save((err2) => {
 					if (err2) {
 						resolve(false);
-						return message.channel.send('Something went wrong, please try again.')
-							.then((msg) => {
-								message.delete({ timeout: 4000, reason: 'Automated' });
-								msg.delete({ timeout: 4000, reason: 'Automated' });
-							});
+						return message.channel.send('Something went wrong, please try again.');
 					} resolve(true);
 				});
 			}
@@ -130,13 +120,7 @@ function send(message, setting, value) {
 
 // Command
 exports.run = async (client, message, args) => {
-	if (!args[0]) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}settings <setting> <value>`)
-			.then((msg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				msg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}settings <setting> <value>`);
 
 	let settings = '';
 	availableSettings.forEach((setting, index) => {
@@ -150,13 +134,7 @@ exports.run = async (client, message, args) => {
 
 	if (!args[1]) {
 		return Setting.findById(setting.name, (err, doc) => {
-			if (err) {
-				return message.channel.send('Something went wrong, please try again.')
-					.then((errMsg) => {
-						message.delete({ timeout: 4000, reason: 'Automated' });
-						errMsg.delete({ timeout: 4000, reason: 'Automated' });
-					});
-			}
+			if (err) return message.channel.send('Something went wrong, please try again.');
 
 			if (!doc) {
 				const embed = new MessageEmbed()
@@ -194,22 +172,13 @@ exports.run = async (client, message, args) => {
 						.setDescription(`New value: ${value}`);
 					message.channel.send(embed);
 				} else {
-					message.channel.send('Something went wrong, please try again.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						});
+					message.channel.send('Something went wrong, please try again.');
 				}
 			});
 	} else if (setting.type === 'user') {
 		const user = await getUser(message, value);
-		if (!user) {
-			return message.channel.send('Member not found.')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (!user) return message.channel.send('Member not found.');
+
 		setSetting(message, setting.name, user.id)
 			.then((succeeded) => {
 				if (succeeded) {
@@ -218,22 +187,13 @@ exports.run = async (client, message, args) => {
 						.setDescription(`New value: <@${user.id}>`);
 					message.channel.send(embed);
 				} else {
-					message.channel.send('Something went wrong, please try again.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						});
+					message.channel.send('Something went wrong, please try again.');
 				}
 			});
 	} else if (setting.type === 'role') {
 		const role = await getRole(message, value);
-		if (!role) {
-			return message.channel.send('Role not found.')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (!role) return message.channel.send('Role not found.');
+
 		setSetting(message, setting.name, role.id)
 			.then((succeeded) => {
 				if (succeeded) {
@@ -242,22 +202,13 @@ exports.run = async (client, message, args) => {
 						.setDescription(`New value: <@&${role.id}>`);
 					message.channel.send(embed);
 				} else {
-					message.channel.send('Something went wrong, please try again.')
-						.then((msg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							msg.delete({ timeout: 4000, reason: 'Automated' });
-						});
+					message.channel.send('Something went wrong, please try again.');
 				}
 			});
 	} else if (setting.type === 'channel') {
 		const channel = await getChannel(message, value);
-		if (!channel) {
-			return message.channel.send('Member not found.')
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
-		}
+		if (!channel) return message.channel.send('Channel not found.');
+
 		setSetting(message, setting.name, channel.id)
 			.then((succeeded) => {
 				if (succeeded) {
@@ -266,11 +217,7 @@ exports.run = async (client, message, args) => {
 						.setDescription(`New value: <#${channel.id}>`);
 					message.channel.send(embed);
 				} else {
-					message.channel.send('Something went wrong, please try again.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						});
+					message.channel.send('Something went wrong, please try again.');
 				}
 			});
 	}
