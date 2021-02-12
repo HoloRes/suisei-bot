@@ -1,10 +1,7 @@
-name: Create development Docker image
+name: Create staging Docker image
 on:
-  push:
-    branches:
-      - '*'
-      - '!v*'
-      - '!master'
+  pull_request:
+    branches: [master]
 
 jobs:
   deploy:
