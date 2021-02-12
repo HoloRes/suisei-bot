@@ -22,7 +22,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
-          environment: development
+          environment: staging
 
       - name: Docker meta
         id: docker_meta
@@ -32,7 +32,7 @@ jobs:
           tag-sha: true
           tag-custom: |
             'latest'
-            'dev'
+            'staging'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
