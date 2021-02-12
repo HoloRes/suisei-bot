@@ -29,8 +29,8 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tag-sha: true
           tag-custom: |
-            'latest'
-            'prod'
+            latest
+            prod
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
