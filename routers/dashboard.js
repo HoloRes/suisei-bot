@@ -21,22 +21,29 @@ function authCheck(req, res, next) {
 router.use(authCheck);
 
 async function getModData(req, res, next) {
-	if (!req.body.moderator || !req.body.offender || !req.body.offenderId || !req.body.reason) {
+	if (!req.body.moderator || !req.body.offender || !req.body.reason) {
 		res.status(400).end();
 	}
+
+	req.data = {};
+
 	const guild = await client.guilds.fetch(config.discord.serverId)
 		.catch(() => res.status(500).end());
 	req.data.guild = guild;
 
-	req.data.moderator = await guild.members.fetch(req.body.moderator)
-		.catch(() => res.status(404).send('Moderator not found'));
+	const moderator = await guild.members.fetch(req.body.moderator)
+		.catch(() => res.status(404).json({ info: 'Moderator not found' }));
+	if (!moderator.user) return res.status(404).json({ info: 'Moderator not found' });
+	req.data.moderator = moderator;
 
-	req.data.offender = await guild.members.fetch(req.body.offender)
-		.catch(() => res.status(404).end('Offender not found'));
+	const offender = await guild.members.fetch(req.body.offender)
+		.catch(() => res.status(404).json({ info: 'Offender not found' }));
+	if (!offender.user) return res.status(404).json({ info: 'Offender not found' });
 
-	if (req.data.offender.hasPermission('MANAGE_GUILD') || req.data.offender.bot) return res.status(400).send("Can't take moderation action against this user");
+	if (offender.hasPermission('MANAGE_GUILD') || offender.bot) return res.status(400).json({ info: "Can't take moderation action against this user" });
+	req.data.offender = offender;
 
-	req.data.offenderId = req.body.offenderId;
+	req.data.offenderId = req.body.offender;
 	req.data.reason = req.body.reason;
 	req.data.duration = req.body.duration || undefined;
 	next();
@@ -57,7 +64,7 @@ router.get('/checkUser/:id', async (req, res) => {
 });
 
 router.post('/modAction/strike', getModData, (req, res) => {
-	moderation.strike(req.data.member, req.data.reason, req.data.moderator)
+	moderation.strike(req.data.offender, req.data.reason, req.data.moderator)
 		.then((result) => {
 			res.status(200).json(result);
 		})
@@ -67,7 +74,7 @@ router.post('/modAction/strike', getModData, (req, res) => {
 });
 
 router.post('/modAction/warn', getModData, (req, res) => {
-	moderation.warn(req.data.member, req.data.reason, req.data.moderator)
+	moderation.warn(req.data.offender, req.data.reason, req.data.moderator)
 		.then((result) => {
 			res.status(200).json(result);
 		})
@@ -78,7 +85,7 @@ router.post('/modAction/warn', getModData, (req, res) => {
 
 router.post('/modAction/mute', getModData, (req, res) => {
 	if (!req.data.duration) res.status(400).end();
-	moderation.mute(req.data.member, req.data.duration, req.data.reason, req.data.moderator)
+	moderation.mute(req.data.offender, req.data.duration, req.data.reason, req.data.moderator)
 		.then((result) => {
 			res.status(200).json(result);
 		})
@@ -88,7 +95,7 @@ router.post('/modAction/mute', getModData, (req, res) => {
 });
 
 router.post('/modAction/kick', getModData, (req, res) => {
-	moderation.kick(req.data.member, req.data.reason, req.data.moderator)
+	moderation.kick(req.data.offender, req.data.reason, req.data.moderator)
 		.then((result) => {
 			res.status(200).json(result);
 		})
@@ -98,7 +105,7 @@ router.post('/modAction/kick', getModData, (req, res) => {
 });
 
 router.post('/modAction/ban', getModData, (req, res) => {
-	moderation.ban(req.data.member, req.data.reason, req.data.moderator)
+	moderation.ban(req.data.offender, req.data.reason, req.data.moderator)
 		.then((result) => {
 			res.status(200).json(result);
 		})
@@ -160,6 +167,9 @@ router.get('/modlogs', async (req, res) => {
 		.exec()
 		.catch(() => res.status(500).end());
 
+	const modLogCount = await ModLog.countDocuments({}).exec()
+		.catch(() => res.status(500).end());
+
 	// eslint-disable-next-line array-callback-return
 	const promises = logs.map(async (log) => {
 		const doc = await User.findById(log.userId).exec().catch(() => {});
@@ -180,7 +190,7 @@ router.get('/modlogs', async (req, res) => {
 	});
 	const modLogs = await Promise.all(promises);
 
-	res.status(200).json(modLogs);
+	res.status(200).json({ logs: modLogs, count: modLogCount });
 });
 
 router.get('/userinfo/:userid', async (req, res) => {

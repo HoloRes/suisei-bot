@@ -33,24 +33,13 @@ function confirmAndBan(message, member, reason) {
 
 // Command
 exports.run = async (client, message, args) => {
-	if (args.length < 2) {
-		return message.channel.send(`**USAGE:** ${config.discord.prefix}ban <user> <reason>`)
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (args.length < 2) return message.channel.send(`**USAGE:** ${config.discord.prefix}ban <user> <reason>`);
 
 	const reason = await args.slice(1).join(' ');
-	if (reason.length > 1000) {
-		return message.channel.send('Error: Reason is over 1000 characters')
-			.then((errMsg) => {
-				message.delete({ timeout: 4000, reason: 'Automated' });
-				errMsg.delete({ timeout: 4000, reason: 'Automated' });
-			});
-	}
+	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
-	const member = await moderation.getMemberFromMessage(message, args)
+	moderation.getMemberFromMessage(message, args)
+		.then((member) => confirmAndBan(message, member, reason))
 		.catch((err) => {
 			if (err === 'Member not found') {
 				return message.guild.members.ban(args[0])
@@ -63,20 +52,10 @@ exports.run = async (client, message, args) => {
 						}, '#f54242');
 						message.channel.send(`**${user.tag}** has been banned`);
 					})
-					.catch(() => message.channel.send('User not found or something went wrong.')
-						.then((errMsg) => {
-							message.delete({ timeout: 4000, reason: 'Automated' });
-							errMsg.delete({ timeout: 4000, reason: 'Automated' });
-						}));
+					.catch(() => message.channel.send('User not found or something went wrong.'));
 			}
-			message.channel.send(err)
-				.then((errMsg) => {
-					message.delete({ timeout: 4000, reason: 'Automated' });
-					errMsg.delete({ timeout: 4000, reason: 'Automated' });
-				});
+			message.channel.send(err);
 		});
-
-	confirmAndBan(message, member, reason);
 };
 
 exports.config = {

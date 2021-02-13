@@ -26,6 +26,10 @@ function start() {
 
 		stream = await T.stream('statuses/filter', { follow: users });
 		stream.on('data', (tweet) => {
+			if (!tweet.user || !tweet.user.id_str) {
+				logger.debug("Tweet doesn't have required properties");
+				return logger.debug(tweet);
+			}
 			TweetSubscription.findById(tweet.user.id_str, async (err2, doc) => {
 				if (!doc) return;
 				if (err2) return logger.error(err2);

@@ -38,16 +38,15 @@ function confirmAndMute(message, duration, member, reason) {
 exports.run = async (client, message, args) => {
 	if (args.length < 3) return message.channel.send(`**USAGE:** ${config.discord.prefix}mute <user> <duration> <reason>`);
 
-	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((e) => message.channel.send(e));
-
 	const reason = await args.slice(2).join(' ');
 	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
 	const duration = await parse(args[1], 'm'); // Parse into minutes
 	if (Number.isNaN(duration) || duration === 0 || duration === null || duration === undefined) return message.channel.send('Invalid duration');
 
-	if (member) confirmAndMute(message, duration, member, reason);
+	moderation.getMemberFromMessage(message, args)
+		.then((member) => confirmAndMute(message, duration, member, reason))
+		.catch((e) => message.channel.send(e));
 };
 
 exports.config = {

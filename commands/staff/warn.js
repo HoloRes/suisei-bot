@@ -38,10 +38,9 @@ exports.run = async (client, message, args) => {
 	const reason = await args.slice(1).join(' ');
 	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
-	const member = await moderation.getMemberFromMessage(message, args)
-		.catch(() => message.channel.send('Member not found'));
-
-	confirmAndWarn(message, member, reason);
+	moderation.getMemberFromMessage(message, args)
+		.then((member) => confirmAndWarn(message, member, reason))
+		.catch((e) => message.channel.send(e));
 };
 
 exports.config = {

@@ -31,13 +31,13 @@ function log(logItem, color) {
 						offender: offender.tag,
 						duration: logItem.duration || undefined,
 						reason: logItem.reason,
-						moderator: moderator.tag,
+						moderator: moderator.user.tag,
 						userId: offender.id,
 					});
 
 					const embed = new MessageEmbed()
 						.setTitle(`${logItem.type}${logItem._id ? ` | case ${logItem._id}` : ''}`)
-						.setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ''}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.tag}`)
+						.setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ''}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.user.tag}`)
 						.setFooter(`ID: ${logItem.userId}`)
 						.setColor(color)
 						.setTimestamp();
@@ -204,7 +204,7 @@ function mute(member, duration, reason, moderator) {
 			if (err) reject({ type: 'err', error: err });
 			// eslint-disable-next-line prefer-promise-reject-errors
 			if (!setting) reject({ type: 'err', error: 'noRole' });
-			member.roles.add(setting.value, `Muted by ${moderator.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`)
+			member.roles.add(setting.value, `Muted by ${moderator.user.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`)
 				.catch((e) => {
 					// eslint-disable-next-line prefer-promise-reject-errors
 					reject({ type: 'err', error: e });
@@ -517,17 +517,22 @@ exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, re
 		message.guild.members.fetch(args[0])
 			.then((member) => {
 				// eslint-disable-next-line prefer-promise-reject-errors
-				if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
+				if (!member.user) reject('Member not found');
 				// eslint-disable-next-line prefer-promise-reject-errors
-				else if (member.user.bot) reject('This user is a bot');
+				else if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
+				// eslint-disable-next-line prefer-promise-reject-errors
+				else if (member.user.bot) reject(new Error('This user is a bot'));
 				else resolve(member);
 			})
 			.catch(() => {
 				message.guild.members.fetch()
 					.then(() => {
-						const member = message.guild.members.fetch({ query: args[0], limit: 1 });
+						const member = message.guild.members.fetch({ query: args[0], limit: 1 })
+							// eslint-disable-next-line prefer-promise-reject-errors
+							.catch(() => reject('Member not found'));
+
 						// eslint-disable-next-line prefer-promise-reject-errors
-						if (!member) reject('Member not found');
+						if (!member.user) reject('Member not found');
 
 						// eslint-disable-next-line prefer-promise-reject-errors
 						else if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
