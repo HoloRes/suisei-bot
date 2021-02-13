@@ -14,10 +14,12 @@ const { logger } = require('$/index');
 
 // Init
 const router = new express.Router();
+
 function authCheck(req, res, next) {
 	if (req.get('Authorization') !== config.apiToken) return res.status(401).end();
 	next();
 }
+
 router.use(authCheck);
 
 async function getModData(req, res, next) {
@@ -172,10 +174,12 @@ router.get('/modlogs', async (req, res) => {
 
 	// eslint-disable-next-line array-callback-return
 	const promises = logs.map(async (log) => {
-		const doc = await User.findById(log.userId).exec().catch(() => {});
+		const doc = await User.findById(log.userId).exec()
+			.catch(() => res.status(500).end());
 		if (!doc) {
 			const user = await client.users.fetch(log.userId)
-				.catch(() => {});
+				.catch(() => {
+				});
 			new User({
 				_id: log.userId,
 				lastKnownTag: user.tag,
@@ -219,7 +223,9 @@ router.get('/userinfo/:userid', async (req, res) => {
 				lastKnownTag: member.user.tag,
 			});
 			await user.save()
-				.catch((err2) => { logger.error(err2); });
+				.catch((err2) => {
+					logger.error(err2);
+				});
 
 			return res.status(200).json({
 				userData: user,
@@ -235,6 +241,65 @@ router.get('/userinfo/:userid', async (req, res) => {
 			strikes: strikes.length,
 		});
 	});
+});
+
+router.get('/users', async (req, res) => {
+	const guild = await client.guilds.fetch(config.discord.serverId)
+		.catch(() => res.status(500).end());
+
+	const userDocs = await User.find({}).lean().exec()
+		.catch(() => res.status(500).end());
+
+	const users = userDocs.filter(async (user) => {
+		const member = await guild.members.fetch(user._id)
+			.catch(() => true);
+		if (!member.user) return true;
+		if (member.hasPermission('MANAGE_GUILD') || member.user.bot) return false;
+		return true;
+	});
+
+	const userCount = await User.countDocuments({}).exec()
+		.catch(() => res.status(500).end());
+
+	const userPromises = users.map(async (user) => {
+		const strikes = await Strike.find({ userId: user._id }).exec()
+			.catch(() => res.status(500).end());
+
+		const activeStrikes = await strikes.filter(
+			(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
+		);
+
+		const lastStrikeDate = (strikes[0] && strikes[0].strikeDate
+			? strikes[0].strikeDate.toISOString() : undefined);
+
+		let strikeExpiration = (
+			activeStrikes[activeStrikes.length - 1]
+			&& activeStrikes[activeStrikes.length - 1].strikeDate
+				? new Date(activeStrikes[activeStrikes.length - 1].strikeDate)
+				: undefined);
+
+		if (strikeExpiration) {
+			strikeExpiration.setDate(strikeExpiration.getDate() + 30);
+			strikeExpiration = strikeExpiration.toISOString();
+		}
+
+		logger.debug(lastStrikeDate);
+		logger.debug(strikeExpiration);
+
+		return {
+			userData: user,
+			activeStrikes: activeStrikes.length,
+			lastStrikeDate,
+			strikeExpiration,
+			strikes: strikes.length,
+		};
+	});
+
+	const unfilteredUserData = await Promise.all(userPromises);
+
+	const userData = unfilteredUserData.filter((user) => user.strikes > 0);
+
+	res.status(200).json({ users: userData, count: userCount	});
 });
 
 // Exports

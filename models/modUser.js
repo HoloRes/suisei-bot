@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 // Schema
 const userSchema = new mongoose.Schema({
-	_id: { type: Number, required: true },
+	_id: { type: String, required: true },
 	notes: [{
 		_id: Number,
 		value: String,
