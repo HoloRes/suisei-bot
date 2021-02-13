@@ -499,7 +499,7 @@ exports.getNotes = (member) => new Promise((resolve, reject) => {
 		if (!doc || !doc.notes) {
 			updateMember(member);
 			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', info: 'No user notes found' });
+			resolve({ type: 'success', data: [] });
 		} else resolve({ type: 'success', data: doc.notes });
 	});
 });
