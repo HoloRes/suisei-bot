@@ -283,9 +283,6 @@ router.get('/users', async (req, res) => {
 			strikeExpiration = strikeExpiration.toISOString();
 		}
 
-		logger.debug(lastStrikeDate);
-		logger.debug(strikeExpiration);
-
 		return {
 			userData: user,
 			activeStrikes: activeStrikes.length,
