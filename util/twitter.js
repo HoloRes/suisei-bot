@@ -59,7 +59,7 @@ function start() {
 		});
 	});
 
-	scheduleJob('0 0 * * *', () => { // Automatically restart the client every Sunday
+	scheduleJob('0 */6 * * *', () => { // Automatically restart the client every 6h
 		if (stream) stream.destroy();
 		setTimeout(() => { start(); }, 2000);
 	});
