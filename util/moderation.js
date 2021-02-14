@@ -31,13 +31,13 @@ function log(logItem, color) {
 						offender: offender.tag,
 						duration: logItem.duration || undefined,
 						reason: logItem.reason,
-						moderator: moderator.user.tag,
+						moderator: moderator.tag,
 						userId: offender.id,
 					});
 
 					const embed = new MessageEmbed()
 						.setTitle(`${logItem.type}${logItem._id ? ` | case ${logItem._id}` : ''}`)
-						.setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ''}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.user.tag}`)
+						.setDescription(`**Offender:** ${offender.tag}${logItem.duration ? `\n**Duration:** ${logItem.duration}` : ''}\n**Reason:** ${logItem.reason}\n**Moderator:** ${moderator.tag}`)
 						.setFooter(`ID: ${logItem.userId}`)
 						.setColor(color)
 						.setTimestamp();
