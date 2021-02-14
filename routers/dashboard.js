@@ -295,8 +295,9 @@ router.get('/users', async (req, res) => {
 	const unfilteredUserData = await Promise.all(userPromises);
 
 	const userData = unfilteredUserData.filter((user) => user.strikes > 0);
+	const sortedUserData = userData.sort((a, b) => b.activeStrikes - a.activeStrikes);
 
-	res.status(200).json({ users: userData, count: userCount	});
+	res.status(200).json({ users: sortedUserData, count: userCount	});
 });
 
 // Exports
