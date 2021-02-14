@@ -58,13 +58,14 @@ function start() {
 			});
 		});
 	});
-
+}
+exports.init = () => {
+	start();
 	scheduleJob('0 */6 * * *', () => { // Automatically restart the client every 6h
 		if (stream) stream.destroy();
 		setTimeout(() => { start(); }, 2000);
 	});
-}
-exports.init = start;
+};
 
 exports.restart = () => {
 	if (stream) stream.destroy();
