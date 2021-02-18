@@ -9,7 +9,7 @@ const config = require('$/config.json');
 exports.run = async (client, message, args) => {
 	if (!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}autopublish <Discord channel id>`);
 
-	const channel = client.channels.fetch(args[0])
+	const channel = await client.channels.fetch(args[0])
 		.catch((err) => {
 			logger.error(err);
 			return message.channel.send("That channel doesn't exist.");
