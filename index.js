@@ -237,15 +237,14 @@ client.on('message', (message) => {
 		if (err) return logger.error(err);
 		if (doc) {
 			const { options: { http } } = client;
-			if (message.channel.type === 'news') {
+			if (doc.autoPublish === true && message.channel.type === 'news') {
 				axios({
 					method: 'POST',
 					url: `${http.api}/v${http.version}/channels/${message.channel.id}/messages/${message.id}/crosspost`,
 					headers: {
 						Authorization: `Bot ${config.discord.token}`,
 					},
-				})
-					.catch(() => {}); // Ignore errors
+				}).catch(() => {}); // Ignore errors
 			} else {
 				// eslint-disable-next-line no-param-reassign
 				doc.autoPublish = false;
