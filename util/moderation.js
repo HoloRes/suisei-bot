@@ -460,9 +460,13 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 	});
 });
 
-exports.massban = (members, reason, moderator) => new Promise((resolve, reject) => {
+exports.massban = (members, reason, moderator) => {
 
-});
+};
+
+exports.tosviolation = (member, reason, moderator) => {
+
+};
 
 exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) => {
 	Strike.findById(caseID, (err, doc) => {
