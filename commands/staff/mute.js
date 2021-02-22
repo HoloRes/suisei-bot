@@ -39,6 +39,7 @@ exports.run = async (client, message, args) => {
 	if (args.length < 3) return message.channel.send(`**USAGE:** ${config.discord.prefix}mute <user> <duration> <reason>`);
 
 	const reason = await args.slice(2).join(' ');
+	if (reason.length === 0) return message.channel.send("Error: Reason can't be empty");
 	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
 	const duration = await parse(args[1], 'm'); // Parse into minutes

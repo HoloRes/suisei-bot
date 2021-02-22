@@ -29,6 +29,7 @@ exports.run = async (client, message, args) => {
 		message.channel.send(embed);
 	} else if (args[1] === 'add') {
 		const note = args.slice(2).join(' ');
+		if (note.length === 0) return message.channel.send("Error: Note can't be empty");
 		if (note.length > 1000) return message.channel.send('Error: Note is over 1000 characters');
 
 		moderation.addNote(member, note)
