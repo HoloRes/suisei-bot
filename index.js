@@ -27,8 +27,6 @@ const logger = winston.createLogger({
 	level: config.logLevel,
 	transports: [
 		new winston.transports.Console(),
-		new winston.transports.File({ filename: path.join(__dirname, 'logs', 'error', `${date}.log`), level: 'error' }),
-		new winston.transports.File({ filename: path.join(__dirname, 'logs', 'complete', `${date}.log`) }),
 		new LokiTransport({
 			host: config.lokiHost,
 			labels: { service: 'suisei-mic' },
