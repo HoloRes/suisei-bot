@@ -24,6 +24,13 @@ Sentry.configureScope((scope) => {
 	scope.setTag('module', 'Moderation');
 });
 
+class ModerationError extends Error {
+	constructor(message, data) {
+		super();
+		this.data = data || {};
+	}
+}
+
 // Functions
 function log(logItem, color) {
 	client.users.fetch(logItem.userId)
@@ -168,7 +175,7 @@ function unmute(member, reason, moderator) {
 
 exports.unmute = unmute;
 
-function mute(member, duration, reason, moderator) {
+function mute(member, duration, reason, moderator, tos) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
 		const expirationDate = moment().add(duration, 'minutes');
@@ -201,6 +208,21 @@ function mute(member, duration, reason, moderator) {
 					reject({ type: 'err', error: err2 });
 				}
 			});
+
+			if (tos) {
+				const tosStrike = new Strike({
+					_id: -logItem._id,
+					userId: member.id,
+				});
+				tosStrike.save((err2) => {
+					if (err2) {
+						Sentry.captureException(err2);
+						logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+						// eslint-disable-next-line prefer-promise-reject-errors
+						reject({ type: 'err', error: err2 });
+					}
+				});
+			}
 
 			Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
 				if (err2) {
@@ -351,7 +373,7 @@ function kick(member, reason, moderator) {
 
 exports.kick = kick;
 
-function ban(member, reason, moderator) {
+function ban(member, reason, moderator, tos) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
 		const logItem = new LogItem({
@@ -381,6 +403,21 @@ function ban(member, reason, moderator) {
 					reject({ type: 'err', error: err2 });
 				}
 			});
+
+			if (tos) {
+				const tosStrike = new Strike({
+					_id: -logItem._id,
+					userId: member.id,
+				});
+				tosStrike.save((err2) => {
+					if (err2) {
+						Sentry.captureException(err2);
+						logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+						// eslint-disable-next-line prefer-promise-reject-errors
+						reject({ type: 'err', error: err2 });
+					}
+				});
+			}
 		});
 
 		Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
@@ -461,12 +498,33 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 });
 
 exports.massban = (members, reason, moderator) => {
-
+	// TODO: Have a loop with a one second interval in between to not hit rate limits
 };
 
-exports.tosviolation = (member, reason, moderator) => {
+exports.tosviolation = (member, reason, moderator) => new Promise((resolve, reject) => {
+	Strike.find({ userId: member.id }, (err2, strikes) => {
+		if (err2) {
+			Sentry.captureException(err2);
+			logger.error(err2, { labels: { module: 'moderation', event: ['tosviolation', 'databaseSearch'] } });
+			// eslint-disable-next-line prefer-promise-reject-errors
+			reject(new ModerationError(err2));
+		}
 
-};
+		const activeStrikes = strikes.filter(
+			(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
+		).length;
+
+		if (activeStrikes > 0) {
+			ban(member, reason, moderator, true)
+				.then(resolve)
+				.catch(reject);
+		} else {
+			mute(member, 7 * 24 * 60, reason, moderator, true)
+				.then(resolve)
+				.catch(reject);
+		}
+	});
+});
 
 exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) => {
 	Strike.findById(caseID, (err, doc) => {
@@ -582,9 +640,9 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 	});
 });
 
-exports.updateNote = (member, noteID, note) => new Promise((resolve, reject) => {
+exports.updateNote = (member, noteID, note) => {
 
-});
+};
 
 // eslint-disable-next-line no-async-promise-executor
 exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => {
