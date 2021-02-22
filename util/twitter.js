@@ -35,7 +35,7 @@ function start() {
 		stream.on('data', (tweet) => {
 			if (!tweet.user || !tweet.user.id_str) {
 				logger.debug("Tweet doesn't have required properties", { labels: { module: 'twitter', event: 'tweet' } });
-				return logger.debug(tweet);
+				return logger.debug(JSON.stringify(tweet, null, 2), { labels: { module: 'twitter', event: 'tweet' } });
 			}
 			TweetSubscription.findById(tweet.user.id_str, async (err2, doc) => {
 				if (err2) {
