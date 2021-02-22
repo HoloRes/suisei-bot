@@ -274,6 +274,10 @@ function mute(member, duration, reason, moderator) {
 
 exports.mute = mute;
 
+exports.hardmute = (member, moderator) => {
+
+};
+
 function kick(member, reason, moderator) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
@@ -456,6 +460,10 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 	});
 });
 
+exports.massban = (members, reason, moderator) => new Promise((resolve, reject) => {
+
+});
+
 exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) => {
 	Strike.findById(caseID, (err, doc) => {
 		if (err) {
@@ -538,6 +546,10 @@ exports.getModLogByCaseID = (caseID) => new Promise((resolve, reject) => {
 	});
 });
 
+exports.updateReason = (caseID, reason) => {
+
+};
+
 // eslint-disable-next-line no-async-promise-executor
 exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 	await updateMember(member);
@@ -564,6 +576,10 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 			} else resolve({ type: 'success' });
 		});
 	});
+});
+
+exports.updateNote = (member, noteID, note) => new Promise((resolve, reject) => {
+
 });
 
 // eslint-disable-next-line no-async-promise-executor
