@@ -1,12 +1,13 @@
 // Imports
-// Packages
 const { MessageEmbed } = require('discord.js');
-
-// Local files
-const config = require('$/config.json');
+const Sentry = require('@sentry/node');
 
 // Models
 const Setting = require('$/models/setting');
+
+// Local files
+const config = require('$/config.json');
+const { logger } = require('$/index');
 
 // Init
 const availableSettings = [ // Available types: user, role, channel, string
@@ -19,6 +20,8 @@ function setSetting(message, setting, value) {
 	return new Promise((resolve) => {
 		Setting.findById(setting, (err, doc) => {
 			if (err) {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'commands', event: ['settings', 'databaseSearch'] } });
 				return message.channel.send('Something went wrong, please try again.')
 					.then(() => {
 						resolve(false);
@@ -32,6 +35,8 @@ function setSetting(message, setting, value) {
 				});
 				settingDoc.save((err2) => {
 					if (err2) {
+						Sentry.captureException(err2);
+						logger.error(err2, { labels: { module: 'commands', event: ['settings', 'databaseSave'] } });
 						resolve(false);
 						return message.channel.send('Something went wrong, please try again.');
 					} resolve(true);
@@ -41,6 +46,8 @@ function setSetting(message, setting, value) {
 				doc.value = value;
 				doc.save((err2) => {
 					if (err2) {
+						Sentry.captureException(err2);
+						logger.error(err2, { labels: { module: 'commands', event: ['settings', 'databaseSave'] } });
 						resolve(false);
 						return message.channel.send('Something went wrong, please try again.');
 					} resolve(true);
@@ -134,7 +141,11 @@ exports.run = async (client, message, args) => {
 
 	if (!args[1]) {
 		return Setting.findById(setting.name, (err, doc) => {
-			if (err) return message.channel.send('Something went wrong, please try again.');
+			if (err) {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'commands', event: ['settings', 'databaseSearch'] } });
+				return message.channel.send('Something went wrong, please try again.');
+			}
 
 			if (!doc) {
 				const embed = new MessageEmbed()

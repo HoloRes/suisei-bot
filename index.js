@@ -11,6 +11,8 @@ const sequence = require('mongoose-sequence');
 const moment = require('moment');
 const HoloApiClient = require('@holores/holoapi');
 const { Server: SocketIO } = require('socket.io');
+const LokiTransport = require('winston-loki');
+const Tracing = require('@sentry/tracing');
 const PingSubscription = require('$/models/pingSubscription');
 const AutoPublish = require('$/models/publish');
 const Mute = require('$/models/activeMute');
@@ -23,11 +25,15 @@ const config = require('$/config.json');
 const date = new Date().toISOString();
 const logger = winston.createLogger({
 	level: config.logLevel,
-	format: winston.format.simple(),
 	transports: [
 		new winston.transports.Console(),
 		new winston.transports.File({ filename: path.join(__dirname, 'logs', 'error', `${date}.log`), level: 'error' }),
 		new winston.transports.File({ filename: path.join(__dirname, 'logs', 'complete', `${date}.log`) }),
+		new LokiTransport({
+			host: config.lokiHost,
+			labels: { service: 'suisei-mic' },
+			level: 'silly',
+		}),
 	],
 });
 exports.logger = logger;
@@ -73,7 +79,26 @@ const moderation = require('$/util/moderation');
 
 // Init
 // Sentry
-if (config.environment === 'production') Sentry.init({ dsn: config.sentryDsn });
+if (config.environment === 'production') {
+	Sentry.init({
+		dsn: config.sentryDsn,
+		release: `suisei-mic@${process.env.COMMIT_SHA}`,
+		integrations: [
+			new Tracing.Integrations.Mongo(),
+			new Sentry.Integrations.Http({ tracing: true }),
+			new Tracing.Integrations.Express({ app }),
+		],
+		beforeSend(event, hint) {
+			const error = hint.originalException;
+			logger.error(error.stack, {
+				labels: { id: event.event_id || undefined, module: event.tags.module || undefined },
+			});
+
+			return event;
+		},
+		tracesSampleRate: 0.3,
+	});
+}
 
 // Mongoose
 mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
@@ -118,7 +143,7 @@ function loadcmds() {
 		if (err) throw (err);
 		const jsfiles = files.filter((f) => f.split('.').pop() === 'js');
 		if (jsfiles.length <= 0) {
-			return logger.info('No user commands found.');
+			return logger.verbose('No user commands found.', { labels: { module: 'index' } });
 		}
 		jsfiles.forEach((f) => {
 			delete require.cache[require.resolve(`./commands/user/${f}`)];
@@ -131,7 +156,7 @@ function loadcmds() {
 		if (err) throw (err);
 		const jsfiles = files.filter((f) => f.split('.').pop() === 'js');
 		if (jsfiles.length <= 0) {
-			return logger.info('No dev commands found.');
+			return logger.verbose('No dev commands found.', { labels: { module: 'index' } });
 		}
 		jsfiles.forEach((f) => {
 			delete require.cache[require.resolve(`./commands/dev/${f}`)];
@@ -144,7 +169,7 @@ function loadcmds() {
 		if (err) throw (err);
 		const jsfiles = files.filter((f) => f.split('.').pop() === 'js');
 		if (jsfiles.length <= 0) {
-			return logger.info('No staff commands found.');
+			return logger.verbose('No staff commands found.', { labels: { module: 'index' } });
 		}
 		jsfiles.forEach((f) => {
 			delete require.cache[require.resolve(`./commands/staff/${f}`)];
@@ -165,7 +190,7 @@ client.on('ready', () => {
 	client.guilds.fetch(config.discord.serverId)
 		.then((mainGuild) => mainGuild.members.fetch())
 		.catch((e) => logger.error(e));
-	logger.info('Bot online');
+	logger.info('Bot online', { labels: { module: 'index' } });
 });
 
 // Ping list reaction handler
@@ -173,7 +198,10 @@ client.on('messageReactionAdd', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
 		PingSubscription.findById(messageReaction.message.id, (err, doc) => {
-			if (err) return logger.error(err);
+			if (err) {
+				Sentry.captureException(err);
+				return logger.error(err, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSearch'] } });
+			}
 			if (!doc || reaction.emoji.name !== doc.emoji) return;
 			const filter = (id) => id === user.id;
 			const index = doc.users.findIndex(filter);
@@ -189,7 +217,10 @@ client.on('messageReactionRemove', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
 		PingSubscription.findById(messageReaction.message.id, (err, doc) => {
-			if (err) return logger.error(err);
+			if (err) {
+				Sentry.captureException(err);
+				return logger.error(err, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSearch'] } });
+			}
 			if (!doc || reaction.emoji.name !== doc.emoji) return;
 			const filter = (id) => id === user.id;
 			const index = doc.users.findIndex(filter);
@@ -204,7 +235,10 @@ client.on('messageReactionRemove', (reaction, user) => {
 // Mute evasion handler
 client.on('guildMemberRemove', async (member) => {
 	Mute.findOne({ userId: member.id }, (err, doc) => {
-		if (err) return logger.error(err);
+		if (err) {
+			Sentry.captureException(err);
+			return logger.error(err, { labels: { module: 'index', event: ['guildMemberRemove', 'databaseSearch'] } });
+		}
 		if (!doc) return;
 
 		// eslint-disable-next-line no-param-reassign
@@ -222,7 +256,10 @@ client.on('guildMemberAdd', async (member) => {
 	const clientMember = await mainGuild.members.fetch(client.user.id);
 
 	Mute.findOneAndDelete({ userId: member.id }, (err, doc) => {
-		if (err) return logger.error(err);
+		if (err) {
+			Sentry.captureException(err);
+			return logger.error(err, { labels: { module: 'index', event: 'guildMemberAdd' } });
+		}
 
 		if (!doc || !doc.leftAt) return;
 		const timeLeftAtLeave = doc.expireAt - doc.leftAt;
@@ -234,7 +271,10 @@ client.on('guildMemberAdd', async (member) => {
 // Auto publish handler
 client.on('message', (message) => {
 	AutoPublish.findById(message.channel.id, (err, doc) => {
-		if (err) return logger.error(err);
+		if (err) {
+			Sentry.captureException(err);
+			return logger.error(err, { labels: { module: 'index', event: ['autoPublish', 'databaseSearch'] } });
+		}
 		if (doc) {
 			const { options: { http } } = client;
 			if (doc.autoPublish === true && message.channel.type === 'news') {
@@ -244,7 +284,10 @@ client.on('message', (message) => {
 					headers: {
 						Authorization: `Bot ${config.discord.token}`,
 					},
-				}).catch(() => {}); // Ignore errors
+				}).catch((err2) => {
+					Sentry.captureException(err2);
+					return logger.error(err2, { labels: { module: 'index', event: ['autoPublish', 'axios'] } });
+				});
 			} else {
 				// eslint-disable-next-line no-param-reassign
 				doc.autoPublish = false;

@@ -6,7 +6,9 @@
   "dependencies": {
     "@holores/holoapi": "^1.0.4",
     "@sentry/node": "^5.25.0",
+    "@sentry/tracing": "^6.2.0",
     "aws-sdk": "^2.766.0",
+    "axios": "^0.21.1",
     "basetag": "^1.2.10",
     "discord.js": "^12.5.1",
     "express": "^4.17.1",
@@ -25,7 +27,8 @@
     "shortid": "^2.2.15",
     "socket.io": "^3.1.1",
     "twitter-lite": "^0.14.0",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "winston-loki": "^6.0.0-rc.9"
   },
   "devDependencies": {
     "eslint": "^7.19.0",
