@@ -2,6 +2,7 @@
 const { scheduleJob } = require('node-schedule');
 const { MessageEmbed } = require('discord.js');
 const { google } = require('googleapis');
+const Sentry = require('@sentry/node');
 
 // Models
 const Subscription = require('$/models/subscription');
@@ -11,6 +12,10 @@ const Livestream = require('$/models/stream');
 const config = require('$/config.json');
 
 const YT = google.youtube('v3');
+
+Sentry.configureScope((scope) => {
+	scope.setTag('module', 'YouTube');
+});
 
 async function fetchLivestreams(logger, holoClient, client) {
 	const streams = await holoClient.videos.getLivestreams(undefined, 72, 0, true);

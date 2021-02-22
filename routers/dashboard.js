@@ -1,5 +1,6 @@
 // Imports
 const express = require('express');
+const Sentry = require('@sentry/node');
 
 // Models
 const User = require('$/models/modUser');
@@ -13,6 +14,11 @@ const moderation = require('$/util/moderation');
 const { logger } = require('$/index');
 
 // Init
+Sentry.configureScope((scope) => {
+	scope.setTag('module', 'express');
+	scope.setTag('router', 'dashboard');
+});
+
 const router = new express.Router();
 
 function authCheck(req, res, next) {
@@ -30,7 +36,11 @@ async function getModData(req, res, next) {
 	req.data = {};
 
 	const guild = await client.guilds.fetch(config.discord.serverId)
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/modlogs', 'discord'] } });
+			return res.status(500).end();
+		});
 	req.data.guild = guild;
 
 	const moderator = await guild.members.fetch(req.body.moderator)
@@ -55,12 +65,16 @@ async function getModData(req, res, next) {
 router.get('/checkUser/:id', async (req, res) => {
 	if (!req.params.id) res.status(400).end();
 	const guild = await client.guilds.fetch(config.discord.serverId)
-		.catch(() => res.send('false'));
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/modlogs', 'discord'] } });
+			return res.status(500).send('false');
+		});
 
 	const member = await guild.members.fetch(req.params.id)
 		.catch(() => res.send('false'));
 
-	if (!member) return res.send('false');
+	if (!member || !member.user) return res.send('false');
 	if (member.hasPermission('MANAGE_GUILD')) return res.send('true');
 	return res.send('false');
 });
@@ -118,7 +132,11 @@ router.post('/modAction/ban', getModData, (req, res) => {
 
 router.post('/notes/:userid', async (req, res) => {
 	const guild = await client.guilds.fetch(config.discord.serverId)
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/modlogs', 'discord'] } });
+			return res.status(500).end();
+		});
 
 	const member = await guild.members.fetch(req.params.userid)
 		.catch(() => res.status(404).send('Member not found'));
@@ -132,7 +150,11 @@ router.post('/notes/:userid', async (req, res) => {
 
 router.delete('/notes/:userid/:noteid', async (req, res) => {
 	const guild = await client.guilds.fetch(config.discord.serverId)
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/modlogs', 'discord'] } });
+			return res.status(500).end();
+		});
 
 	const member = await guild.members.fetch(req.params.userid)
 		.catch(() => res.status(404).send('Member not found'));
@@ -155,7 +177,11 @@ router.get('/modlogs', async (req, res) => {
 
 	if (req.query.userid) {
 		const guild = await client.guilds.fetch(config.discord.serverId)
-			.catch(() => res.status(500).end());
+			.catch((err) => {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'express', event: ['get', '/modlogs', 'discord'] } });
+				return res.status(500).end();
+			});
 
 		const member = await guild.members.fetch(req.query.userid)
 			.catch(() => res.status(404).send('Member not found'));
@@ -167,10 +193,18 @@ router.get('/modlogs', async (req, res) => {
 		.sort({ _id: 'desc' })
 		.lean()
 		.exec()
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/modlogs', 'databaseSearch'] } });
+			return res.status(500).end();
+		});
 
 	const modLogCount = await ModLog.countDocuments({}).exec()
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/modlogs', 'databaseSearch'] } });
+			return res.status(500).end();
+		});
 
 	// eslint-disable-next-line array-callback-return
 	const promises = logs.map(async (log) => {
@@ -178,8 +212,7 @@ router.get('/modlogs', async (req, res) => {
 			.catch(() => res.status(500).end());
 		if (!doc) {
 			const user = await client.users.fetch(log.userId)
-				.catch(() => {
-				});
+				.catch(() => res.status(500).end());
 			new User({
 				_id: log.userId,
 				lastKnownTag: user.tag,
@@ -199,7 +232,11 @@ router.get('/modlogs', async (req, res) => {
 
 router.get('/userinfo/:userid', async (req, res) => {
 	const guild = await client.guilds.fetch(config.discord.serverId)
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/userinfo/:userid', 'databaseSearch'] } });
+			res.status(500).end();
+		});
 
 	const member = await guild.members.fetch(req.params.userid)
 		.catch(() => res.status(404).end('Member not found'));
@@ -208,14 +245,23 @@ router.get('/userinfo/:userid', async (req, res) => {
 	if (member.hasPermission('MANAGE_GUILD') || member.user.bot) return res.status(400).send('No data for this member is available');
 
 	const strikes = await Strike.find({ userId: member.id }).exec()
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/userinfo/:userid', 'databaseSearch'] } });
+			return res.status(500).end();
+		});
 
 	const activeStrikes = strikes.filter(
 		(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
 	).length;
 
 	User.findById(member.id, async (err, doc) => {
-		if (err) res.status(500).end();
+		if (err) {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/userinfo/:userid', 'databaseSearch'] } });
+			return res.status(500).end();
+		}
+
 		if (!doc) {
 			const user = new User({
 				_id: member.id,
@@ -224,7 +270,9 @@ router.get('/userinfo/:userid', async (req, res) => {
 			});
 			await user.save()
 				.catch((err2) => {
-					logger.error(err2);
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'express', event: ['get', '/userinfo/:userid', 'databaseSave'] } });
+					res.status(500).end();
 				});
 
 			return res.status(200).json({
@@ -245,10 +293,18 @@ router.get('/userinfo/:userid', async (req, res) => {
 
 router.get('/users', async (req, res) => {
 	const guild = await client.guilds.fetch(config.discord.serverId)
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/users', 'discord'] } });
+			return res.status(500).end();
+		});
 
 	const userDocs = await User.find({}).lean().exec()
-		.catch(() => res.status(500).end());
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'express', event: ['get', '/users', 'databaseSearch'] } });
+			return res.status(500).end();
+		});
 
 	const users = userDocs.filter(async (user) => {
 		const member = await guild.members.fetch(user._id)

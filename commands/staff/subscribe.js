@@ -1,3 +1,6 @@
+// Imports
+const Sentry = require('@sentry/node');
+
 // Models
 const Subscription = require('$/models/subscription');
 
@@ -11,19 +14,22 @@ exports.run = async (client, message, args) => {
 
 	const channel = await holoClient.channels.getByYouTubeId(args[0])
 		.catch((err) => {
-			logger.error(err);
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['subscribe', 'holoclient'] } });
 			return message.channel.send('YouTube channel not found');
 		});
 
 	const discordChannel = await client.channels.fetch(args[1])
 		.catch((err) => {
-			logger.error(err);
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['subscribe', 'discord'] } });
 			return message.channel.send('Discord channel not found');
 		});
 
 	const existingSub = await Subscription.findById(channel.youtubeId).exec()
 		.catch((err) => {
-			logger.error(err);
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['subscribe', 'databaseSearch'] } });
 			return message.channel.send('Something went wrong, please try again.');
 		});
 
@@ -57,7 +63,8 @@ exports.run = async (client, message, args) => {
 				if (result === true) {
 					existingSub.save((err) => {
 						if (err) {
-							logger.error(err);
+							Sentry.captureException(err);
+							logger.error(err, { labels: { module: 'commands', event: ['subscribe', 'databaseSearch'] } });
 							message.channel.send('Something went wrong saving to the database.');
 						} else {
 							message.channel.send('Subscription successful.');
@@ -84,7 +91,8 @@ exports.run = async (client, message, args) => {
 				if (result === true) {
 					subscription.save((err) => {
 						if (err) {
-							logger.error(err);
+							Sentry.captureException(err);
+							logger.error(err, { labels: { module: 'commands', event: ['subscribe', 'databaseSearch'] } });
 							message.channel.send('Something went wrong saving to the database.');
 						} else {
 							message.channel.send('Subscription successful.');

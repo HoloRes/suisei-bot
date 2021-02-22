@@ -1,5 +1,6 @@
 // Models
 const Discord = require('discord.js');
+const Sentry = require('@sentry/node');
 const PingSubscription = require('$/models/pingSubscription');
 
 // Local files
@@ -44,7 +45,10 @@ exports.run = async (client, message, args) => {
 
 	const name = args.slice(2).join(' ');
 	await PingSubscription.findById(name).lean().exec((err, doc) => {
-		if (err) logger.error(err);
+		if (err) {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['createpinglist', 'databaseSearch'] } });
+		}
 		if (doc) return message.reply('That list already exists.');
 	});
 

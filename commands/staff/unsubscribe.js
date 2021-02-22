@@ -1,3 +1,6 @@
+// Imports
+const Sentry = require('@sentry/node');
+
 // Models
 const Subscription = require('$/models/subscription');
 
@@ -10,7 +13,11 @@ exports.run = (client, message, args) => {
 	if (args.length < 2) return message.channel.send(`**USAGE:** ${config.discord.prefix}unsubscribe <YouTube channel id> <Discord channel id>`);
 
 	Subscription.findById(args[0], async (err, subscription) => {
-		if (err) return message.channel.send('Something went wrong, try again later.');
+		if (err) {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['unsubscribe', 'databaseSearch'] } });
+			return message.channel.send('Something went wrong, try again later.');
+		}
 		if (!subscription) return message.channel.send("That channel doesn't exist in the database.");
 
 		const index = subscription.channels.findIndex((channel) => channel.id === args[1]);
@@ -31,7 +38,8 @@ exports.run = (client, message, args) => {
 					if (subscription.channels.length === 0) {
 						Subscription.findByIdAndDelete(subscription._id, (err2) => {
 							if (err2) {
-								logger.error(err2);
+								Sentry.captureException(err2);
+								logger.error(err2, { labels: { module: 'commands', event: ['unsubscribe', 'databaseSearch'] } });
 								message.channel.send('Something went wrong during deletion, try again later.');
 							} else {
 								message.channel.send('Subscription removal successful.');
@@ -40,7 +48,8 @@ exports.run = (client, message, args) => {
 					} else {
 						subscription.save((err2) => {
 							if (err2) {
-								logger.error(err2);
+								Sentry.captureException(err2);
+								logger.error(err2, { labels: { module: 'commands', event: ['unsubscribe', 'databaseSearch'] } });
 								message.channel.send('Something went wrong during the subscription removal, try again later.');
 							} else {
 								message.channel.send('Subscription removal successful.');

@@ -1,3 +1,6 @@
+// Imports
+const Sentry = require('@sentry/node');
+
 // Models
 const PingSubscription = require('$/models/pingSubscription');
 
@@ -8,7 +11,8 @@ const { logger } = require('$/index');
 exports.run = async (client, message, args) => {
 	const channel = client.channels.fetch(args[0])
 		.catch((err) => {
-			logger.error(err);
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['ping', 'discord'] } });
 			return message.channel.send("That channel doesn't exist.");
 		});
 

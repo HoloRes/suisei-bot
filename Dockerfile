@@ -1,6 +1,10 @@
 # Select NodeJS LTS Alpine image, alpine for smaller size
 FROM node:lts-alpine
 
+# For Sentry release tracking
+ARG sha
+ENV COMMIT_SHA=$sha
+
 # Create a folder for the bot
 WORKDIR /app
 COPY package.json .

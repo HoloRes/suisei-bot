@@ -1,9 +1,9 @@
 // Imports
-// Models
 const Twitter = require('twitter-lite');
-const TweetSubscription = require('$/models/tweetSubscription');
+const Sentry = require('@sentry/node');
 
-// Packages
+// Models
+const TweetSubscription = require('$/models/tweetSubscription');
 
 // Local imports
 const { confirmRequest } = require('$/util/functions');
@@ -17,7 +17,10 @@ const T = new Twitter(config.twitter);
 // Functions
 function checkExistingAndFollow(message, subscription, channel, user) {
 	TweetSubscription.findById(subscription._id, async (err, doc) => {
-		if (err) return logger.error(err);
+		if (err) {
+			Sentry.captureException(err);
+			return logger.error(err, { labels: { module: 'commands', event: ['follow', 'databaseSearch'] } });
+		}
 		if (doc) {
 			const index = await doc.channels.findIndex((docChannel) => docChannel.id === channel.id);
 			if (index !== -1) return message.channel.send(`${channel.name} is already following @${user.screen_name}.`);
@@ -30,7 +33,8 @@ function checkExistingAndFollow(message, subscription, channel, user) {
 			if (result === true) {
 				doc.save((err2) => {
 					if (err2) {
-						logger.error(err2);
+						Sentry.captureException(err2);
+						logger.error(err, { labels: { module: 'commands', event: ['follow', 'databaseSave'] } });
 						message.channel.send('Something went wrong saving to the database.');
 					} else {
 						message.channel.send('Subscription successful.');
@@ -47,7 +51,8 @@ function checkExistingAndFollow(message, subscription, channel, user) {
 			msg.delete({ timeout: 2000, reason: 'Automated' });
 			subscription.save((err2) => {
 				if (err2) {
-					logger.error(err2);
+					Sentry.captureException(err2);
+					logger.error(err, { labels: { module: 'commands', event: ['follow', 'databaseSave'] } });
 					message.channel.send('Something went wrong during the subscription, try again later.');
 				} else {
 					restart();
@@ -67,7 +72,8 @@ exports.run = async (client, message, args) => {
 	}
 	const users = await T.get('users/lookup', { screen_name: args[0] })
 		.catch((err) => {
-			logger.error(err);
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['follow', 'twitter', 'users/lookup'] } });
 			return message.channel.send("Couldn't find this user, please try again.");
 		});
 
@@ -87,7 +93,8 @@ exports.run = async (client, message, args) => {
 			const existingWebhook = await hooks.find((wh) => wh.name.toLowerCase() === 'holotweeter');
 			if (!existingWebhook) {
 				await channel.createWebhook('HoloTweeter').catch((err) => {
-					logger.error(err);
+					Sentry.captureException(err);
+					logger.error(err, { labels: { module: 'commands', event: ['follow', 'discord'] } });
 					return message.channel.send('Unable to create a webhook in that channel, please create one with the name `HoloTweeter` and run this command again.');
 				});
 			}

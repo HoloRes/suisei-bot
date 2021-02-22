@@ -1,9 +1,9 @@
 // Imports
+const Sentry = require('@sentry/node');
+
 // Models
 const Twitter = require('twitter-lite');
 const TweetSubscription = require('$/models/tweetSubscription');
-
-// Packages
 
 // Local imports
 const config = require('$/config.json');
@@ -19,7 +19,8 @@ exports.run = async (client, message, args) => {
 
 	const users = await T.get('users/lookup', { screen_name: args[0] })
 		.catch((err) => {
-			logger.error(err);
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'commands', event: ['unfollow', 'twitter', 'users/lookup'] } });
 			return message.channel.send("Couldn't find this user, please try again.");
 		});
 
@@ -35,7 +36,8 @@ exports.run = async (client, message, args) => {
 		doc.channels.splice(index, 1);
 		const msg = message.channel.send(`Are you sure you want to remove @${args[0]} from ${args[1]}?`)
 			.catch((err2) => {
-				logger.error(err2);
+				Sentry.captureException(err2);
+				logger.error(err2, { labels: { module: 'commands', event: ['unfollow', 'discord'] } });
 				message.channel.send('Something went wrong during deletion, try again later.');
 			});
 
@@ -46,7 +48,8 @@ exports.run = async (client, message, args) => {
 					if (doc.channels.length === 0) {
 						doc.findByIdAndDelete(doc._id, (err2) => {
 							if (err2) {
-								logger.error(err2);
+								Sentry.captureException(err2);
+								logger.error(err2, { labels: { module: 'commands', event: ['unfollow', 'databaseSearch'] } });
 								message.channel.send('Something went wrong during deletion, try again later.');
 							} else {
 								restart();
@@ -56,7 +59,8 @@ exports.run = async (client, message, args) => {
 					} else {
 						doc.save((err2) => {
 							if (err2) {
-								logger.error(err2);
+								Sentry.captureException(err2);
+								logger.error(err2, { labels: { module: 'commands', event: ['unfollow', 'databaseSearch'] } });
 								message.channel.send('Something went wrong during unfollowing, try again later.');
 							} else {
 								message.channel.send('Unfollow successful.');
