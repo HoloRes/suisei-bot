@@ -35,13 +35,14 @@ function confirmAndBan(users, reason, message) {
 // Command
 exports.run = async (client, message, args) => {
 	if (args.length < 2) return message.channel.send(`**USAGE:** ${config.discord.prefix}massban "<reason>" <ids>`);
-	const reason = await args.join(' ').split('"')[1];
-	if (reason.length === 0) return message.channel.send("Error: Reason can't be empty");
-	if (reason.length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
+	const reason = await args.join(' ').split('"');
+	if (reason.length !== 3) return message.channel.send('Error: Invalid reason');
+	if (reason[1].length === 0) return message.channel.send("Error: Reason can't be empty");
+	if (reason[1].length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
 	const ids = await args.join(' ').split('"')[2].split(' ');
 	await ids.splice(0, 1);
-	confirmAndBan(ids, reason, message);
+	confirmAndBan(ids, reason[1], message);
 };
 
 exports.config = {
