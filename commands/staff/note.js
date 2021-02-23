@@ -15,18 +15,71 @@ exports.run = async (client, message, args) => {
 	if (!args[1] || args[1].toLowerCase() === 'list') {
 		const { data: notes } = await moderation.getNotes(member);
 
-		const embed = new MessageEmbed()
-			.setTitle(member.user.tag)
-			.setTimestamp();
+		if (notes.length === 0) {
+			const embed = new MessageEmbed()
+				.setAuthor(member.user.tag, member.user.displayAvatarURL())
+				.setDescription('No notes found for this user')
+				.setTimestamp();
 
-		if (notes.length === 0) embed.setDescription('No notes found for this user');
-		else {
-			notes.forEach((note) => {
-				embed.addField(`Note #${note._id}`, note.value, true);
-			});
+			message.channel.send(embed);
+		} else if (notes.length > 12) {
+			const pages = Math.ceil(notes.length / 12);
+			const embeds = [];
+			let currentPage = 0;
+
+			// eslint-disable-next-line no-plusplus
+			for (let i = 0; i < pages; i++) {
+				const offset = 12 * i;
+				embeds[i] = new MessageEmbed()
+					.setTitle(member.user.tag)
+					.setTimestamp();
+				if (i + 1 === pages) {
+					const left = notes.length - offset;
+					// eslint-disable-next-line no-plusplus
+					for (let x = 0; x < left; x++) {
+						const note = notes[offset + x];
+						embeds[i].addField(`Note #${note._id}`, note.value, true);
+					}
+				} else {
+					// eslint-disable-next-line no-plusplus
+					for (let x = 0; x < 12; x++) {
+						const note = notes[offset + x];
+						embeds[i].addField(`Note #${note._id}`, note.value, true);
+					}
+				}
+			}
+
+			message.channel.send(embeds[0])
+				.then(async (msg) => {
+					await msg.react('◀️');
+					await msg.react('▶️');
+
+					const filter = (reaction) => ['◀️', '▶️'].includes(reaction.emoji.name);
+					const collector = msg.createReactionCollector(filter, { time: 60000 });
+
+					collector.on('collect', (r) => {
+						if (r.emoji.name === '◀️' && currentPage > 0) {
+							currentPage -= 1;
+							msg.edit(embeds[currentPage]);
+						} else if (r.emoji.name === '▶️' && currentPage < pages - 1) {
+							currentPage += 1;
+							msg.edit(embeds[currentPage]);
+						}
+					});
+
+					collector.on('end', () => {
+						msg.reactions.removeAll();
+					});
+				});
+		} else {
+			const embed = new MessageEmbed()
+				.setTitle(member.user.tag)
+				.setTimestamp();
+
+			notes.forEach((note) => embed.addField(`Note #${note._id}`, note.value, true));
+
+			message.channel.send(embed);
 		}
-
-		message.channel.send(embed);
 	} else if (args[1] === 'add') {
 		const note = args.slice(2).join(' ');
 		if (note.length === 0) return message.channel.send("Error: Note can't be empty");
