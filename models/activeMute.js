@@ -7,6 +7,7 @@ const muteSchema = new mongoose.Schema({
 	expireAt: { type: Date, required: true },
 	leftAt: Date,
 	userId: { type: String, required: true },
+	roles: [String],
 });
 
 // muteSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });

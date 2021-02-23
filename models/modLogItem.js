@@ -12,6 +12,7 @@ const LogSchema = new mongoose.Schema({
 	duration: { type: String },
 	moderator: { type: String, required: true },
 	reason: { type: String, required: true },
+	date: { type: Date, default: Date.now() },
 }, { _id: false });
 
 LogSchema.plugin(AutoIncrement);
