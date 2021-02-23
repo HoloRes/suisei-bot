@@ -531,9 +531,47 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 	});
 });
 
-exports.massban = (members, reason, moderator) => {
-	// TODO: Have a loop with a one second interval in between to not hit rate limits
-};
+// eslint-disable-next-line no-async-promise-executor
+exports.massban = (users, reason, moderator) => new Promise(async (resolve, reject) => {
+	const timer = (ms) => new Promise((res) => setTimeout(res, ms));
+
+	const guild = await client.guilds.fetch(config.discord.serverId)
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['massban', 'discord'] } });
+			reject(new ModerationError(err));
+		});
+
+	// eslint-disable-next-line no-plusplus
+	for (let i = 0; i < users.length; i++) {
+		// eslint-disable-next-line no-await-in-loop
+		await guild.members.ban(users[i], { reason })
+			.catch(() => {});
+		// eslint-disable-next-line no-await-in-loop
+		await timer(2000);
+	}
+
+	const embed = new MessageEmbed()
+		.setTitle(`massban | ${users.length} users`)
+		.setDescription(`**Reason:** ${reason}\n**Moderator:** ${moderator.user.tag}`)
+		.setColor('#f54242')
+		.setTimestamp();
+
+	Setting.findById('modLogChannel', (err, doc) => {
+		if (err) {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['massban', 'databaseSearch'] } });
+			return resolve({});
+		}
+		if (!doc) return resolve({});
+		client.channels.fetch(doc.value)
+			.then((channel) => {
+				channel.send(embed);
+			});
+	});
+
+	resolve({});
+});
 
 exports.tosviolation = (member, reason, moderator) => new Promise((resolve, reject) => {
 	Strike.find({ userId: member.id }, (err2, strikes) => {
