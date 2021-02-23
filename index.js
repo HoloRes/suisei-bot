@@ -86,14 +86,6 @@ if (config.environment === 'production') {
 			new Sentry.Integrations.Http({ tracing: true }),
 			new Tracing.Integrations.Express({ app }),
 		],
-		beforeSend(event, hint) {
-			const error = hint.originalException;
-			logger.error(error.stack, {
-				labels: { id: event.event_id || undefined, module: event.tags.module || undefined },
-			});
-
-			return event;
-		},
 		tracesSampleRate: 0.3,
 	});
 }
