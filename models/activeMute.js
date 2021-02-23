@@ -7,6 +7,7 @@ const muteSchema = new mongoose.Schema({
 	expireAt: { type: Date, required: true },
 	leftAt: Date,
 	userId: { type: String, required: true },
+	hardMute: { type: Boolean, default: false },
 	roles: [String],
 });
 

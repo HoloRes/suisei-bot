@@ -139,12 +139,15 @@ exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject
 
 function unmute(member, reason, moderator) {
 	return new Promise((resolve, reject) => {
-		Setting.findById('mutedRole').lean().exec((err, setting) => {
+		Setting.findById('mutedRole').lean().exec(async (err, setting) => {
 			if (err) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['unmute', 'databaseSearch'] } });
 				reject(new ModerationError(err));
 			}
+			await member.fetch();
+			if (!member.roles.cache.has(setting.value)) return reject(new ModerationError('', 'This member is not muted'));
+
 			member.roles.remove(setting.value);
 			if (reason && moderator) {
 				log({
@@ -165,6 +168,9 @@ function unmute(member, reason, moderator) {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['unmute', 'databaseSearch'] } });
+				}
+				if (doc && doc.hardMute) {
+					member.roles.add(doc.roles);
 				}
 				if (doc && plannedUnmutes[doc._id]) plannedUnmutes[doc._id].cancel();
 			});
@@ -231,9 +237,9 @@ function mute(member, duration, reason, moderator, tos) {
 				if (!err2 && doc) {
 					try {
 						plannedUnmutes[doc._id].cancel();
-					} catch (e) {
-						Sentry.captureException(e);
-						logger.error(e, { labels: { module: 'moderation', event: ['mute'] } });
+					} catch (err3) {
+						Sentry.captureException(err3);
+						logger.error(err3, { labels: { module: 'moderation', event: ['mute'] } });
 					}
 				}
 			});
@@ -291,11 +297,48 @@ function mute(member, duration, reason, moderator, tos) {
 
 exports.mute = mute;
 
-exports.hardmute = (member, moderator) => {
-	Mute.findOne({ userId: member.id }, (err, doc) => {
+exports.hardmute = (member, moderator) => new Promise((resolve, reject) => {
+	Mute.findOne({ userId: member.id }, async (err, doc) => {
+		if (err) {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['hardmute', 'databaseSave'] } });
+			reject(new ModerationError(err));
+		}
+		if (!doc) return reject(new ModerationError('', 'Member is not muted'));
 
+		const mutedRole = await Setting.findById('mutedRole').exec()
+			.catch((err2) => {
+				Sentry.captureException(err2);
+				logger.error(err2, { labels: { module: 'moderation', event: ['hardmute', 'databaseSearch'] } });
+				reject(new ModerationError(err2));
+			});
+
+		// eslint-disable-next-line no-param-reassign
+		doc.roles = await member.roles.cache.map((role) => role.id);
+		const index = doc.roles.findIndex((role) => role === mutedRole.value);
+		await doc.roles.splice(index, 1);
+		// eslint-disable-next-line no-param-reassign
+		doc.hardMute = true;
+
+		await member.roles.remove(doc.roles);
+
+		doc.save((err2) => {
+			if (err2) {
+				Sentry.captureException(err2);
+				logger.error(err2, { labels: { module: 'moderation', event: ['hardmute', 'databaseSave'] } });
+				reject(new ModerationError(err2));
+			}
+		});
+
+		log({
+			type: 'hardmute',
+			userId: member.id,
+			moderator: moderator.id,
+			reason: 'N/A',
+		}, '#ff9c24');
+		resolve({});
 	});
-};
+});
 
 function kick(member, reason, moderator) {
 	// eslint-disable-next-line no-async-promise-executor
@@ -701,22 +744,22 @@ exports.init = () => {
 		docs.forEach(async (doc) => {
 			if (doc.leftAt) return;
 			const guild = await client.guilds.fetch(config.discord.serverId)
-				.catch((err) => {
-					Sentry.captureException(err);
-					return logger.error(err, { labels: { module: 'moderation', event: ['init', 'discord'] } });
+				.catch((err2) => {
+					Sentry.captureException(err2);
+					return logger.error(err2, { labels: { module: 'moderation', event: ['init', 'discord'] } });
 				});
 
 			const member = await guild.members.fetch(doc.userId)
-				.catch((err) => {
-					Sentry.captureException(err);
-					return logger.error(err, { labels: { module: 'moderation', event: ['init', 'discord'] } });
+				.catch((err2) => {
+					Sentry.captureException(err2);
+					return logger.error(err2, { labels: { module: 'moderation', event: ['init', 'discord'] } });
 				});
 
 			plannedUnmutes[doc._id] = scheduleJob(doc.expireAt, () => {
 				unmute(member)
-					.catch((err) => {
-						Sentry.captureException(err);
-						return logger.error(err, { labels: { module: 'moderation', event: ['init'] } });
+					.catch((err2) => {
+						Sentry.captureException(err2);
+						return logger.error(err2, { labels: { module: 'moderation', event: ['init'] } });
 					});
 			});
 		});

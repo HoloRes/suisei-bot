@@ -241,6 +241,10 @@ client.on('guildMemberRemove', async (member) => {
 
 		// eslint-disable-next-line no-param-reassign
 		doc.leftAt = new Date();
+		// eslint-disable-next-line no-param-reassign
+		doc.hardMute = false;
+		// eslint-disable-next-line no-param-reassign
+		doc.roles = undefined;
 		moderation.unplanMute(doc._id);
 		doc.save((e) => {
 			if (e) logger.error(e);
