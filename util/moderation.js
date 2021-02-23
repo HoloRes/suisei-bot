@@ -110,6 +110,7 @@ exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject
 		type: 'warn',
 		reason,
 		moderator: moderator.id,
+		date: new Date(),
 	});
 	await logItem.save((err) => {
 		if (err) {
@@ -185,6 +186,7 @@ function mute(member, duration, reason, moderator, tos) {
 			reason,
 			moderator: moderator.id,
 			duration: humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds(), { largest: 2, round: true }),
+			date: new Date(),
 		});
 		await logItem.save((err) => {
 			if (err) {
@@ -302,6 +304,7 @@ function kick(member, reason, moderator) {
 			type: 'kick',
 			reason,
 			moderator: moderator.id,
+			date: new Date(),
 		});
 		await logItem.save((err) => {
 			if (err) {
@@ -373,6 +376,7 @@ function ban(member, reason, moderator, tos) {
 			type: 'ban',
 			reason,
 			moderator: moderator.id,
+			date: new Date(),
 		});
 		await logItem.save((err) => {
 			if (err) {
