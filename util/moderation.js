@@ -24,10 +24,11 @@ Sentry.configureScope((scope) => {
 	scope.setTag('module', 'Moderation');
 });
 
+// Info is a message that can be shown to the user, while the message can contain info for debugging
 class ModerationError extends Error {
-	constructor(message, data) {
+	constructor(message, info) {
 		super();
-		this.data = data || {};
+		this.info = info || undefined;
 	}
 }
 
@@ -114,8 +115,7 @@ exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['warn', 'databaseSave'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 		log(logItem, '#ffde26');
 	});
@@ -130,10 +130,10 @@ exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject
 
 	await member.send(embed)
 		.catch(() => {
-			resolve({ type: 'success', info: 'failed to send DM' });
+			resolve({ info: 'failed to send DM' });
 		});
 
-	resolve({ type: 'success' });
+	resolve({});
 });
 
 function unmute(member, reason, moderator) {
@@ -142,8 +142,7 @@ function unmute(member, reason, moderator) {
 			if (err) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['unmute', 'databaseSearch'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err });
+				reject(new ModerationError(err));
 			}
 			member.roles.remove(setting.value);
 			if (reason && moderator) {
@@ -168,7 +167,7 @@ function unmute(member, reason, moderator) {
 				}
 				if (doc && plannedUnmutes[doc._id]) plannedUnmutes[doc._id].cancel();
 			});
-			resolve({ type: 'success' });
+			resolve({});
 		});
 	});
 }
@@ -191,8 +190,7 @@ function mute(member, duration, reason, moderator, tos) {
 			if (err) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['mute', 'databaseSave'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err });
+				reject(new ModerationError(err));
 			}
 			log(logItem, '#ff9c24');
 
@@ -204,8 +202,7 @@ function mute(member, duration, reason, moderator, tos) {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'databaseSave'] } });
-					// eslint-disable-next-line prefer-promise-reject-errors
-					reject({ type: 'err', error: err2 });
+					reject(new ModerationError(err2));
 				}
 			});
 
@@ -218,8 +215,7 @@ function mute(member, duration, reason, moderator, tos) {
 					if (err2) {
 						Sentry.captureException(err2);
 						logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-						// eslint-disable-next-line prefer-promise-reject-errors
-						reject({ type: 'err', error: err2 });
+						reject(new ModerationError(err2));
 					}
 				});
 			}
@@ -249,8 +245,7 @@ function mute(member, duration, reason, moderator, tos) {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['warn', 'databaseSave'] } });
-					// eslint-disable-next-line prefer-promise-reject-errors
-					reject({ type: 'err', error: err2 });
+					reject(new ModerationError(err2));
 				}
 			});
 
@@ -269,11 +264,10 @@ function mute(member, duration, reason, moderator, tos) {
 			// eslint-disable-next-line prefer-promise-reject-errors
 			if (!setting) reject({ type: 'err', error: 'noRole' });
 			member.roles.add(setting.value, `Muted by ${moderator.user.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`)
-				.catch((e) => {
-					Sentry.captureException(e);
-					logger.error(e, { labels: { module: 'moderation', event: ['mute', 'discord'] } });
-					// eslint-disable-next-line prefer-promise-reject-errors
-					reject({ type: 'err', error: e });
+				.catch((err2) => {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'discord'] } });
+					reject(new ModerationError(err2));
 				});
 		});
 
@@ -287,10 +281,10 @@ function mute(member, duration, reason, moderator, tos) {
 
 		await member.send(embed)
 			.catch(() => {
-				resolve({ type: 'success', info: 'failed to send DM' });
+				resolve({ info: 'failed to send DM' });
 			});
 
-		resolve({ type: 'success' });
+		resolve({});
 	});
 }
 
@@ -325,8 +319,7 @@ function kick(member, reason, moderator) {
 			strike.save((err2) => {
 				Sentry.captureException(err2);
 				logger.error(err2, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				if (err2) reject({ type: 'err', error: err2 });
+				reject(new ModerationError(err2));
 			});
 		});
 
@@ -363,11 +356,10 @@ function kick(member, reason, moderator) {
 			.catch((err) => {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['kick', 'discord'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err });
+				reject(new ModerationError(err));
 			});
 
-		resolve({ type: 'success' });
+		resolve({});
 	});
 }
 
@@ -399,8 +391,7 @@ function ban(member, reason, moderator, tos) {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-					// eslint-disable-next-line prefer-promise-reject-errors
-					reject({ type: 'err', error: err2 });
+					reject(new ModerationError(err2));
 				}
 			});
 
@@ -413,8 +404,7 @@ function ban(member, reason, moderator, tos) {
 					if (err2) {
 						Sentry.captureException(err2);
 						logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-						// eslint-disable-next-line prefer-promise-reject-errors
-						reject({ type: 'err', error: err2 });
+						reject(new ModerationError(err2));
 					}
 				});
 			}
@@ -429,8 +419,8 @@ function ban(member, reason, moderator, tos) {
 			if (!err2 && doc) {
 				try {
 					plannedUnmutes[doc._id].cancel();
-				} catch (e) {
-					logger.error(e);
+				} catch (err3) {
+					logger.error(err3, { labels: { module: 'moderation', event: ['ban', 'databaseSearch'] } });
 				}
 			}
 		});
@@ -445,18 +435,17 @@ function ban(member, reason, moderator, tos) {
 
 		await member.send(embed)
 			.catch(() => {
-				resolve({ type: 'success', info: 'failed to send DM' });
+				resolve({ info: 'failed to send DM' });
 			});
 
 		await member.ban({ reason })
 			.catch((err) => {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['ban', 'discord'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err });
+				reject(new ModerationError(err));
 			});
 
-		resolve({ type: 'success' });
+		resolve({});
 	});
 }
 
@@ -468,8 +457,7 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['strike', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 		if (docs.length === 0) {
 			mute(member, 24 * 60, reason, moderator)
@@ -506,7 +494,6 @@ exports.tosviolation = (member, reason, moderator) => new Promise((resolve, reje
 		if (err2) {
 			Sentry.captureException(err2);
 			logger.error(err2, { labels: { module: 'moderation', event: ['tosviolation', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
 			reject(new ModerationError(err2));
 		}
 
@@ -531,8 +518,7 @@ exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) =>
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['revoke', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 
 		// eslint-disable-next-line prefer-promise-reject-errors
@@ -540,10 +526,9 @@ exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) =>
 		else {
 			Strike.findByIdAndDelete(caseID, (err2, strike) => {
 				if (err2) {
-					Sentry.captureException(err);
-					logger.error(err, { labels: { module: 'moderation', event: ['revoke', 'databaseSearch'] } });
-					// eslint-disable-next-line prefer-promise-reject-errors
-					reject({ type: 'err', error: err2 });
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['revoke', 'databaseSearch'] } });
+					reject(new ModerationError(err2));
 				}
 
 				log({
@@ -553,7 +538,7 @@ exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) =>
 					reason,
 					moderator: moderator.id,
 				}, '#2bad64');
-				resolve({ type: 'success' });
+				resolve({});
 			});
 		}
 	});
@@ -564,16 +549,14 @@ exports.getMemberModLogs = (member) => new Promise((resolve, reject) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['getMemberModLogs', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 
 		Strike.find({ userId: member.id }, (err2, strikes) => {
 			if (err2) {
 				Sentry.captureException(err2);
 				logger.error(err2, { labels: { module: 'moderation', event: ['getMemberModLogs', 'databaseSearch'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err2 });
+				reject(new ModerationError(err2));
 			}
 
 			const activeStrikes = strikes.filter(
@@ -581,7 +564,6 @@ exports.getMemberModLogs = (member) => new Promise((resolve, reject) => {
 			).length;
 
 			resolve({
-				type: 'success',
 				data: {
 					logs: docs,
 					strikes: strikes.length,
@@ -597,14 +579,12 @@ exports.getModLogByCaseID = (caseID) => new Promise((resolve, reject) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['getModLogByCaseID', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 
-		// eslint-disable-next-line prefer-promise-reject-errors
-		if (err) reject({ type: 'err', info: 'Moderation action not found' });
+		if (!doc) reject(new ModerationError(err, 'Moderation action not found'));
 
-		resolve({ type: 'success', data: doc });
+		resolve({ data: doc });
 	});
 });
 
@@ -617,12 +597,10 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 	await updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
-		// eslint-disable-next-line prefer-promise-reject-errors
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['addNote', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 
 		doc.notes.push({
@@ -633,9 +611,8 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 			if (err2) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['addNote', 'databaseSave'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err2 });
-			} else resolve({ type: 'success' });
+				reject(new ModerationError(err2));
+			} else resolve({});
 		});
 	});
 });
@@ -657,17 +634,15 @@ exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => 
 		}
 
 		const index = doc.notes.findIndex((note) => note._id === noteID);
-		// eslint-disable-next-line prefer-promise-reject-errors
-		if (index === -1) reject({ type: 'err', info: 'Note not found' });
+		if (index === -1) reject(new ModerationError('', 'Note not found'));
 		else {
 			doc.notes.splice(index, 1);
 			doc.save((err2) => {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['removeNote', 'databaseSearch'] } });
-					// eslint-disable-next-line prefer-promise-reject-errors
-					reject({ type: 'err', error: err2 });
-				} else resolve({ type: 'success' });
+					reject(new ModerationError(err2));
+				} else resolve({});
 			});
 		}
 	});
@@ -678,15 +653,13 @@ exports.getNotes = (member) => new Promise((resolve, reject) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['getNotes', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 
 		if (!doc || !doc.notes) {
 			updateMember(member);
-			// eslint-disable-next-line prefer-promise-reject-errors
-			resolve({ type: 'success', data: [] });
-		} else resolve({ type: 'success', data: doc.notes });
+			resolve({ data: [] });
+		} else resolve({ data: doc.notes });
 	});
 });
 
@@ -694,64 +667,55 @@ exports.getNotes = (member) => new Promise((resolve, reject) => {
 exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, reject) => {
 	if (message.mentions.members.size > 0) {
 		const member = await message.mentions.members.first().fetch();
-		// eslint-disable-next-line prefer-promise-reject-errors
-		if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
-		// eslint-disable-next-line prefer-promise-reject-errors
-		else if (member.user.bot) reject('This user is a bot');
+		if (member.hasPermission('MANAGE_GUILD')) reject(new ModerationError('', 'This member is a moderator'));
+		else if (member.user.bot) reject(new ModerationError('', 'This user is a bot'));
 		else resolve(member);
 	} else {
 		message.guild.members.fetch(args[0])
 			.then((member) => {
-				// eslint-disable-next-line prefer-promise-reject-errors
-				if (!member.user) reject('Member not found');
-				// eslint-disable-next-line prefer-promise-reject-errors
-				else if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
-				// eslint-disable-next-line prefer-promise-reject-errors
-				else if (member.user.bot) reject('This user is a bot');
+				if (!member.user) reject(new ModerationError('', 'Member not found'));
+				else if (member.hasPermission('MANAGE_GUILD')) reject(new ModerationError('', 'This member is a moderator'));
+				else if (member.user.bot) reject(new ModerationError('', 'This user is a bot'));
 				else resolve(member);
 			})
 			.catch(() => {
 				message.guild.members.fetch()
 					.then(() => {
 						const member = message.guild.members.fetch({ query: args[0], limit: 1 })
-							// eslint-disable-next-line prefer-promise-reject-errors
-							.catch(() => reject('Member not found'));
+							.catch(() => reject(new ModerationError('', 'Member not found')));
 
-						// eslint-disable-next-line prefer-promise-reject-errors
-						if (!member.user) reject('Member not found');
+						if (!member.user) reject(new ModerationError('', 'Member not found'));
 
-						// eslint-disable-next-line prefer-promise-reject-errors
-						else if (member.hasPermission('MANAGE_GUILD')) reject('This member is a moderator');
-						// eslint-disable-next-line prefer-promise-reject-errors
-						else if (member.user.bot) reject('This user is a bot');
+						else if (member.hasPermission('MANAGE_GUILD')) reject(new ModerationError('', 'This member is a moderator'));
+						else if (member.user.bot) reject(new ModerationError('', 'This user is a bot'));
 						else return resolve(member);
 					});
 			});
 	}
 });
 
-exports.init = () => { // Should run on every bot start
+exports.init = () => {
 	Mute.find({}, (err, docs) => {
 		if (err) return logger.error(err);
 		docs.forEach(async (doc) => {
 			if (doc.leftAt) return;
 			const guild = await client.guilds.fetch(config.discord.serverId)
-				.catch((e) => {
-					Sentry.captureException(e);
-					return logger.error(e, { labels: { module: 'moderation', event: ['init', 'discord'] } });
+				.catch((err) => {
+					Sentry.captureException(err);
+					return logger.error(err, { labels: { module: 'moderation', event: ['init', 'discord'] } });
 				});
 
 			const member = await guild.members.fetch(doc.userId)
-				.catch((e) => {
-					Sentry.captureException(e);
-					return logger.error(e, { labels: { module: 'moderation', event: ['init', 'discord'] } });
+				.catch((err) => {
+					Sentry.captureException(err);
+					return logger.error(err, { labels: { module: 'moderation', event: ['init', 'discord'] } });
 				});
 
 			plannedUnmutes[doc._id] = scheduleJob(doc.expireAt, () => {
 				unmute(member)
-					.catch((e) => {
-						Sentry.captureException(e);
-						return logger.error(e, { labels: { module: 'moderation', event: ['init'] } });
+					.catch((err) => {
+						Sentry.captureException(err);
+						return logger.error(err, { labels: { module: 'moderation', event: ['init'] } });
 					});
 			});
 		});
@@ -761,8 +725,8 @@ exports.init = () => { // Should run on every bot start
 exports.unplanMute = (id) => {
 	try {
 		plannedUnmutes[id].cancel();
-	} catch (e) {
-		Sentry.captureException(e);
-		return logger.error(e, { labels: { module: 'moderation', event: 'unplanMute' } });
+	} catch (err) {
+		Sentry.captureException(err);
+		return logger.error(err, { labels: { module: 'moderation', event: 'unplanMute' } });
 	}
 };

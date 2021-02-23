@@ -9,7 +9,7 @@ exports.run = async (client, message, args) => {
 	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}modlog <member>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((err) => message.channel.send(err));
+		.catch((err) => message.channel.send(err.info));
 
 	const { data } = await moderation.getMemberModLogs(member)
 		.catch(() => message.channel.send('Something went wrong, please try again.'));

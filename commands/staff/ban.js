@@ -42,7 +42,7 @@ exports.run = async (client, message, args) => {
 	moderation.getMemberFromMessage(message, args)
 		.then((member) => confirmAndBan(message, member, reason))
 		.catch((err) => {
-			if (err === 'Member not found') {
+			if (err.info === 'Member not found') {
 				return message.guild.members.ban(args[0])
 					.then((user) => {
 						moderation.log({
@@ -55,7 +55,7 @@ exports.run = async (client, message, args) => {
 					})
 					.catch(() => message.channel.send('User not found or something went wrong.'));
 			}
-			message.channel.send(err);
+			message.channel.send(err.info);
 		});
 };
 

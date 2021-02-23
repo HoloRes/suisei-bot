@@ -2,7 +2,6 @@
 const { MessageEmbed } = require('discord.js');
 
 // Local files
-const { logger } = require('$/index');
 const moderation = require('$/util/moderation');
 const config = require('$/config.json');
 
@@ -10,8 +9,9 @@ exports.run = async (client, message, args) => {
 	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/remove/list> <note/noteid>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
-		.catch((err) => message.channel.send(err));
+		.catch((err) => message.channel.send(err.info));
 
+	if (!member.user) return;
 	if (!args[1] || args[1].toLowerCase() === 'list') {
 		const { data: notes } = await moderation.getNotes(member);
 
@@ -36,10 +36,7 @@ exports.run = async (client, message, args) => {
 			.then(() => {
 				message.channel.send(`Note taken for: **${member.user.tag}**\n**Note:** ${note}`);
 			})
-			.catch((err) => {
-				logger.error(err);
-				return message.channel.send('Something went wrong, please try again.');
-			});
+			.catch(() => message.channel.send('Something went wrong, please try again.'));
 	} else if (args[1] === 'remove') {
 		const noteId = Number.parseInt(args[2], 10);
 		if (Number.isNaN(noteId) || noteId < 0) return message.channel.send('Invalid note id');
@@ -48,10 +45,7 @@ exports.run = async (client, message, args) => {
 			.then(() => {
 				message.channel.send('Note removed');
 			})
-			.catch((err) => {
-				logger.error(err);
-				return message.channel.send(err.info ? err.info : 'Something went wrong, please try again.');
-			});
+			.catch((err) => message.channel.send(err.info ? err.info : 'Something went wrong, please try again.'));
 	} else {
 		return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/remove/list> <note/noteid>`);
 	}
