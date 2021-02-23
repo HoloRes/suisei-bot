@@ -26,7 +26,7 @@ function confirmAndMute(message, duration, member, reason) {
 								if (status.info) message.channel.send(`Mute succeeded, but ${status.info}`);
 								else message.channel.send(`**${member.user.tag}** has been muted`);
 							})
-							.catch(() => message.channel.send('Something went wrong, please try again.'));
+							.catch((err) => message.channel.send(err.info || 'Something went wrong, please try again.'));
 					} else {
 						msg.edit('Cancelled.');
 					}

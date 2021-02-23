@@ -260,11 +260,10 @@ function mute(member, duration, reason, moderator, tos) {
 			if (err) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['mute', 'databaseSearch'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err });
+				reject(new ModerationError(err));
 			}
-			// eslint-disable-next-line prefer-promise-reject-errors
-			if (!setting) reject({ type: 'err', error: 'noRole' });
+
+			if (!setting) reject(new ModerationError(err, 'Mute role not found.'));
 			member.roles.add(setting.value, `Muted by ${moderator.user.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`)
 				.catch((err2) => {
 					Sentry.captureException(err2);
@@ -293,7 +292,9 @@ function mute(member, duration, reason, moderator, tos) {
 exports.mute = mute;
 
 exports.hardmute = (member, moderator) => {
+	Mute.findOne({ userId: member.id }, (err, doc) => {
 
+	});
 };
 
 function kick(member, reason, moderator) {
@@ -310,8 +311,7 @@ function kick(member, reason, moderator) {
 			if (err) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err });
+				reject(new ModerationError(err));
 			}
 			log(logItem, '#f54242');
 
@@ -382,8 +382,7 @@ function ban(member, reason, moderator, tos) {
 			if (err) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-				// eslint-disable-next-line prefer-promise-reject-errors
-				reject({ type: 'err', error: err });
+				reject(new ModerationError(err));
 			}
 			log(logItem, '#f54242');
 
@@ -525,8 +524,7 @@ exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) =>
 			reject(new ModerationError(err));
 		}
 
-		// eslint-disable-next-line prefer-promise-reject-errors
-		if (!doc) reject({ type: 'err', info: 'Strike not found' });
+		if (!doc) reject(new ModerationError('', 'Strike not found'));
 		else {
 			Strike.findByIdAndDelete(caseID, (err2, strike) => {
 				if (err2) {
@@ -633,8 +631,7 @@ exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => 
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['removeNote', 'databaseSearch'] } });
-			// eslint-disable-next-line prefer-promise-reject-errors
-			reject({ type: 'err', error: err });
+			reject(new ModerationError(err));
 		}
 
 		const index = doc.notes.findIndex((note) => note._id === noteID);
