@@ -40,9 +40,10 @@ exports.run = async (client, message, args) => {
 	if (reason[1].length === 0) return message.channel.send("Error: Reason can't be empty");
 	if (reason[1].length > 1000) return message.channel.send('Error: Reason is over 1000 characters');
 
-	const ids = await args.join(' ').split('"')[2].split(' ');
+	const ids = await args.join(' ').split('"')[2].split(',');
 	await ids.splice(0, 1);
-	confirmAndBan(ids, reason[1], message);
+	const trimmedIds = await ids.map((id) => id.trim())
+	confirmAndBan(trimmedIds, reason[1], message);
 };
 
 exports.config = {
