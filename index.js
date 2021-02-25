@@ -296,22 +296,25 @@ client.on('message', (message) => {
 	if (message.author.bot) return;
 	if (message.content.startsWith(config.discord.prefix)) { // User command handler
 		const cont = message.content.slice(config.discord.prefix.length).split(' ');
-		const args = cont.slice(1);
+		const args = cont.slice(1).join(' ').trim().split(' ');
 
 		const staffCmd = client.staffcmds.get(cont[0]);
 		if (staffCmd && message.member.hasPermission('MANAGE_GUILD')) return staffCmd.run(client, message, args);
-		const cmd = client.commands.get(cont[0]);
 
+		const cmd = client.commands.get(cont[0]);
 		if (cmd) return cmd.run(client, message, args);
 	} else if (message.content.startsWith(config.discord.devprefix)) { // Dev command handler
 		if (!message.member.roles.cache.has(config.discord.roles.dev)) return;
+
 		const cont = message.content.slice(config.discord.devprefix.length).split(' ');
+
 		if (cont[0] === 'reload') {
 			message.channel.send('Reloading commands...');
 			loadcmds();
 			return message.channel.send('All commands have been reloaded.');
 		}
-		const args = cont.slice(1);
+
+		const args = cont.slice(1).join(' ').trim().split(' ');
 		const cmd = client.devcmds.get(cont[0]);
 		if (cmd) return cmd.run(client, message, args);
 	}
