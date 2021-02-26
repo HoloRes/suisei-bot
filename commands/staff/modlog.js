@@ -6,6 +6,7 @@ const moderation = require('$/util/moderation');
 const config = require('$/config.json');
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const urlRegex = /https?(:\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])/igm;
 
 exports.run = async (client, message, args) => {
 	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}modlog <member>`);
@@ -41,13 +42,13 @@ exports.run = async (client, message, args) => {
 				// eslint-disable-next-line no-plusplus
 				for (let x = 0; x < left; x++) {
 					const log = data.logs[offset + x];
-					embeds[i].addField(`#${log._id} | ${log.type}${log.duration ? ` | ${log.duration}` : ''}${log.date ? ` | ${log.date.getUTCDate()} ${months[log.date.getUTCMonth()]} ${log.date.getUTCFullYear()}` : ''}`, log.reason, true);
+					embeds[i].addField(`#${log._id} | ${log.type}${log.duration ? ` | ${log.duration}` : ''}${log.date ? ` | ${log.date.getUTCDate()} ${months[log.date.getUTCMonth()]} ${log.date.getUTCFullYear()}` : ''}`, log.reason.replace(urlRegex, '[link]($&)'), true);
 				}
 			} else {
 				// eslint-disable-next-line no-plusplus
 				for (let x = 0; x < 12; x++) {
 					const log = data.logs[offset + x];
-					embeds[i].addField(`#${log._id} | ${log.type}${log.duration ? ` | ${log.duration}` : ''}${log.date ? ` | ${log.date.getUTCDate()} ${months[log.date.getUTCMonth()]} ${log.date.getUTCFullYear()}` : ''}`, log.reason, true);
+					embeds[i].addField(`#${log._id} | ${log.type}${log.duration ? ` | ${log.duration}` : ''}${log.date ? ` | ${log.date.getUTCDate()} ${months[log.date.getUTCMonth()]} ${log.date.getUTCFullYear()}` : ''}`, log.reason.replace(urlRegex, '[link]($&)'), true);
 				}
 			}
 		}
@@ -81,7 +82,7 @@ exports.run = async (client, message, args) => {
 			.setTimestamp();
 
 		data.logs.forEach((log) => {
-			embed.addField(`#${log._id} | ${log.type}${log.duration ? ` | ${log.duration}` : ''}${log.date ? ` | ${log.date.getUTCDate()} ${months[log.date.getUTCMonth()]} ${log.date.getUTCFullYear()}` : ''}`, log.reason, true);
+			embed.addField(`#${log._id} | ${log.type}${log.duration ? ` | ${log.duration}` : ''}${log.date ? ` | ${log.date.getUTCDate()} ${months[log.date.getUTCMonth()]} ${log.date.getUTCFullYear()}` : ''}`, log.reason.replace(urlRegex, '[link]($&)'), true);
 		});
 
 		message.channel.send(embed);

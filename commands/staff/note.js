@@ -5,6 +5,8 @@ const { MessageEmbed } = require('discord.js');
 const moderation = require('$/util/moderation');
 const config = require('$/config.json');
 
+const urlRegex = /https?(:\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])/igm;
+
 exports.run = async (client, message, args) => {
 	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/edit/remove/list> <note/noteid> <note (update)>`);
 
@@ -38,13 +40,13 @@ exports.run = async (client, message, args) => {
 					// eslint-disable-next-line no-plusplus
 					for (let x = 0; x < left; x++) {
 						const note = notes[offset + x];
-						embeds[i].addField(`Note #${note._id}`, note.value, true);
+						embeds[i].addField(`Note #${note._id}`, note.value.replace(urlRegex, '[link]($&)'), true);
 					}
 				} else {
 					// eslint-disable-next-line no-plusplus
 					for (let x = 0; x < 12; x++) {
 						const note = notes[offset + x];
-						embeds[i].addField(`Note #${note._id}`, note.value, true);
+						embeds[i].addField(`Note #${note._id}`, note.value.replace(urlRegex, '[link]($&)'), true);
 					}
 				}
 			}
@@ -76,7 +78,7 @@ exports.run = async (client, message, args) => {
 				.setTitle(member.user.tag)
 				.setTimestamp();
 
-			notes.forEach((note) => embed.addField(`Note #${note._id}`, note.value, true));
+			notes.forEach((note) => embed.addField(`Note #${note._id}`, note.value.replace(urlRegex, '[link]($&)'), true));
 
 			message.channel.send(embed);
 		}
