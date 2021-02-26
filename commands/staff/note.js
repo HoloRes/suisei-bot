@@ -6,7 +6,7 @@ const moderation = require('$/util/moderation');
 const config = require('$/config.json');
 
 exports.run = async (client, message, args) => {
-	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/remove/list> <note/noteid>`);
+	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/edit/remove/list> <note/noteid> <note (update)>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
 		.catch((err) => message.channel.send(err.info));
@@ -88,6 +88,19 @@ exports.run = async (client, message, args) => {
 		moderation.addNote(member, note)
 			.then(() => {
 				message.channel.send(`Note taken for: **${member.user.tag}**\n**Note:** ${note}`);
+			})
+			.catch(() => message.channel.send('Something went wrong, please try again.'));
+	} else if (args[1] === 'edit') {
+		const noteId = Number.parseInt(args[2], 10);
+		if (Number.isNaN(noteId) || noteId < 0) return message.channel.send('Invalid note id');
+
+		const note = args.slice(3).join(' ');
+		if (note.length === 0) return message.channel.send("Error: Note can't be empty");
+		if (note.length > 1000) return message.channel.send('Error: Note is over 1000 characters');
+
+		moderation.updateNote(member, noteId, note)
+			.then(() => {
+				message.channel.send(`Note taken updated: **${member.user.tag}**\n**Note:** ${note}`);
 			})
 			.catch(() => message.channel.send('Something went wrong, please try again.'));
 	} else if (args[1] === 'remove') {

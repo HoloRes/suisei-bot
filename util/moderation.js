@@ -671,9 +671,27 @@ exports.getModLogByCaseID = (caseID) => new Promise((resolve, reject) => {
 	});
 });
 
-exports.updateReason = (caseID, reason) => {
+exports.updateReason = (caseID, reason) => new Promise((resolve, reject) => {
+	LogItem.findById(caseID, (err, doc) => {
+		if (err) {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['updateReason', 'databaseSearch'] } });
+			reject(new ModerationError(err));
+		}
 
-};
+		if (!doc) reject(new ModerationError('', 'Moderation action not found'));
+
+		// eslint-disable-next-line no-param-reassign
+		doc.reason = reason;
+		doc.save((err2) => {
+			if (err2) {
+				Sentry.captureException(err2);
+				logger.error(err2, { labels: { module: 'moderation', event: ['updateReason', 'databaseSave'] } });
+				reject(new ModerationError(err2));
+			} else resolve({});
+		});
+	});
+});
 
 // eslint-disable-next-line no-async-promise-executor
 exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
@@ -700,9 +718,32 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 	});
 });
 
-exports.updateNote = (member, noteID, note) => {
+// eslint-disable-next-line no-async-promise-executor
+exports.updateNote = (member, noteID, note) => new Promise(async (resolve, reject) => {
+	await updateMember(member);
 
-};
+	User.findById(member.id, (err, doc) => {
+		if (err) {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['updateNote', 'databaseSearch'] } });
+			reject(new ModerationError(err));
+		}
+
+		const index = doc.notes.findIndex((noteI) => noteI._id === noteID);
+		if (index === -1) reject(new ModerationError('', 'Note not found'));
+		else {
+			// eslint-disable-next-line no-param-reassign
+			doc.notes[index].value = note;
+			doc.save((err2) => {
+				if (err2) {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['updateNote', 'databaseSave'] } });
+					reject(new ModerationError(err2));
+				} else resolve({});
+			});
+		}
+	});
+});
 
 // eslint-disable-next-line no-async-promise-executor
 exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => {
@@ -722,7 +763,7 @@ exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => 
 			doc.save((err2) => {
 				if (err2) {
 					Sentry.captureException(err2);
-					logger.error(err2, { labels: { module: 'moderation', event: ['removeNote', 'databaseSearch'] } });
+					logger.error(err2, { labels: { module: 'moderation', event: ['removeNote', 'databaseSave'] } });
 					reject(new ModerationError(err2));
 				} else resolve({});
 			});
