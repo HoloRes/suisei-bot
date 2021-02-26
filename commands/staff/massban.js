@@ -43,7 +43,7 @@ exports.run = async (client, message, args) => {
 	const ids = await args.join(' ').split('"')[2].split(',');
 	await ids.splice(0, 1);
 	const trimmedIds = await ids.map((id) => id.trim());
-	if(trimmedIds.length < 2) return message.channel.send('Error: No members to ban (or only one)');
+	if (trimmedIds.length < 2) return message.channel.send('Error: No members to ban (or only one)');
 	confirmAndBan(trimmedIds, reason[1], message);
 };
 
