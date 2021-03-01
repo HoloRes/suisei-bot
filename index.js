@@ -72,6 +72,7 @@ const youtubeNotifications = require('$/util/youtube');
 const twitterNotifications = require('$/util/twitter');
 const dashboardRouter = require('$/routers/dashboard');
 const moderation = require('$/util/moderation');
+const trivia = require('$/util/trivia');
 
 // Variables
 
@@ -113,6 +114,9 @@ youtubeNotifications.init(logger, holoClient, client);
 
 // Moderation
 moderation.init();
+
+// Trivia module
+trivia.init();
 
 // Code
 // Functions

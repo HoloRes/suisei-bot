@@ -13,6 +13,7 @@ const { logger } = require('$/index');
 const availableSettings = [ // Available types: user, role, channel, string
 	{ name: 'mutedRole', type: 'role' },
 	{ name: 'modLogChannel', type: 'channel' },
+	{ name: 'triviaChannel', type: 'channel' },
 ];
 
 // Functions
