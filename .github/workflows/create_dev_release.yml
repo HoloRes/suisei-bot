@@ -2,7 +2,7 @@ name: Create development Docker image
 on:
   push:
     branches:
-      - '*'
+      - '**'
       - '!master'
 
 jobs:

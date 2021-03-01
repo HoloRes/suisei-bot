@@ -33,10 +33,7 @@ function start() {
 
 		stream = await T.stream('statuses/filter', { follow: users });
 		stream.on('data', (tweet) => {
-			if (!tweet.user || !tweet.user.id_str) {
-				logger.debug("Tweet doesn't have required properties", { labels: { module: 'twitter', event: 'tweet' } });
-				return logger.debug(JSON.stringify(tweet, null, 2), { labels: { module: 'twitter', event: 'tweet' } });
-			}
+			if (tweet.delete) return;
 			TweetSubscription.findById(tweet.user.id_str, async (err2, doc) => {
 				if (err2) {
 					Sentry.captureException(err2);

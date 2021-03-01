@@ -41,7 +41,7 @@ exports.run = async (client, message, args) => {
 
 	moderation.getMemberFromMessage(message, args)
 		.then((member) => confirmAndKick(message, member, reason))
-		.catch((e) => message.channel.send(e));
+		.catch((err) => message.channel.send(err.info));
 };
 
 exports.config = {
