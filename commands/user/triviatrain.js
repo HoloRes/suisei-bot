@@ -2,9 +2,9 @@
 const trivia = require('$/util/trivia');
 
 exports.run = () => {
-	trivia.sendQuestion();
+	trivia.restart();
 };
 
 exports.config = {
-	command: 'triviasend',
+	command: 'triviatrain',
 };
