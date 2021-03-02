@@ -136,6 +136,12 @@ exports.restart = (message) => {
 	} else message.reply('a session is already ongoing.');
 };
 
+exports.forceRestart = () => {
+	nonAnsweredQuestions = 0;
+	sendQuestion();
+	active = true;
+};
+
 async function reload() {
 	const customTriviaSetting = await Setting.findById('triviaQuestionsUrl').lean().exec()
 		.catch((err) => {
