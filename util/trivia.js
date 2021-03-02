@@ -124,12 +124,12 @@ async function sendQuestion() {
 	});
 }
 
-exports.restart = () => {
+exports.restart = (message) => {
 	if (active === false) {
 		nonAnsweredQuestions = 0;
 		sendQuestion();
 		active = true;
-	}
+	} else message.reply('a session is already ongoing.');
 };
 
 async function reload() {

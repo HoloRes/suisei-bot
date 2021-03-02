@@ -1,8 +1,8 @@
 // Imports
 const trivia = require('$/util/trivia');
 
-exports.run = () => {
-	trivia.restart();
+exports.run = (client, message) => {
+	trivia.restart(message);
 };
 
 exports.config = {
