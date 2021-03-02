@@ -100,8 +100,11 @@ async function sendQuestion() {
 		if (collected.size === 0) {
 			channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
 			nonAnsweredQuestions += 1;
-		} else if (correctAnswers.length === 0) channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
-		else {
+		} else if (correctAnswers.length === 0) {
+			nonAnsweredQuestions = 0;
+			channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
+		} else {
+			nonAnsweredQuestions = 0;
 			const winnersList = correctAnswers.map((answer) => `\`${answer.user.tag}\` in ${humanizeDuration(answer.time, {
 				largest: 2,
 				round: true,
@@ -115,7 +118,6 @@ async function sendQuestion() {
 				.setTimestamp();
 			channel.send(winnersEmbed);
 		}
-
 		if (nonAnsweredQuestions === 3) {
 			active = false;
 			return channel.send('Three questions in a row have been unanswered, restart training with the following command `/triviatrain`');
