@@ -17,6 +17,7 @@ Sentry.configureScope((scope) => {
 });
 
 // Variables
+let active = false;
 let nonAnsweredQuestions = 0;
 let customQuestions = [];
 
@@ -110,7 +111,10 @@ async function sendQuestion() {
 			channel.send(winnersEmbed);
 		}
 
-		if (nonAnsweredQuestions === 3) return channel.send('Three questions in a row have been unanswered, restart training with the following command `/triviatrain`');
+		if (nonAnsweredQuestions === 3) {
+			active = false;
+			return channel.send('Three questions in a row have been unanswered, restart training with the following command `/triviatrain`');
+		}
 		setTimeout(() => {
 			channel.send('Trivia in 15 seconds!');
 		}, 45 * 1000);
@@ -121,8 +125,11 @@ async function sendQuestion() {
 }
 
 exports.restart = () => {
-	nonAnsweredQuestions = 0;
-	sendQuestion();
+	if (active === false) {
+		nonAnsweredQuestions = 0;
+		sendQuestion();
+		active = true;
+	}
 };
 
 async function reload() {
