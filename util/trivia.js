@@ -101,6 +101,7 @@ async function sendQuestion() {
 			channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
 			nonAnsweredQuestions += 1;
 		} else {
+			if (correctAnswers.length === 0) return channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
 			const winnersList = correctAnswers.map((answer) => `\`${answer.user.tag}\` in ${humanizeDuration(answer.time, { largest: 2, round: true })}`);
 			const winnersEmbed = new MessageEmbed()
 				.setTitle('Results:')
