@@ -100,9 +100,12 @@ async function sendQuestion() {
 		if (collected.size === 0) {
 			channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
 			nonAnsweredQuestions += 1;
-		} else {
-			if (correctAnswers.length === 0) return channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
-			const winnersList = correctAnswers.map((answer) => `\`${answer.user.tag}\` in ${humanizeDuration(answer.time, { largest: 2, round: true })}`);
+		} else if (correctAnswers.length === 0) channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
+		else {
+			const winnersList = correctAnswers.map((answer) => `\`${answer.user.tag}\` in ${humanizeDuration(answer.time, {
+				largest: 2,
+				round: true,
+			})}`);
 			const winnersEmbed = new MessageEmbed()
 				.setTitle('Results:')
 				.setDescription(`**Answer:** ${correctAnswer.join(', ')}`)
