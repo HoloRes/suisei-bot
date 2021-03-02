@@ -105,6 +105,7 @@ async function sendQuestion() {
 			const winnersList = correctAnswers.map((answer) => `\`${answer.user.tag}\` in ${humanizeDuration(answer.time, {
 				largest: 2,
 				round: true,
+				units: ['s', 'ms'],
 			})}`);
 			const winnersEmbed = new MessageEmbed()
 				.setTitle('Results:')
