@@ -98,7 +98,7 @@ async function sendQuestion() {
 	});
 	collector.on('end', (collected) => {
 		if (collected.size === 0) {
-			channel.send('No winners!');
+			channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
 			nonAnsweredQuestions += 1;
 		} else {
 			const winnersList = correctAnswers.map((answer) => `\`${answer.user.tag}\` in ${humanizeDuration(answer.time, { largest: 2, round: true })}`);
