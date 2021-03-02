@@ -53,8 +53,6 @@ async function sendQuestion() {
 		const index = Math.floor(Math.random() * customQuestions.length);
 		question = customQuestions[index];
 	}
-	// eslint-disable-next-line no-console
-	console.log(question);
 	// eslint-disable-next-line max-len
 	let correctAnswer = customOrOtdb % 2 === 0 ? [decode(question.correct_answer).toLowerCase()] : [];
 	// eslint-disable-next-line max-len
