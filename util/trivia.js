@@ -121,10 +121,10 @@ async function sendQuestion() {
 		}
 		setTimeout(() => {
 			channel.send('Trivia in 15 seconds!');
-		}, 45 * 1000);
+		}, 15 * 1000);
 		setTimeout(() => {
 			sendQuestion();
-		}, 60 * 1000);
+		}, 30 * 1000);
 	});
 }
 
