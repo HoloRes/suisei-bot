@@ -21,6 +21,8 @@ let active = false;
 let nonAnsweredQuestions = 0;
 let customQuestions = [];
 
+const multipleChoiceRegex = /(which of)|(of the following)/gi;
+
 async function sendQuestion() {
 	const channelSetting = await Setting.findById('triviaTrainChannel').lean().exec()
 		.catch((err) => {
@@ -55,9 +57,12 @@ async function sendQuestion() {
 		question = customQuestions[index];
 	}
 	// eslint-disable-next-line max-len
+	const answersNonLowercase = customOrOtdb % 2 === 0 ? decode(question.correct_answer) : question.answers.join(', ');
+	// eslint-disable-next-line max-len
 	let correctAnswer = customOrOtdb % 2 === 0 ? [decode(question.correct_answer).toLowerCase()] : [];
 	// eslint-disable-next-line max-len
 	if (customOrOtdb % 2 !== 0) correctAnswer = question.answers.map((answer) => answer.toLowerCase());
+	if (multipleChoiceRegex.test(question.question) && customOrOtdb % 2 === 0) return sendQuestion();
 
 	const embed = new MessageEmbed()
 		.setTitle(decode(question.question))
@@ -98,11 +103,11 @@ async function sendQuestion() {
 	});
 	collector.on('end', (collected) => {
 		if (collected.size === 0) {
-			channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
+			channel.send(`No winners!\nAnswer: ${answersNonLowercase}`);
 			nonAnsweredQuestions += 1;
 		} else if (correctAnswers.length === 0) {
 			nonAnsweredQuestions = 0;
-			channel.send(`No winners!\nAnswer: ${correctAnswer.join(', ')}`);
+			channel.send(`No winners!\nAnswer: ${answersNonLowercase}`);
 		} else {
 			nonAnsweredQuestions = 0;
 			const winnersList = correctAnswers.map((answer) => `\`${answer.user.tag}\` in ${humanizeDuration(answer.time, {
@@ -112,7 +117,7 @@ async function sendQuestion() {
 			})}`);
 			const winnersEmbed = new MessageEmbed()
 				.setTitle('Results:')
-				.setDescription(`**Answer:** ${correctAnswer.join(', ')}`)
+				.setDescription(`**Answer:** ${answersNonLowercase}`)
 				.addField('Winners', winnersList.join('\n'))
 				.setFooter('Powered by Open Trivia Database')
 				.setTimestamp();
