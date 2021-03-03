@@ -74,25 +74,42 @@ async function sendQuestion() {
 	const date = new Date();
 
 	let answered = false;
+	let fiveSecondTimerPast = false;
+	setTimeout(() => { fiveSecondTimerPast = true; }, 5000);
+
 	const correctAnswers = [];
 	const correctAnswersAuthorIds = [];
+
 	const filter = (collectedMsg) => !collectedMsg.author.bot;
 	const collector = channel.createMessageCollector(filter, { time: 45 * 1000 });
+
 	collector.on('collect', (collectedMsg) => {
 		if (correctAnswersAuthorIds.indexOf(collectedMsg.author.id) !== -1) return;
 
 		const answer = collectedMsg.content.toLowerCase();
 		if (answered === false && correctAnswer.indexOf(answer) !== -1) {
-			channel.send('First answer received, answers within 1 second will be counted.');
-			setTimeout(() => {
-				collector.stop();
-			}, 1000);
-			correctAnswers.push({
-				user: collectedMsg.author,
-				time: new Date() - date,
-			});
-			correctAnswersAuthorIds.push(collectedMsg.author.id);
-			answered = true;
+			if (fiveSecondTimerPast === true) {
+				channel.send('First answer received, answers within 1 second will be counted.');
+				setTimeout(() => {
+					collector.stop();
+				}, 1000);
+				correctAnswers.push({
+					user: collectedMsg.author,
+					time: new Date() - date,
+				});
+				correctAnswersAuthorIds.push(collectedMsg.author.id);
+				answered = true;
+			} else {
+				correctAnswers.push({
+					user: collectedMsg.author,
+					time: new Date() - date,
+				});
+				correctAnswersAuthorIds.push(collectedMsg.author.id);
+				answered = true;
+				setTimeout(() => {
+					collector.stop();
+				}, 5000 - (new Date() - date));
+			}
 		} else if (answered === true && correctAnswer.indexOf(answer) !== -1) {
 			correctAnswers.push({
 				user: collectedMsg.author,
