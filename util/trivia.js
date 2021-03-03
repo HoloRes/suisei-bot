@@ -21,7 +21,7 @@ let active = false;
 let nonAnsweredQuestions = 0;
 let customQuestions = [];
 
-const multipleChoiceRegex = /(which of)|(of the following)/gi;
+const multipleChoiceRegex = /(which of)|(of the following)|(list the following)/gi;
 
 async function sendQuestion() {
 	const channelSetting = await Setting.findById('triviaTrainChannel').lean().exec()
