@@ -187,7 +187,7 @@ client.on('ready', () => {
 	client.guilds.fetch(config.discord.serverId)
 		.then((mainGuild) => mainGuild.members.fetch())
 		.catch((e) => logger.error(e));
-	logger.info('Bot online', { labels: { module: 'index' } });
+	logger.info(`Bot online, version: ${process.env.COMMIT_SHA.substring(0, 10)}`, { labels: { module: 'index' } });
 });
 
 // Ping list reaction handler

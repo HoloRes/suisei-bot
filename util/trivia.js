@@ -75,7 +75,7 @@ async function sendQuestion() {
 
 	let answered = false;
 	let fiveSecondTimerPast = false;
-	setTimeout(() => { fiveSecondTimerPast = true; }, 5000);
+	setTimeout(() => { fiveSecondTimerPast = true; }, 10000);
 
 	const correctAnswers = [];
 	const correctAnswersAuthorIds = [];
@@ -108,7 +108,7 @@ async function sendQuestion() {
 				answered = true;
 				setTimeout(() => {
 					collector.stop();
-				}, 5000 - (new Date() - date));
+				}, 10000 - (new Date() - date));
 			}
 		} else if (answered === true && correctAnswer.indexOf(answer) !== -1) {
 			correctAnswers.push({

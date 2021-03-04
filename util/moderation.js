@@ -542,7 +542,6 @@ exports.massban = (users, reason, moderator) => new Promise(async (resolve, reje
 			reject(new ModerationError(err));
 		});
 
-	// eslint-disable-next-line no-plusplus
 	for (let i = 0; i < users.length; i++) {
 		// eslint-disable-next-line no-await-in-loop
 		await guild.members.ban(users[i], { reason })
