@@ -43,7 +43,7 @@ exports.run = async (client, message, args) => {
 		.then((member) => confirmAndBan(message, member, reason))
 		.catch((err) => {
 			if (err.info === 'Member not found') {
-				return message.guild.members.ban(args[0])
+				return message.guild.members.ban(args[0], { reason })
 					.then((user) => {
 						moderation.log({
 							userId: user.id,
