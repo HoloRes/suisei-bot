@@ -4,6 +4,7 @@ const { decode } = require('html-entities');
 const { MessageEmbed } = require('discord.js');
 const Sentry = require('@sentry/node');
 const humanizeDuration = require('humanize-duration');
+const { scheduleJob } = require('node-schedule');
 
 // Local files
 const { logger, client } = require('$/index');
@@ -188,5 +189,40 @@ exports.reload = reload;
 
 exports.init = async () => {
 	reload();
-	// TODO: Set up auto locking and unlocking of Trivia channel
+};
+
+exports.autoLockHandler = async (message) => {
+	const triviaChannel = await Setting.findById('triviaChannel').lean().exec()
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'trivia', event: 'databaseSearch' } });
+			throw new Error(err);
+		});
+	const triviaPingRole = await Setting.findById('triviaPingRole').lean().exec()
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'trivia', event: 'databaseSearch' } });
+			throw new Error(err);
+		});
+
+	if (!triviaChannel || !triviaPingRole) return;
+	if (message.channel.id === triviaChannel.value && message.author.id === '774523954286034965' && message.embeds[0]) {
+		const channel = await message.guild.channels.fetch(triviaChannel.value)
+			.catch((err) => {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'trivia', event: 'discord' } });
+				throw new Error(err);
+			});
+		if (message.embeds[0].title.includes('Upcoming Trivia Battle')) {
+			// Unlock and ping 30 seconds before the start
+			const date = new Date(new Date(message.embeds[0].timestamp) - 30 * 1000);
+			scheduleJob(date, () => {
+				channel.overwritePermissions(message.guild.roles.everyone, { SEND_MESSAGES: true }, 'Automatic unlock');
+				channel.send(`<@&${triviaPingRole.value}> Trivia is starting in less than 30 seconds`);
+			});
+		} else if (message.embeds[0].title.includes('We have a winner')) {
+			channel.overwritePermissions(message.guild.roles.everyone, { SEND_MESSAGES: false }, 'Automatic lock');
+			channel.send('https://tenor.com/view/hololive-hoshimachi-suisei-suityan-suisei-hoshimati-suisei-gif-20514867');
+		}
+	}
 };

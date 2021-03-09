@@ -271,6 +271,7 @@ client.on('guildMemberAdd', async (member) => {
 
 // Auto publish handler
 client.on('message', (message) => {
+	trivia.autoLockHandler(message);
 	AutoPublish.findById(message.channel.id, (err, doc) => {
 		if (err) {
 			Sentry.captureException(err);

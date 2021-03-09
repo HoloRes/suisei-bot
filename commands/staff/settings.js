@@ -16,6 +16,7 @@ const availableSettings = [ // Available types: user, role, channel, string
 	{ name: 'triviaChannel', type: 'channel' },
 	{ name: 'triviaTrainChannel', type: 'channel' },
 	{ name: 'triviaQuestionsUrl', type: 'string' },
+	{ name: 'triviaPingRole', type: 'role' },
 ];
 
 // Functions
