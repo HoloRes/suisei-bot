@@ -209,7 +209,7 @@ exports.autoLockHandler = async (message) => {
 		});
 
 	if (!triviaChannel || !triviaPingRole) return;
-	if (message.channel.id === triviaChannel.value && message.author.id === '774523954286034965' && message.embeds.length > 0) {
+	if (message.channel.id === triviaChannel.value && message.author.id === '763769064572190730' && message.embeds.length > 0) {
 		const channel = await client.channels.fetch(triviaChannel.value)
 			.catch((err) => {
 				Sentry.captureException(err);
@@ -221,7 +221,8 @@ exports.autoLockHandler = async (message) => {
 			const date = new Date(new Date(message.embeds[0].timestamp) - 30 * 1000);
 			scheduleJob(date, () => {
 				// eslint-disable-next-line max-len
-				channel.permissionOverwrites.find((override) => override.id === channel.guild.roles.everyone.id).delete();
+				const permissionOverride = channel.permissionOverwrites.find((override) => override.id === channel.guild.roles.everyone.id);
+				if (permissionOverride) permissionOverride.delete();
 				channel.send(`<@&${triviaPingRole.value}> Trivia is starting in less than 30 seconds`);
 				channel.setTopic("<a:checkthepins:677867705403047937> Please Read Trivia Rules <a:checkthepins:677867705403047937>\nIf we lose, it's Riku's fault <:Sui_Gun:818108804733730859> If we win, it's because of Suisei <:Sui_Pray:815958089769156609>");
 			});
