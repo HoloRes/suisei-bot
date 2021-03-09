@@ -219,10 +219,12 @@ exports.autoLockHandler = async (message) => {
 			scheduleJob(date, () => {
 				channel.overwritePermissions(message.guild.roles.everyone, { SEND_MESSAGES: true }, 'Automatic unlock');
 				channel.send(`<@&${triviaPingRole.value}> Trivia is starting in less than 30 seconds`);
+				channel.setTopic("<a:checkthepins:677867705403047937> Please Read Trivia Rules <a:checkthepins:677867705403047937>\nIf we lose, it's Riku's fault <:Sui_Gun:818108804733730859> If we win, it's because of Suisei <:Sui_Pray:815958089769156609>");
 			});
 		} else if (message.embeds[0].title.includes('We have a winner')) {
 			channel.overwritePermissions(message.guild.roles.everyone, { SEND_MESSAGES: false }, 'Automatic lock');
 			channel.send('https://tenor.com/view/hololive-hoshimachi-suisei-suityan-suisei-hoshimati-suisei-gif-20514867');
+			channel.setTopic("<a:checkthepins:677867705403047937> Please Read Trivia Rules <a:checkthepins:677867705403047937>\nIf we lose, it's Riku's fault <:Sui_Gun:818108804733730859> If we win, it's because of Suisei <:Sui_Pray:815958089769156609>");
 		}
 	}
 };
