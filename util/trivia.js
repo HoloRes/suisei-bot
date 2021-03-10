@@ -219,7 +219,9 @@ exports.autoLockHandler = async (message) => {
 		if (message.embeds[0].title.includes('Upcoming Trivia Battle')) {
 			// 30 seconds before the start
 			const date = new Date(new Date(message.embeds[0].timestamp) - 30 * 1000);
+			// 5 minutes before the start
 			const openDate = new Date(new Date(message.embeds[0].timestamp) - 5 * 60 * 1000);
+
 			scheduleJob(openDate, () => {
 				// eslint-disable-next-line max-len
 				const permissionOverride = channel.permissionOverwrites.find((override) => override.id === channel.guild.roles.everyone.id);
