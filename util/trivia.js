@@ -217,17 +217,21 @@ exports.autoLockHandler = async (message) => {
 				throw new Error(err);
 			});
 		if (message.embeds[0].title.includes('Upcoming Trivia Battle')) {
-			// Unlock and ping 30 seconds before the start
+			// 30 seconds before the start
 			const date = new Date(new Date(message.embeds[0].timestamp) - 30 * 1000);
 			scheduleJob(date, () => {
 				// eslint-disable-next-line max-len
 				const permissionOverride = channel.permissionOverwrites.find((override) => override.id === channel.guild.roles.everyone.id);
-				if (permissionOverride) permissionOverride.delete();
+				if (permissionOverride) permissionOverride.update({ SEND_MESSAGES: true, VIEW_CHANNEL: false }, 'Automatic unlock');
+				else channel.createOverwrite(channel.guild.roles.everyone, { SEND_MESSAGES: true, VIEW_CHANNEL: false }, 'Automatic unlock');
 				channel.send(`<@&${triviaPingRole.value}> Trivia is starting in less than 30 seconds`);
 				channel.setTopic("<a:checkthepins:677867705403047937> Please Read Trivia Rules <a:checkthepins:677867705403047937>\nIf we lose, it's Riku's fault <:Sui_Gun:818108804733730859> If we win, it's because of Suisei <:Sui_Pray:815958089769156609>");
 			});
 		} else if (message.embeds[0].title.includes('We have a winner')) {
-			channel.createOverwrite(channel.guild.roles.everyone, { SEND_MESSAGES: false }, 'Automatic lock');
+			// eslint-disable-next-line max-len
+			const permissionOverride = channel.permissionOverwrites.find((override) => override.id === channel.guild.roles.everyone.id);
+			if (permissionOverride) permissionOverride.update({ SEND_MESSAGES: false, VIEW_CHANNEL: false }, 'Automatic lock');
+			else channel.createOverwrite(channel.guild.roles.everyone, { SEND_MESSAGES: false, VIEW_CHANNEL: false }, 'Automatic lock');
 			channel.send('https://tenor.com/view/hololive-hoshimachi-suisei-suityan-suisei-hoshimati-suisei-gif-20514867');
 			channel.setTopic("<a:checkthepins:677867705403047937> Please Read Trivia Rules <a:checkthepins:677867705403047937>\nIf we lose, it's Riku's fault <:Sui_Gun:818108804733730859> If we win, it's because of Suisei <:Sui_Pray:815958089769156609>");
 		}
