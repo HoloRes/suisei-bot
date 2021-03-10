@@ -219,11 +219,14 @@ exports.autoLockHandler = async (message) => {
 		if (message.embeds[0].title.includes('Upcoming Trivia Battle')) {
 			// 30 seconds before the start
 			const date = new Date(new Date(message.embeds[0].timestamp) - 30 * 1000);
-			scheduleJob(date, () => {
+			const openDate = new Date(new Date(message.embeds[0].timestamp) - 5 * 60 * 1000);
+			scheduleJob(openDate, () => {
 				// eslint-disable-next-line max-len
 				const permissionOverride = channel.permissionOverwrites.find((override) => override.id === channel.guild.roles.everyone.id);
-				if (permissionOverride) permissionOverride.update({ SEND_MESSAGES: true, VIEW_CHANNEL: false }, 'Automatic unlock');
-				else channel.createOverwrite(channel.guild.roles.everyone, { SEND_MESSAGES: true, VIEW_CHANNEL: false }, 'Automatic unlock');
+				if (permissionOverride) permissionOverride.delete('Automatic unlock');
+				channel.createOverwrite(channel.guild.roles.everyone, { VIEW_CHANNEL: false }, 'Automatic unlock');
+			});
+			scheduleJob(date, () => {
 				channel.send(`<@&${triviaPingRole.value}> Trivia is starting in less than 30 seconds`);
 				channel.setTopic("<a:checkthepins:677867705403047937> Please Read Trivia Rules <a:checkthepins:677867705403047937>\nIf we lose, it's Riku's fault <:Sui_Gun:818108804733730859> If we win, it's because of Suisei <:Sui_Pray:815958089769156609>");
 			});
