@@ -227,6 +227,7 @@ exports.autoLockHandler = async (message) => {
 				const permissionOverride = channel.permissionOverwrites.find((override) => override.id === channel.guild.roles.everyone.id);
 				if (permissionOverride) permissionOverride.delete('Automatic unlock');
 				channel.createOverwrite(channel.guild.roles.everyone, { VIEW_CHANNEL: false }, 'Automatic unlock');
+				channel.send(`<@&${triviaPingRole.value}> Trivia is starting in less than 5 minutes`);
 			});
 			scheduleJob(date, () => {
 				channel.send(`<@&${triviaPingRole.value}> Trivia is starting in less than 30 seconds`);
