@@ -69,8 +69,6 @@ async function sendQuestion() {
 		question = customQuestions[index];
 	}
 
-	console.log(question);
-
 	// eslint-disable-next-line no-nested-ternary
 	const answersNonLowercase = customOrOtdb < 200
 		? (customOrOtdb < 100
