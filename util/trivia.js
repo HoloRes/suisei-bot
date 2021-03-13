@@ -23,6 +23,7 @@ let nonAnsweredQuestions = 0;
 let customQuestions = [];
 
 const multipleChoiceRegex = /(which of)|(which one of)|(of the following)|(list the following)/gi;
+const htmlRegex = /<\/?[a-z]+(\s\/)?>/gi;
 
 async function sendQuestion() {
 	const channelSetting = await Setting.findById('triviaTrainChannel').lean().exec()
@@ -40,44 +41,65 @@ async function sendQuestion() {
 			throw new Error(err);
 		});
 
-	const { data } = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple')
+	const { data: otdb } = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple')
 		.catch((err) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'opentdb' } });
 			throw new Error(err);
 		});
 
-	let customOrOtdb = Math.floor(Math.random() * 100);
+	const { data: jservice } = await axios.get('https://jservice.io/api/random')
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'trivia', event: 'jservice' } });
+			throw new Error(err);
+		});
+
+	let customOrOtdb = Math.floor(Math.random() * 300);
 	if (customQuestions.length === 0) customOrOtdb = 2;
 
 	let question;
 	// eslint-disable-next-line prefer-destructuring
-	if (customOrOtdb % 2 === 0) question = data.results[0];
-	else {
+	if (customOrOtdb < 100) question = otdb.results[0];
+	else if (customOrOtdb < 200) {
+		// eslint-disable-next-line prefer-destructuring
+		question = jservice[0];
+	} else {
 		const index = Math.floor(Math.random() * customQuestions.length);
 		question = customQuestions[index];
 	}
+
+	console.log(question);
+
+	// eslint-disable-next-line no-nested-ternary
+	const answersNonLowercase = customOrOtdb < 200
+		? (customOrOtdb < 100
+			? decode(question.correct_answer)
+			: question.answer.replace(htmlRegex, '')
+		) : question.answers.join(', ');
+	// eslint-disable-next-line no-nested-ternary
+	let correctAnswer = customOrOtdb < 200
+		? (customOrOtdb < 100
+			? [decode(question.correct_answer).toLowerCase()]
+			: [question.answer.replace(htmlRegex, '').toLowerCase()]
+		) : [];
 	// eslint-disable-next-line max-len
-	const answersNonLowercase = customOrOtdb % 2 === 0 ? decode(question.correct_answer) : question.answers.join(', ');
-	// eslint-disable-next-line max-len
-	let correctAnswer = customOrOtdb % 2 === 0 ? [decode(question.correct_answer).toLowerCase()] : [];
-	// eslint-disable-next-line max-len
-	if (customOrOtdb % 2 !== 0) correctAnswer = question.answers.map((answer) => answer.toLowerCase());
-	if (multipleChoiceRegex.test(question.question) && customOrOtdb % 2 === 0) return sendQuestion();
+	if (customOrOtdb > 200) correctAnswer = question.answers.map((answer) => answer.toLowerCase());
+	if (multipleChoiceRegex.test(question.question) && customOrOtdb < 100) return sendQuestion();
 
 	const embed = new MessageEmbed()
 		.setTitle(decode(question.question))
-		.setDescription(`**Category:**\n${question.category || 'N/A'}`)
-		.setFooter('Powered by Open Trivia Database')
+		.setDescription(`**Category:**\n${(question.category && question.category.title) || question.category || 'N/A'}`)
+		.setFooter('Powered by Open Trivia Database, JService.io and Alliance Trivia')
 		.setTimestamp();
 
 	await channel.send(embed);
 	const date = new Date();
 
 	let answered = false;
-	let fiveSecondTimerPast = false;
+	let tenSecondTimerPast = false;
 	setTimeout(() => {
-		fiveSecondTimerPast = true;
+		tenSecondTimerPast = true;
 	}, 10000);
 
 	const correctAnswers = [];
@@ -91,7 +113,7 @@ async function sendQuestion() {
 
 		const answer = collectedMsg.content.toLowerCase();
 		if (answered === false && correctAnswer.indexOf(answer) !== -1) {
-			if (fiveSecondTimerPast === true) {
+			if (tenSecondTimerPast === true) {
 				channel.send('First answer received, answers within 1 second will be counted.');
 				setTimeout(() => {
 					collector.stop();
