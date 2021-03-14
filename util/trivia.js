@@ -230,6 +230,7 @@ exports.autoLockHandler = async (message) => {
 
 	if (!triviaChannel || !triviaPingRole) return;
 	if (message.channel.id === triviaChannel.value && message.author.id === '774523954286034965' && message.embeds.length > 0) {
+		if (!message.embeds[0].title) return;
 		const channel = await client.channels.fetch(triviaChannel.value)
 			.catch((err) => {
 				Sentry.captureException(err);
