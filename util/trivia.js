@@ -28,6 +28,8 @@ const htmlRegex = /<\/?[a-z]+(\s\/)?>/gi;
 async function sendQuestion() {
 	const channelSetting = await Setting.findById('triviaTrainChannel').lean().exec()
 		.catch((err) => {
+			channel.send('A crash happened, auto restarting.');
+			sendQuestion();
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'databaseSearch' } });
 			throw new Error(err);
@@ -36,6 +38,8 @@ async function sendQuestion() {
 
 	const channel = await client.channels.fetch(channelSetting.value)
 		.catch((err) => {
+			channel.send('A crash happened, auto restarting.');
+			sendQuestion();
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'discord' } });
 			throw new Error(err);
@@ -43,6 +47,8 @@ async function sendQuestion() {
 
 	const { data: otdb } = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple')
 		.catch((err) => {
+			channel.send('A crash happened, auto restarting.');
+			sendQuestion();
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'opentdb' } });
 			throw new Error(err);
@@ -50,6 +56,8 @@ async function sendQuestion() {
 
 	const { data: jservice } = await axios.get('https://jservice.io/api/random')
 		.catch((err) => {
+			channel.send('A crash happened, auto restarting.');
+			sendQuestion();
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'jservice' } });
 			throw new Error(err);
