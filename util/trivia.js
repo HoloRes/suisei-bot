@@ -28,8 +28,9 @@ const htmlRegex = /<\/?[a-z]+(\s\/)?>/gi;
 async function sendQuestion() {
 	const channelSetting = await Setting.findById('triviaTrainChannel').lean().exec()
 		.catch((err) => {
-			channel.send('A crash happened, auto restarting.');
-			sendQuestion();
+			channel.send('A crash happened, please restart using `/triviatrain`.');
+			active = false;
+			nonAnsweredQuestions = 0;
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'databaseSearch' } });
 			throw new Error(err);
@@ -47,8 +48,9 @@ async function sendQuestion() {
 
 	const { data: otdb } = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple')
 		.catch((err) => {
-			channel.send('A crash happened, auto restarting.');
-			sendQuestion();
+			channel.send('A crash happened, please restart using `/triviatrain`.');
+			active = false;
+			nonAnsweredQuestions = 0;
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'opentdb' } });
 			throw new Error(err);
@@ -217,6 +219,11 @@ async function reload() {
 }
 
 exports.reload = reload;
+
+exports.forceStop = () => {
+	nonAnsweredQuestions = 0;
+	active = false;
+};
 
 exports.init = async () => {
 	reload();
