@@ -72,6 +72,7 @@ const youtubeNotifications = require('$/util/youtube');
 const twitterNotifications = require('$/util/twitter');
 const dashboardRouter = require('$/routers/dashboard');
 const moderation = require('$/util/moderation');
+const trivia = require('$/util/trivia');
 
 // Variables
 
@@ -113,6 +114,9 @@ youtubeNotifications.init(logger, holoClient, client);
 
 // Moderation
 moderation.init();
+
+// Trivia module
+trivia.init();
 
 // Code
 // Functions
@@ -183,7 +187,7 @@ client.on('ready', () => {
 	client.guilds.fetch(config.discord.serverId)
 		.then((mainGuild) => mainGuild.members.fetch())
 		.catch((e) => logger.error(e));
-	logger.info('Bot online', { labels: { module: 'index' } });
+	logger.info(`Bot online, version: ${process.env.COMMIT_SHA.substring(0, 10)}`, { labels: { module: 'index' } });
 });
 
 // Ping list reaction handler
@@ -267,6 +271,7 @@ client.on('guildMemberAdd', async (member) => {
 
 // Auto publish handler
 client.on('message', (message) => {
+	trivia.autoLockHandler(message);
 	AutoPublish.findById(message.channel.id, (err, doc) => {
 		if (err) {
 			Sentry.captureException(err);

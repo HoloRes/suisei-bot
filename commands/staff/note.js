@@ -8,7 +8,7 @@ const config = require('$/config.json');
 const urlRegex = /https?(:\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#/%=~_|$?!:,.]*\)|[A-Z0-9+&@#/%=~_|$])/igm;
 
 exports.run = async (client, message, args) => {
-	if (args.length < 1) return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/edit/remove/list> <note/noteid> <note (update)>`);
+	if (args.length < 1 || args[0].length === 0) return message.channel.send(`**USAGE:** ${config.discord.prefix}note <member> <add/edit/remove/list> <note/noteid> <note (update)>`);
 
 	const member = await moderation.getMemberFromMessage(message, args)
 		.catch((err) => message.channel.send(err.info));

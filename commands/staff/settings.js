@@ -7,12 +7,16 @@ const Setting = require('$/models/setting');
 
 // Local files
 const config = require('$/config.json');
-const { logger } = require('$/index');
+const { logger, client } = require('$/index');
 
 // Init
 const availableSettings = [ // Available types: user, role, channel, string
 	{ name: 'mutedRole', type: 'role' },
 	{ name: 'modLogChannel', type: 'channel' },
+	{ name: 'triviaChannel', type: 'channel' },
+	{ name: 'triviaTrainChannel', type: 'channel' },
+	{ name: 'triviaQuestionsUrl', type: 'string' },
+	{ name: 'triviaPingRole', type: 'role' },
 ];
 
 // Functions
@@ -103,10 +107,10 @@ function getChannel(message, arg) {
 		if (message.mentions.channels.size === 1) {
 			resolve(message.mentions.channels.first());
 		} else {
-			message.guild.channels.fetch(arg)
+			client.channels.fetch(arg)
 				.then((channel) => resolve(channel))
 				.catch(() => {
-					message.guild.channels.fetch()
+					client.channels.fetch()
 						.then(() => {
 							const channel = message.guild.channels.cache.find(
 								(cachedChannel) => cachedChannel.name.toLowerCase() === arg.toLowerCase(),
