@@ -194,7 +194,7 @@ client.on('ready', () => {
 client.on('messageReactionAdd', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
-		PingSubscription.findById(messageReaction.message.id, (err, doc) => {
+		PingSubscription.find({ messageID: messageReaction.message.id }, (err, doc) => {
 			if (err) {
 				Sentry.captureException(err);
 				return logger.error(err, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSearch'] } });
@@ -213,7 +213,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 client.on('messageReactionRemove', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
-		PingSubscription.findById(messageReaction.message.id, (err, doc) => {
+		PingSubscription.find({ messageID: messageReaction.message.id }, (err, doc) => {
 			if (err) {
 				Sentry.captureException(err);
 				return logger.error(err, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSearch'] } });

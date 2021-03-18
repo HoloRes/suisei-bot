@@ -18,14 +18,22 @@ Sentry.configureScope((scope) => {
 });
 
 async function fetchLivestreams(logger, holoClient, client) {
-	const streams = await holoClient.videos.getLivestreams(undefined, 72, 0, true);
+	const streams = await holoClient.videos.getLivestreams(undefined, 72, 1, true);
 
 	const updatedChannels = [];
+
+	streams.ended.forEach((ls) => {
+		Livestream.findByIdAndDelete(ls.youtubeId, (err) => {
+			if (err) {
+				logger.error(err, { labels: { module: 'youtube', event: 'databaseSearch' } });
+			}
+		});
+	});
 
 	// noinspection ES6MissingAwait
 	streams.live.forEach(async (ls) => {
 		const sub = await Subscription.findById(ls.channel.youtubeId).exec()
-			.catch((err) => logger.error(err));
+			.catch((err) => logger.error(err, { labels: { module: 'youtube', event: 'databaseSearch' } }));
 		if (!sub) return;
 
 		// noinspection ES6MissingAwait
@@ -54,7 +62,7 @@ async function fetchLivestreams(logger, holoClient, client) {
 				return;
 			}
 			const ytChannel = await YT.channels.list({ auth: config.YtApiKey, id: ls.channel.youtubeId, part: 'snippet' })
-				.catch((err) => logger.error(err));
+				.catch((err) => logger.error(err, { labels: { module: 'youtube', event: 'youtubeApi' } }));
 
 			const msg = await webhook.send(ch.message, {
 				embeds: [embed],
