@@ -184,8 +184,8 @@ client.on('ready', () => {
 	loadcmds();
 	client.guilds.fetch(config.discord.serverId)
 		.then((mainGuild) => mainGuild.members.fetch())
-		.catch((e) => logger.error(e));
 	logger.info(`Bot online, version: ${process.env.COMMIT_SHA.substring(0, 10)}`, { labels: { module: 'index' } });
+		.catch((e) => logger.error(e, { labels: { module: 'index', event: 'discord' } }));
 });
 
 // Ping list reaction handler
@@ -203,7 +203,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 			if (index !== -1) return;
 			doc.users.push(user.id);
 			doc.save();
-			logger.debug(`${user.tag} has been added to ${doc.name}`);
+			logger.debug(`${user.tag} has been added to ${doc.name}`, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSave'] } });
 		});
 	});
 });
@@ -222,7 +222,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 			if (index === -1) return;
 			doc.users.splice(index, 1);
 			doc.save();
-			logger.debug(`${user.tag} has been removed from ${doc.name}`);
+			logger.debug(`${user.tag} has been removed from ${doc.name}`, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSave'] } });
 		});
 	});
 });
