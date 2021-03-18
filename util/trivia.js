@@ -28,7 +28,6 @@ const htmlRegex = /<\/?[a-z]+(\s\/)?>/gi;
 async function sendQuestion() {
 	const channelSetting = await Setting.findById('triviaTrainChannel').lean().exec()
 		.catch((err) => {
-			channel.send('A crash happened, please restart using `/triviatrain`.');
 			active = false;
 			nonAnsweredQuestions = 0;
 			Sentry.captureException(err);
@@ -39,7 +38,6 @@ async function sendQuestion() {
 
 	const channel = await client.channels.fetch(channelSetting.value)
 		.catch((err) => {
-			channel.send('A crash happened, auto restarting.');
 			sendQuestion();
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'trivia', event: 'discord' } });
