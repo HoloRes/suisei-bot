@@ -22,7 +22,6 @@ const config = require('$/config.json');
 
 // Pre-init
 // Winston logger
-const date = new Date().toISOString();
 const logger = winston.createLogger({
 	level: config.logLevel,
 	transports: [
