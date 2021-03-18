@@ -4,7 +4,6 @@ const Discord = require('discord.js');
 const mongoose = require('mongoose'); // Library for MongoDB
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
 const Sentry = require('@sentry/node');
 const winston = require('winston'); // Advanced logging library
 const sequence = require('mongoose-sequence');
@@ -22,7 +21,6 @@ const config = require('$/config.json');
 
 // Pre-init
 // Winston logger
-const date = new Date().toISOString();
 const logger = winston.createLogger({
 	level: config.logLevel,
 	transports: [
@@ -186,15 +184,15 @@ client.on('ready', () => {
 	loadcmds();
 	client.guilds.fetch(config.discord.serverId)
 		.then((mainGuild) => mainGuild.members.fetch())
-		.catch((e) => logger.error(e));
 	logger.info(`Bot online, version: ${process.env.COMMIT_SHA.substring(0, 10)}`, { labels: { module: 'index' } });
+		.catch((e) => logger.error(e, { labels: { module: 'index', event: 'discord' } }));
 });
 
 // Ping list reaction handler
 client.on('messageReactionAdd', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
-		PingSubscription.findById(messageReaction.message.id, (err, doc) => {
+		PingSubscription.find({ messageID: messageReaction.message.id }, (err, doc) => {
 			if (err) {
 				Sentry.captureException(err);
 				return logger.error(err, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSearch'] } });
@@ -205,7 +203,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 			if (index !== -1) return;
 			doc.users.push(user.id);
 			doc.save();
-			logger.debug(`${user.tag} has been added to ${doc.name}`);
+			logger.debug(`${user.tag} has been added to ${doc.name}`, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSave'] } });
 		});
 	});
 });
@@ -213,7 +211,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 client.on('messageReactionRemove', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
-		PingSubscription.findById(messageReaction.message.id, (err, doc) => {
+		PingSubscription.find({ messageID: messageReaction.message.id }, (err, doc) => {
 			if (err) {
 				Sentry.captureException(err);
 				return logger.error(err, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSearch'] } });
@@ -224,7 +222,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 			if (index === -1) return;
 			doc.users.splice(index, 1);
 			doc.save();
-			logger.debug(`${user.tag} has been removed from ${doc.name}`);
+			logger.debug(`${user.tag} has been removed from ${doc.name}`, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSave'] } });
 		});
 	});
 });
