@@ -16,7 +16,6 @@ const Tracing = require('@sentry/tracing');
 const PingSubscription = require('$/models/pingSubscription');
 const AutoPublish = require('$/models/publish');
 const Mute = require('$/models/activeMute');
-const { previewMessageHandler } = require('$/util/functions');
 
 // Local config files
 const config = require('$/config.json');
@@ -73,6 +72,7 @@ const youtubeNotifications = require('$/util/youtube');
 const twitterNotifications = require('$/util/twitter');
 const dashboardRouter = require('$/routers/dashboard');
 const moderation = require('$/util/moderation');
+const { previewMessageHandler } = require('$/util/functions');
 const trivia = require('$/util/trivia');
 
 // Variables
