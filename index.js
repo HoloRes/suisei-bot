@@ -16,6 +16,7 @@ const Tracing = require('@sentry/tracing');
 const PingSubscription = require('$/models/pingSubscription');
 const AutoPublish = require('$/models/publish');
 const Mute = require('$/models/activeMute');
+const { previewMessageHandler } = require('$/util/functions');
 
 // Local config files
 const config = require('$/config.json');
@@ -302,6 +303,7 @@ client.on('message', (message) => {
 // Message handler
 client.on('message', (message) => {
 	if (message.author.bot) return;
+	previewMessageHandler(message);
 	if (message.content.startsWith(config.discord.prefix)) { // User command handler
 		const cont = message.content.slice(config.discord.prefix.length).split(' ');
 		const args = cont.slice(1).join(' ').trim().split(' ');

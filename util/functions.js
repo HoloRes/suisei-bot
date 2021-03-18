@@ -20,3 +20,7 @@ exports.confirmRequest = (msg, authorId) => new Promise((resolve, reject) => {
 		reject(new Error(e));
 	}
 });
+
+exports.previewMessageHandler = (msg) => {
+
+};
