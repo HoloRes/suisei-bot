@@ -4,7 +4,6 @@ const Discord = require('discord.js');
 const mongoose = require('mongoose'); // Library for MongoDB
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
 const Sentry = require('@sentry/node');
 const winston = require('winston'); // Advanced logging library
 const sequence = require('mongoose-sequence');
