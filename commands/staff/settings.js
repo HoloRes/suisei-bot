@@ -130,7 +130,7 @@ function send(message, setting, value) {
 }
 
 // Command
-exports.run = async (client, message, args) => {
+exports.run = async (discordClient, message, args) => {
 	if (!args[0]) return message.channel.send(`**USAGE:** ${config.discord.prefix}settings <setting> <value>`);
 
 	let settings = '';
