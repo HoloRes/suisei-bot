@@ -342,7 +342,7 @@ exports.hardmute = (member, moderator) => new Promise((resolve, reject) => {
 	});
 });
 
-function kick(member, reason, moderator) {
+function kick(member, reason, moderator, tos) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
 		const logItem = new LogItem({
@@ -360,32 +360,35 @@ function kick(member, reason, moderator) {
 			}
 			log(logItem, '#f54242');
 
-			const strike = new Strike({
-				_id: logItem._id,
-				userId: member.id,
-			});
-			strike.save((err2) => {
-				Sentry.captureException(err2);
-				logger.error(err2, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
-				reject(new ModerationError(err2));
-			});
-		});
-
-		Mute.findOneAndDelete({ userId: member.id }, (err, doc) => {
-			if (err) {
-				Sentry.captureException(err);
-				logger.error(err, { labels: { module: 'moderation', event: ['kick', 'databaseSearch'] } });
+			if (!tos) {
+				const strike = new Strike({
+					_id: logItem._id,
+					userId: member.id,
+				});
+				strike.save((err2) => {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
+					reject(new ModerationError(err2));
+				});
 			}
-
-			if (!err && doc) {
-				try {
-					plannedUnmutes[doc._id].cancel();
-				} catch (e) {
+		});
+		if (!tos) {
+			Mute.findOneAndDelete({ userId: member.id }, (err, doc) => {
+				if (err) {
 					Sentry.captureException(err);
-					logger.error(err, { labels: { module: 'moderation', event: ['kick', 'unmute'] } });
+					logger.error(err, { labels: { module: 'moderation', event: ['kick', 'databaseSearch'] } });
 				}
-			}
-		});
+
+				if (!err && doc) {
+					try {
+						plannedUnmutes[doc._id].cancel();
+					} catch (e) {
+						Sentry.captureException(err);
+						logger.error(err, { labels: { module: 'moderation', event: ['kick', 'unmute'] } });
+					}
+				}
+			});
+		}
 
 		updateMember(member);
 
@@ -594,7 +597,11 @@ exports.tosviolation = (member, reason, moderator) => new Promise((resolve, reje
 				.catch(reject);
 		} else {
 			mute(member, 7 * 24 * 60, reason, moderator, true)
-				.then(resolve)
+				.then(() => {
+					kick(member, reason, moderator, true)
+						.then(resolve)
+						.catch(reject);
+				})
 				.catch(reject);
 		}
 	});
