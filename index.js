@@ -70,6 +70,7 @@ const youtubeNotifications = require('$/util/youtube');
 const twitterNotifications = require('$/util/twitter');
 const dashboardRouter = require('$/routers/dashboard');
 const moderation = require('$/util/moderation');
+const { previewMessageHandler } = require('$/util/functions');
 const trivia = require('$/util/trivia');
 
 // Variables
@@ -300,6 +301,7 @@ client.on('message', (message) => {
 // Message handler
 client.on('message', (message) => {
 	if (message.author.bot) return;
+	previewMessageHandler(message);
 	if (message.content.startsWith(config.discord.prefix)) { // User command handler
 		const cont = message.content.slice(config.discord.prefix.length).split(' ');
 		const args = cont.slice(1).join(' ').trim().split(' ');
