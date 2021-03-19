@@ -1,8 +1,7 @@
-name: Create Docker image
+name: Create staging Docker image
 on:
-  push:
-    branches:
-      - master
+  pull_request:
+    branches: [master]
 
 jobs:
   deploy:
@@ -20,7 +19,7 @@ jobs:
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
-          environment: production
+          environment: staging
 
       - name: Docker meta
         id: docker_meta
@@ -30,7 +29,7 @@ jobs:
           tag-sha: true
           tag-custom: |
             latest
-            prod
+            staging
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1

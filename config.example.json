@@ -10,10 +10,9 @@
     "prefix": "",
     "devprefix": "",
     "roles": {
-      "musician": "",
-      "staff": "",
       "dev": ""
-    }
+    },
+    "serverId": ""
   },
   "s3": {
     "endpoint": "",
@@ -21,20 +20,20 @@
     "accessKeyId": "",
     "secretAccessKey": ""
   },
-  "PubHubSubBub": {
-    "secret": "",
-    "hubPort": 80,
-    "callbackUrl": "",
-    "hubUrl": ""
-  },
   "twitter": {
     "consumer_key": "",
     "consumer_secret": "",
     "access_token_key": "",
     "access_token_secret": ""
   },
+  "previewApprovedChannels": [],
   "YtApiKey": "",
+  "expressPort": 80,
+  "apiToken": "",
+  "socketToken": "",
+  "panelUrl": "",
   "sentryDsn": "",
+  "lokiHost": "",
   "environment": "production",
   "logLevel": "info"
 }
