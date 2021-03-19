@@ -10,7 +10,7 @@ const { logger, holoClient } = require('$/index');
 const { confirmRequest } = require('$/util/functions');
 
 exports.run = async (client, message, args) => {
-	if (!args.length < 3) return message.channel.send(`**USAGE:** ${config.discord.prefix}subscribe <YouTube channel id> <Discord channel id> <message>`);
+	if (args.length < 3) return message.channel.send(`**USAGE:** ${config.discord.prefix}subscribe <YouTube channel id> <Discord channel id> <message>`);
 
 	const channel = await holoClient.channels.getByYouTubeId(args[0])
 		.catch((err) => {

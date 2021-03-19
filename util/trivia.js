@@ -91,6 +91,7 @@ async function sendQuestion() {
 		) : [];
 	// eslint-disable-next-line max-len
 	if (customOrOtdb > 200) correctAnswer = question.answers.map((answer) => answer.toLowerCase());
+	multipleChoiceRegex.lastIndex = 0;
 	if (multipleChoiceRegex.test(question.question) && customOrOtdb < 100) return sendQuestion();
 
 	const embed = new MessageEmbed()

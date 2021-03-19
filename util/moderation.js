@@ -144,6 +144,7 @@ function unmute(member, reason, moderator) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['unmute', 'databaseSearch'] } });
 				reject(new ModerationError(err));
+				return;
 			}
 			await member.fetch();
 			if (!member.roles.cache.has(setting.value)) return reject(new ModerationError('', 'This member is not muted'));
@@ -303,6 +304,7 @@ exports.hardmute = (member, moderator) => new Promise((resolve, reject) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['hardmute', 'databaseSave'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 		if (!doc) return reject(new ModerationError('', 'Member is not muted'));
 
@@ -504,6 +506,7 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['strike', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 		if (docs.length === 0) {
 			mute(member, 24 * 60, reason, moderator)
@@ -578,6 +581,7 @@ exports.tosviolation = (member, reason, moderator) => new Promise((resolve, reje
 			Sentry.captureException(err2);
 			logger.error(err2, { labels: { module: 'moderation', event: ['tosviolation', 'databaseSearch'] } });
 			reject(new ModerationError(err2));
+			return;
 		}
 
 		const activeStrikes = strikes.filter(
@@ -602,6 +606,7 @@ exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) =>
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['revoke', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
 		if (!doc) reject(new ModerationError('', 'Strike not found'));
@@ -611,6 +616,7 @@ exports.revoke = (caseID, reason, moderator) => new Promise((resolve, reject) =>
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['revoke', 'databaseSearch'] } });
 					reject(new ModerationError(err2));
+					return;
 				}
 
 				log({
@@ -632,6 +638,7 @@ exports.getMemberModLogs = (member) => new Promise((resolve, reject) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['getMemberModLogs', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
 		Strike.find({ userId: member.id }, (err2, strikes) => {
@@ -639,6 +646,7 @@ exports.getMemberModLogs = (member) => new Promise((resolve, reject) => {
 				Sentry.captureException(err2);
 				logger.error(err2, { labels: { module: 'moderation', event: ['getMemberModLogs', 'databaseSearch'] } });
 				reject(new ModerationError(err2));
+				return;
 			}
 
 			const activeStrikes = strikes.filter(
@@ -662,9 +670,10 @@ exports.getModLogByCaseID = (caseID) => new Promise((resolve, reject) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['getModLogByCaseID', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
-		if (!doc) reject(new ModerationError(err, 'Moderation action not found'));
+		if (!doc) return reject(new ModerationError(err, 'Moderation action not found'));
 
 		resolve({ data: doc });
 	});
@@ -676,9 +685,10 @@ exports.updateReason = (caseID, reason) => new Promise((resolve, reject) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['updateReason', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
-		if (!doc) reject(new ModerationError('', 'Moderation action not found'));
+		if (!doc) return reject(new ModerationError('', 'Moderation action not found'));
 
 		// eslint-disable-next-line no-param-reassign
 		doc.reason = reason;
@@ -701,6 +711,7 @@ exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['addNote', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
 		doc.notes.push({
@@ -726,6 +737,7 @@ exports.updateNote = (member, noteID, note) => new Promise(async (resolve, rejec
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['updateNote', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
 		const index = doc.notes.findIndex((noteI) => noteI._id === noteID);
@@ -753,6 +765,7 @@ exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => 
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['removeNote', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
 		const index = doc.notes.findIndex((note) => note._id === noteID);
