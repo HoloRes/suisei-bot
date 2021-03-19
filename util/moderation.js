@@ -789,6 +789,7 @@ exports.getNotes = (member) => new Promise((resolve, reject) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['getNotes', 'databaseSearch'] } });
 			reject(new ModerationError(err));
+			return;
 		}
 
 		if (!doc || !doc.notes) {
