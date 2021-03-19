@@ -61,7 +61,6 @@ exports.previewMessageHandler = async (message) => {
 	let attachmentsString = '';
 	let i = 1;
 	msg.attachments.each((attachment) => {
-		// TODO: Look into url vs proxyURL
 		attachmentsString += `[Attachment ${i}](${attachment.url})`;
 		i += 1;
 	});

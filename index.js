@@ -3,7 +3,6 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const mongoose = require('mongoose'); // Library for MongoDB
 const express = require('express');
-const axios = require('axios');
 const Sentry = require('@sentry/node');
 const winston = require('winston'); // Advanced logging library
 const sequence = require('mongoose-sequence');
@@ -185,26 +184,26 @@ client.on('ready', () => {
 	loadcmds();
 	client.guilds.fetch(config.discord.serverId)
 		.then((mainGuild) => mainGuild.members.fetch())
-	logger.info(`Bot online, version: ${process.env.COMMIT_SHA.substring(0, 10)}`, { labels: { module: 'index' } });
 		.catch((e) => logger.error(e, { labels: { module: 'index', event: 'discord' } }));
+	logger.info(`Bot online, version: ${process.env.COMMIT_SHA.substring(0, 10)}`, { labels: { module: 'index' } });
 });
 
 // Ping list reaction handler
 client.on('messageReactionAdd', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
-		PingSubscription.find({ messageID: messageReaction.message.id }, (err, doc) => {
+		PingSubscription.findOne({ messageID: messageReaction.message.id }, (err, doc) => {
 			if (err) {
 				Sentry.captureException(err);
 				return logger.error(err, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSearch'] } });
 			}
-			if (!doc || reaction.emoji.name !== doc.emoji) return;
+			if (!doc || (reaction.emoji.id !== doc.emoji && reaction.emoji.name !== doc.emoji)) return;
 			const filter = (id) => id === user.id;
 			const index = doc.users.findIndex(filter);
 			if (index !== -1) return;
 			doc.users.push(user.id);
 			doc.save();
-			logger.debug(`${user.tag} has been added to ${doc.name}`, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSave'] } });
+			logger.debug(`${user.tag} has been added to ${doc._id}`, { labels: { module: 'index', event: ['messageReactionAdd', 'databaseSave'] } });
 		});
 	});
 });
@@ -212,18 +211,18 @@ client.on('messageReactionAdd', (reaction, user) => {
 client.on('messageReactionRemove', (reaction, user) => {
 	if (user.id === client.user.id) return;
 	reaction.fetch().then((messageReaction) => {
-		PingSubscription.find({ messageID: messageReaction.message.id }, (err, doc) => {
+		PingSubscription.findOne({ messageID: messageReaction.message.id }, (err, doc) => {
 			if (err) {
 				Sentry.captureException(err);
 				return logger.error(err, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSearch'] } });
 			}
-			if (!doc || reaction.emoji.name !== doc.emoji) return;
+			if (!doc || (reaction.emoji.id !== doc.emoji && reaction.emoji.name !== doc.emoji)) return;
 			const filter = (id) => id === user.id;
 			const index = doc.users.findIndex(filter);
 			if (index === -1) return;
 			doc.users.splice(index, 1);
 			doc.save();
-			logger.debug(`${user.tag} has been removed from ${doc.name}`, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSave'] } });
+			logger.debug(`${user.tag} has been removed from ${doc._id}`, { labels: { module: 'index', event: ['messageReactionRemove', 'databaseSave'] } });
 		});
 	});
 });
@@ -271,24 +270,15 @@ client.on('guildMemberAdd', async (member) => {
 // Auto publish handler
 client.on('message', (message) => {
 	trivia.autoLockHandler(message);
+	previewMessageHandler(message);
 	AutoPublish.findById(message.channel.id, (err, doc) => {
 		if (err) {
 			Sentry.captureException(err);
 			return logger.error(err, { labels: { module: 'index', event: ['autoPublish', 'databaseSearch'] } });
 		}
 		if (doc) {
-			const { options: { http } } = client;
 			if (doc.autoPublish === true && message.channel.type === 'news') {
-				axios({
-					method: 'POST',
-					url: `${http.api}/v${http.version}/channels/${message.channel.id}/messages/${message.id}/crosspost`,
-					headers: {
-						Authorization: `Bot ${config.discord.token}`,
-					},
-				}).catch((err2) => {
-					Sentry.captureException(err2);
-					return logger.error(err2, { labels: { module: 'index', event: ['autoPublish', 'axios'] } });
-				});
+				if (message.crosspostable) message.crosspost();
 			} else {
 				// eslint-disable-next-line no-param-reassign
 				doc.autoPublish = false;
@@ -301,7 +291,6 @@ client.on('message', (message) => {
 // Message handler
 client.on('message', (message) => {
 	if (message.author.bot) return;
-	previewMessageHandler(message);
 	if (message.content.startsWith(config.discord.prefix)) { // User command handler
 		const cont = message.content.slice(config.discord.prefix.length).split(' ');
 		const args = cont.slice(1).join(' ').trim().split(' ');

@@ -59,7 +59,7 @@ exports.run = async (client, message, args) => {
 		const emoji = message.guild.emojis.resolve(args[1]);
 		if (!emoji) return message.reply("That emote doesn't exist.");
 
-		createList(message, channel, emoji, `<:${emoji.name}:${emoji.id}>`, name);
+		createList(message, channel, emoji, emoji.id, name);
 	}
 };
 

@@ -9,7 +9,7 @@ const { confirmRequest } = require('$/util/functions');
 const { logger } = require('$/index');
 
 exports.run = async (client, message, args) => {
-	const channel = client.channels.fetch(args[0])
+	const channel = await client.channels.fetch(args[0])
 		.catch((err) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'commands', event: ['ping', 'discord'] } });
