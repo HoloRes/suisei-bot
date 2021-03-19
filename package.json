@@ -27,7 +27,7 @@
     "pubsubhubbub": "^1.0.1",
     "shortid": "^2.2.16",
     "socket.io": "^3.1.2",
-    "twitter-lite": "^0.14.0",
+    "twitter-lite": "^1.0.0",
     "winston": "^3.3.3",
     "winston-loki": "^6.0.0"
   },
