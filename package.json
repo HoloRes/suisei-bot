@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@holores/holoapi": "^1.0.6",
-    "@sentry/node": "^5.30.0",
+    "@sentry/node": "^6.0.0",
     "@sentry/tracing": "^6.2.2",
     "aws-sdk": "^2.867.0",
     "axios": "^0.21.1",
