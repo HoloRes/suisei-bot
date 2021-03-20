@@ -9,7 +9,7 @@
     "@sentry/tracing": "^6.2.2",
     "aws-sdk": "^2.867.0",
     "axios": "^0.21.1",
-    "basetag": "^2.0.0",
+    "basetag": "^2.0.1",
     "discord.js": "^12.5.1",
     "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
@@ -39,7 +39,8 @@
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint --fix ."
+    "lint": "eslint --fix .",
+    "postinstall": "basetag link"
   },
   "repository": {
     "type": "git",
