@@ -16,5 +16,8 @@ RUN npm ci
 # Copy remaining files except files in .dockerignore
 COPY . .
 
+# Setup basetag
+RUN npx basetag link
+
 # Set start command
 CMD ["node", "index.js", "--trace-events-enabled", "--trace-warnings"]

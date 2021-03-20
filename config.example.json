@@ -14,12 +14,6 @@
     },
     "serverId": ""
   },
-  "s3": {
-    "endpoint": "",
-    "bucket": "",
-    "accessKeyId": "",
-    "secretAccessKey": ""
-  },
   "twitter": {
     "consumer_key": "",
     "consumer_secret": "",
