@@ -4,7 +4,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b51d4f31ca6747d983303a10c17fcb9f)](https://www.codacy.com/gh/HoloRes/suisei-mic/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=HoloRes/suisei-mic&amp;utm_campaign=Badge_Grade)
 [![Jira badge](https://img.shields.io/badge/-Jira-blue?style=flat&logo=jira)](https://holores.atlassian.net/browse/SUI)
 
-## This branch holds the code for version 3.0.0, the upcoming version that will support multiserver.
+## This branch holds the code for version 3.0.0, the upcoming version that will support multiserver
 This is a full rewrite, so a lot (at the moment of writing all) functionality is not implemented yet.
 
 For a stable version you can deploy, although needing some modification to do so, can be found on the master branch and the prod tag of the Docker image.
