@@ -1,4 +1,0 @@
-# Ignore everything in this directory so that it get pushed to GitHub
-*
-# Except this file
-!.gitignore

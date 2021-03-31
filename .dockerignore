@@ -1,7 +1,7 @@
-tmp
+src/tmp
 .github
 logs
 .git
 config.example.json
 # Disable eval command for safety reasons
-commands/dev/eval.js
+src/commands/dev/eval.js

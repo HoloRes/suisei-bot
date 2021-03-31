@@ -1,9 +1,9 @@
 // Imports
-// Packages
-const util = require('util');
+import util from 'util';
+import Discord from 'discord.js';
 
-exports.run = (client, message, args) => {
-	function clean(text) {
+export function run(client: Discord.Client, message: Discord.Message, args: string[]): void {
+	function clean(text: string | any) {
 		if (typeof (text) === 'string') return text.replace(/'/g, `\`${String.fromCharCode(8203)}`).replace(/@/g, `@${String.fromCharCode(8203)}`);
 		return text;
 	}
@@ -18,8 +18,8 @@ exports.run = (client, message, args) => {
 	} catch (err) {
 		message.channel.send(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
 	}
-};
+}
 
-exports.config = {
+export const config = {
 	command: 'eval',
 };
