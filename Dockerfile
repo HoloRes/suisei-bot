@@ -1,6 +1,8 @@
 # Select NodeJS LTS image
 FROM node:lts-buster
 
+# TODO: Rewrite this to compile TS and use those files
+
 # For Sentry release tracking
 ARG sha
 ENV COMMIT_SHA=$sha
@@ -18,9 +20,6 @@ RUN npx basetag link
 
 # Copy remaining files except files in .dockerignore
 COPY . .
-
-# Setup basetag
-RUN npx basetag link
 
 # Set start command
 CMD ["node", "index.js", "--trace-events-enabled", "--trace-warnings"]
