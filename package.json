@@ -1,6 +1,6 @@
 {
-  "name": "suisei-mic",
-  "version": "2.2.1",
+  "name": "suisei-bot",
+  "version": "3.0.0",
   "description": "A custom bot for the Hololive Resort Discord",
   "main": "index.js",
   "dependencies": {
@@ -27,16 +27,20 @@
     "winston-loki": "^6.0.0"
   },
   "devDependencies": {
+    "@tsconfig/node14": "^1.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.20.0",
+    "@typescript-eslint/parser": "^4.20.0",
     "eslint": "7.23.0",
     "eslint-config-airbnb-base": "14.2.1",
-    "eslint-plugin-import": "2.22.1"
+    "eslint-plugin-import": "2.22.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
   },
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --fix .",
-    "lint:ci": "eslint \"./src/**\" ;exit 0",
-    "postinstall": "basetag link"
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
