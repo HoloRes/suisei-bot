@@ -2,7 +2,7 @@
   "compilerOptions": {
 	"outDir": "./dist",
 	"target": "es6",
-	"typeRoots": ["./node_modules/@types", "./src/custom_typings"],
+	"typeRoots": ["./node_modules/@types"],
 	"resolveJsonModule": true
   },
   "include": [

@@ -7,9 +7,11 @@ import winston from 'winston'; // Advanced logging library
 import LokiTransport from 'winston-loki';
 import Tracing from '@sentry/tracing';
 
-// Local config files
-import config from '../config.json';
+// Types
 import { ExtendedClient } from './types';
+
+// Local config files
+const config = require('../config.json');
 
 // Pre-init
 // Winston logger
