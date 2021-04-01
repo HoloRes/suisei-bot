@@ -11,7 +11,7 @@
     "basetag": "^2.0.1",
     "discord.js": "^12.5.1",
     "express": "^4.17.1",
-    "googleapis": "^68.0.0",
+    "googleapis": "^70.0.0",
     "html-entities": "^2.1.1",
     "humanize-duration": "^3.25.1",
     "moment": "^2.29.1",
