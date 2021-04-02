@@ -11,15 +11,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Sentry Release
-        uses: getsentry/action-release@v1.1.5
-        env:
-          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: staging
+#      - name: Sentry Release
+#        uses: getsentry/action-release@v1.1.5
+#        env:
+#          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+#          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+#          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+#          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+#        with:
+#          environment: staging
 
       - name: Docker meta
         id: docker_meta
