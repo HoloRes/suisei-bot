@@ -13,7 +13,7 @@ COPY package.json .
 COPY package-lock.json .
 
 # Install packages
-RUN npm ci
+RUN npm ci --also=dev
 
 # Copy remaining files except files in .dockerignore
 COPY . .
