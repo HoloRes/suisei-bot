@@ -4,7 +4,6 @@ import Discord from 'discord.js';
 import mongoose from 'mongoose'; // Library for MongoDB
 import Sentry from '@sentry/node';
 import winston from 'winston'; // Advanced logging library
-import LokiTransport from 'winston-loki';
 import Tracing from '@sentry/tracing';
 
 // Types
@@ -19,11 +18,6 @@ const logger = winston.createLogger({
 	level: config.logLevel,
 	transports: [
 		new winston.transports.Console(),
-		new LokiTransport({
-			host: config.lokiHost,
-			labels: { service: 'suisei' },
-			level: 'debug',
-		}),
 	],
 });
 
@@ -107,7 +101,7 @@ client.on('ready', () => {
 
 // Message handler
 client.on('message', (message) => {
-	if (message.author.bot) return;
+	if (message.author.bot || message.channel.type === 'dm') return;
 	if (message.content.startsWith(config.discord.prefix)) { // User command handler
 		const cont = message.content.slice(config.discord.prefix.length).split(' ');
 		const args = cont.slice(1).join(' ').trim().split(' ');
