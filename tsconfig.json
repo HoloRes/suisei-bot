@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+	"outDir": "./dist",
+	"target": "es6",
+	"typeRoots": ["./node_modules/@types"],
+	"resolveJsonModule": true
+  },
+  "include": [
+	"./src/**/*"
+  ],
+  "extends": "@tsconfig/node14/tsconfig.json"
+}
