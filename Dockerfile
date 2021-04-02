@@ -13,7 +13,7 @@ COPY package.json .
 COPY package-lock.json .
 
 # Install packages
-RUN npm ci --ignore-scripts
+RUN npm ci --also=dev
 
 # Symlink $ to source code dir
 RUN npx basetag link
