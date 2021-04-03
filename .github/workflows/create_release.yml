@@ -27,10 +27,12 @@ jobs:
         uses: crazy-max/ghaction-docker-meta@v1
         with:
           images: ghcr.io/${{ github.repository }}
-          tag-sha: true
-          tag-custom: |
-            latest
-            prod
+          tags: |
+            type=sha
+            latest=auto
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=prod
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
