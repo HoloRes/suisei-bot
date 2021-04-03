@@ -27,9 +27,10 @@ jobs:
         uses: crazy-max/ghaction-docker-meta@v2
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=auto
           tags: |
             type=sha
-            latest=auto
             type=ref,event=branch
             type=ref,event=pr
             type=raw,value=prod
