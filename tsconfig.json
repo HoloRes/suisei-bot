@@ -2,8 +2,11 @@
   "compilerOptions": {
 	"outDir": "./dist",
 	"target": "es6",
-	"typeRoots": ["./node_modules/@types"],
-	"resolveJsonModule": true
+	"typeRoots": ["./node_modules/@types", "./src/types"],
+	"resolveJsonModule": true,
+	"plugins": [
+	  { "transform": "typescript-is/lib/transform-inline/transformer" }
+	]
   },
   "include": [
 	"./src/**/*"
