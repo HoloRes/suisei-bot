@@ -10,7 +10,7 @@
     "axios": "^0.21.1",
     "discord.js": "^12.5.2",
     "express": "^4.17.1",
-    "googleapis": "^70.0.0",
+    "googleapis": "^71.0.0",
     "html-entities": "^2.3.2",
     "humanize-duration": "^3.25.1",
     "moment": "^2.29.1",
