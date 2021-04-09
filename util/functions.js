@@ -53,7 +53,7 @@ exports.previewMessageHandler = async (message) => {
 		.catch(() => message.channel.send('Cannot find the linked message.'));
 
 	let embed = new MessageEmbed()
-		.setAuthor(msg.author.tag, msg.author.avatarURL())
+		.setAuthor(`${msg.author.tag} - ${msg.author.id}`, msg.author.avatarURL())
 		.setURL(msg.url)
 		.setTimestamp(msg.createdAt);
 
