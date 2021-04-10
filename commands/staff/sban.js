@@ -17,7 +17,7 @@ exports.run = async (client, message, args) => {
 		.then((user) => {
 			moderation.log({
 				userId: user.id,
-				type: 'ban | slient',
+				type: 'ban | silent',
 				reason,
 				moderator: message.author.id,
 			}, '#f54242');
