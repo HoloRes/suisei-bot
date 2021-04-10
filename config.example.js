@@ -34,4 +34,7 @@ module.exports = {
 			level: 'verbose',
 		},
 	},
+	sentry: {
+		dsn: '',
+	},
 };

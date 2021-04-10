@@ -22,14 +22,13 @@ interface BaseConfig {
 		type: 'user' | 'role',
 		userId?: string,
 		serverId?: string,
-		roleId?: string
+		roleId?: string,
 	},
 	api?: {
 		port: number,
 		token: string,
 		cors: string[],
 	},
-	sentryDsn?: string
 	logTransports?: {
 		console?: {
 			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error',
@@ -43,8 +42,11 @@ interface BaseConfig {
 		},
 		file?: {
 			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error',
-		}
-	}
+		},
+	},
+	sentry?: {
+		dsn: string,
+	},
 }
 
 export interface MasterConfig extends BaseConfig {
