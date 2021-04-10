@@ -3,11 +3,13 @@
 module.exports = {
 	mode: 'standalone',
 	modules: {
-		developer: true,
+		developer: false,
 		youtube: true,
 		twitter: true,
 		moderation: true,
 		pingLists: true,
+		utility: true,
+		autoPublish: true,
 	},
 	developer: {
 		type: 'user',

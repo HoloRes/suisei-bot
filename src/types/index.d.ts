@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 
-export interface ICommand { 
+export interface ICommand {
 	run: <C = Discord.Client, M = Discord.Message, A = string[]>(client: C, message: M, args: A) => void,
 	config: {
 		command: string,
@@ -16,6 +16,8 @@ export interface IConfig {
 		youtube: boolean,
 		twitter: boolean,
 		pingLists: boolean,
+		utility: boolean,
+		autoPublish: boolean,
 	},
 	discord: {
 		token: string,

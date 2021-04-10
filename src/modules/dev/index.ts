@@ -19,6 +19,4 @@ class DevModule extends Module {
 	}
 }
 
-const MiscModule = new DevModule(__dirname, []);
-
-export default MiscModule;
+export default new DevModule(__dirname, []);

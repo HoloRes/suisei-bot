@@ -11,7 +11,7 @@ import mongoose from 'mongoose';
 import Discord from 'discord.js';
 
 // Types
-import { IConfig as ConfigType } from './types';
+import { IConfig } from './types';
 import {
 	StandAloneConfig,
 	SlaveConfig,
@@ -21,11 +21,13 @@ import {
 } from './types/config';
 
 // Modules
-import MiscModule from './modules/misc';
+import MainModule from './modules/main';
+import AutoPublishModule from './modules/AutoPublish';
 import DevModule from './modules/dev';
+import UtilityModule from './modules/util';
 
 // Local files
-const config: ConfigType = require('../config');
+const config: IConfig = require('../config');
 
 // Init
 const myFormat = winston.format.printf(({
@@ -47,7 +49,7 @@ export const logger = winston.createLogger({
 
 // Config validation
 try {
-	assertEquals<ConfigType>(config);
+	assertEquals<IConfig>(config);
 	if (config.mode === 'master') {
 		assertEquals<MasterConfig>(config);
 	} else if (config.mode === 'slave') {
@@ -125,8 +127,10 @@ export const client = new Discord.Client();
 client.on('ready', () => {
 	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);
 
-	MiscModule.start(client);
+	MainModule.start(client);
 	if (config.modules.developer) DevModule.start(client);
+	if (config.modules.utility) UtilityModule.start(client);
+	if (config.modules.autoPublish) AutoPublishModule.start(client);
 });
 
 client.login(config.discord.token);

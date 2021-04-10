@@ -6,6 +6,8 @@ interface BaseConfig {
 		youtube: boolean,
 		twitter: boolean,
 		pingLists: boolean,
+		utility: boolean,
+		autoPublish: boolean,
 	},
 	discord: {
 		token: string,
