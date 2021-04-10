@@ -1,28 +1,14 @@
 import Discord from 'discord.js';
 
-export interface Command {
+export interface ICommand { 
 	run: <C = Discord.Client, M = Discord.Message, A = string[]>(client: C, message: M, args: A) => void,
 	config: {
 		command: string,
-		module: string,
-		permissionLevel: Discord.PermissionString,
+		permissionLevel?: Discord.PermissionString,
 	},
 }
 
-export interface DevCommand extends Command {
-	config: {
-		command: string,
-		module: never,
-		permissionLevel: never,
-	}
-}
-
-export interface ExtendedClient extends Discord.Client {
-	commands: Discord.Collection<name<string>, Command>,
-	devCommands: Discord.Collection<name<string>, DevCommand>,
-}
-
-export interface Config {
+export interface IConfig {
 	mode: 'standalone' | 'master' | 'slave',
 	modules: {
 		developer: boolean,
@@ -33,8 +19,8 @@ export interface Config {
 	},
 	discord: {
 		token: string,
-		defaultPrefix?: string,
-		developerPrefix?: string,
+		defaultPrefix: string,
+		developerPrefix: string,
 	},
 	developer: {
 		type: 'user' | 'role',
@@ -83,7 +69,6 @@ export interface Config {
 		token: string,
 		cors: string[],
 	},
-	sentryDsn?: string,
 	logTransports?: {
 		console?: {
 			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error',
@@ -99,4 +84,7 @@ export interface Config {
 			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error',
 		},
 	},
+	sentry?: {
+		dsn: string
+	}
 }
