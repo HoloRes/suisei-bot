@@ -11,6 +11,7 @@ export interface IGuild extends Document {
 	_id: string,
 	settings: {
 		prefix: string,
+		slashCommandsEnabled: boolean,
 		enabledModules: string[],
 	}
 }
@@ -19,6 +20,7 @@ const GuildSchema: Schema = new Schema({
 	_id: { type: String, required: true },
 	settings: {
 		prefix: { type: String, default: config.discord.defaultPrefix },
+		slashCommandsEnabled: { type: Boolean, default: false },
 		enabledModules: [String],
 	},
 });
