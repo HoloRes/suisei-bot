@@ -19,6 +19,7 @@ class AutoPublishModule extends Module {
 					Sentry.captureException(err);
 				}
 				// Thanks ESLint, for enforcing rules on comments :Luna_Galaxy:
+				// TODO: Remove ts-ignore when PR gets merged
 				// eslint-disable-next-line max-len
 				// @ts-expect-error crosspostable not existing on message, PR created to fix this discord.js#5518
 				if (doc && message.crosspostable) message.crosspost();
