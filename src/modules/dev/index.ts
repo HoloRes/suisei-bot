@@ -1,52 +1,24 @@
-// Packages
-import Discord from 'discord.js';
-import fs from 'fs';
-import * as path from 'path';
-
-// Types
-import { ICommand, IConfig } from '../../types/index';
-
 // Local files
-const config: IConfig = require('../../../config');
+import Module from '../../lib/Module';
 
-// Variables
-const commands = new Discord.Collection() as Discord.Collection<string, ICommand>;
+const config = require('../../../config');
 
-function reloadCommands(): void {
-	commands.forEach((cmd) => {
-		commands.delete(cmd.config.command);
-		delete require.cache[require.resolve(`./commands/${cmd.config.command}.js`)];
-	});
+class DevModule extends Module {
+	commandHandler() {
+		this.client?.on('message', (message) => {
+			if (message.author.bot || message.channel.type === 'dm') return;
 
-	fs.readdir(path.resolve(__dirname, 'commands'), (err, files) => {
-		if (err) throw err;
+			if (!message.content.startsWith(config.discord.developerPrefix)) return;
 
-		const filteredFiles = files.filter((file) => file.split('.').pop() === 'js' || file.split('.').pop() === 'ts');
+			const split = message.content.slice(config.discord.developerPrefix.length).split(' ');
+			const args = split.slice(1).join(' ').trim().split(' ');
 
-		filteredFiles.forEach((file) => {
-			delete require.cache[require.resolve(`./commands/${file}`)];
-
-			// eslint-disable-next-line global-require,import/no-dynamic-require
-			const command = require(`./commands/${file}`);
-			commands.set(command.config.command, command);
+			const command = this.commands.get(split[0]);
+			if (command) command.run(this.client, message, args);
 		});
-	});
+	}
 }
 
-function start(client: Discord.Client): void {
-	reloadCommands();
+const MiscModule = new DevModule(__dirname, []);
 
-	client.on('message', (message) => {
-		if (message.author.bot || message.channel.type === 'dm') return;
-
-		if (!message.content.startsWith(config.discord.developerPrefix)) return;
-
-		const split = message.content.slice(config.discord.developerPrefix.length).split(' ');
-		const args = split.slice(1).join(' ').trim().split(' ');
-
-		const command = commands.get(split[0]);
-		if (command) command.run(client, message, args);
-	});
-}
-
-export default { start, reloadCommands };
+export default MiscModule;
