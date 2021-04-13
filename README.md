@@ -7,8 +7,7 @@
 ## This branch holds the code for version 3.0.0, the upcoming version that will support multiserver
 This is a full rewrite, so a lot (at the moment of writing all) functionality is not implemented yet.
 
-For a stable version you can deploy, although needing some modification to do so, can be found on the master branch and the prod tag of the Docker image.
-Follow 
+For a stable version you can deploy, although needing some modification to do so, can be found on the [master branch](https://github.com/HoloRes/suisei/tree/master) and the prod tag of the [Docker image](https://github.com/orgs/HoloRes/packages?repo_name=suisei).
 
 ## About
 This is a bot created for VTuber servers, with features like YouTube notifications, Twitter feeds and more.
