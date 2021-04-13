@@ -92,7 +92,7 @@ app?.listen(config.api?.port);
 if (config.sentry) {
 	const integrations = [];
 
-	if (config.api) {
+	if (app) {
 		integrations.push(new Sentry.Integrations.Http({ tracing: true }));
 		integrations.push(new SentryTracing.Integrations.Express({ app }));
 	}
@@ -127,10 +127,10 @@ export const client = new Discord.Client();
 client.on('ready', () => {
 	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);
 
-	MainModule.start(client);
-	if (config.modules.developer) DevModule.start(client);
-	if (config.modules.utility) UtilityModule.start(client);
-	if (config.modules.autoPublish) AutoPublishModule.start(client);
+	MainModule.start(client, logger);
+	if (config.modules.developer) DevModule.start(client, logger);
+	if (config.modules.utility) UtilityModule.start(client, logger);
+	if (config.modules.autoPublish) AutoPublishModule.start(client, logger);
 });
 
 client.login(config.discord.token);
