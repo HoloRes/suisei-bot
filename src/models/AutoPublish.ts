@@ -9,4 +9,4 @@ const AutoPublishSchema: Schema = new Schema({
 	_id: { type: String, required: true },
 });
 
-export default mongoose.model<IAutoPublish>('AutoPublish', AutoPublishSchema, 'autopublish');
+export default mongoose.model<IAutoPublish>('AutoPublish', AutoPublishSchema, 'autoPublish');
