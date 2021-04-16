@@ -7,7 +7,7 @@ export interface IModLogItem extends Document {
 	userId: string,
 	type: 'warn' | 'mute' | 'kick' | 'ban',
 	duration?: string,
-	moderation: string,
+	moderator: string,
 	reason: string,
 	date: Date,
 }

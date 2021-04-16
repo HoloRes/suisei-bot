@@ -11,18 +11,28 @@ export interface IGuild extends Document {
 	_id: string,
 	settings: {
 		prefix: string,
-		slashCommandsEnabled: boolean,
+		slashCommandsEnabled: {
+			enabled: boolean,
+			allowedRoles: string[],
+			allowedUsers: string[],
+		},
 		enabledModules: string[],
-	}
+	},
+	setupDone: boolean,
 }
 
 const GuildSchema: Schema = new Schema({
 	_id: { type: String, required: true },
 	settings: {
 		prefix: { type: String, default: config.discord.defaultPrefix },
-		slashCommandsEnabled: { type: Boolean, default: false },
+		slashCommands: {
+			enabled: { type: Boolean, default: false },
+			allowedRoles: [String],
+			allowedUsers: [String],
+		},
 		enabledModules: [String],
 	},
+	setupDone: { type: Boolean, default: false },
 });
 
 export default mongoose.model<IGuild>('Guild', GuildSchema, 'guilds');
