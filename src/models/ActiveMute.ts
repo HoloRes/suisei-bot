@@ -1,14 +1,18 @@
 // Packages
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IActiveMute extends Document {
+export interface IActiveMute {
 	id: string,
 	guild: string,
 	userId: string,
 	expireAt: Date,
 	leftAt?: Date,
-	hardMute: boolean,
+	hardMute?: boolean,
 	roles?: string[]
+}
+
+export interface IActiveMuteDocument extends IActiveMute, Document {
+	id: string,
 }
 
 const ActiveMuteSchema: Schema = new Schema({
@@ -21,4 +25,4 @@ const ActiveMuteSchema: Schema = new Schema({
 	roles: { type: [String], default: undefined },
 });
 
-export default mongoose.model<IActiveMute>('ModLogItem', ActiveMuteSchema, 'activeMutes');
+export default mongoose.model<IActiveMuteDocument>('ModLogItem', ActiveMuteSchema, 'activeMutes');

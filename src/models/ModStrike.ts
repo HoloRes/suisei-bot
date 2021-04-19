@@ -6,6 +6,7 @@ export interface IModStrike extends Document {
 	userId: string,
 	guild: string,
 	strikeDate: Date,
+	tos: boolean,
 }
 
 const ModStrikeSchema: Schema = new Schema({
@@ -13,6 +14,7 @@ const ModStrikeSchema: Schema = new Schema({
 	userId: { type: String, required: true },
 	guild: { type: String, required: true },
 	strikeDate: { type: Date, default: new Date() },
+	tos: { type: Boolean, default: false },
 });
 
 export default mongoose.model<IModStrike>('Strike', ModStrikeSchema, 'strikes');
