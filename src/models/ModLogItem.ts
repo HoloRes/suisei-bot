@@ -1,26 +1,30 @@
 // Packages
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IModLogItem extends Document {
+export interface IModLogItem {
 	id: string,
 	guild: string,
 	userId: string,
-	type: 'warn' | 'mute' | 'kick' | 'ban',
+	type: 'warn' | 'unmute' | 'mute' | 'kick' | 'tempban' | 'ban',
 	duration?: string,
 	moderator: string,
 	reason: string,
-	date: Date,
+	date?: Date,
+}
+
+export interface IModLogItemDocument extends IModLogItem, Document {
+	id: string,
 }
 
 const ModLogSchema: Schema = new Schema({
 	id: { type: String, required: true },
 	guild: { type: String, required: true },
 	userId: { type: String, required: true },
-	type: { type: String, required: true, enum: ['warn', 'mute', 'kick', 'ban'] },
+	type: { type: String, required: true, enum: ['warn', 'unmute', 'mute', 'kick', 'ban'] },
 	duration: { type: String },
 	moderator: { type: String, required: true },
 	reason: { type: String, required: true },
-	date: { type: Date },
+	date: { type: Date, default: new Date() },
 });
 
-export default mongoose.model<IModLogItem>('ModLogItem', ModLogSchema, 'modLog');
+export default mongoose.model<IModLogItemDocument>('ModLogItem', ModLogSchema, 'modLog');

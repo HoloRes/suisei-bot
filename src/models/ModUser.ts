@@ -2,7 +2,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IModUser extends Document {
-    _id: string
+    _id: string,
+	lastKnownTag: string,
+	notes: object,
 }
 
 const ModUserSchema: Schema = new Schema({
