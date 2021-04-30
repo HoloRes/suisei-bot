@@ -27,7 +27,7 @@
     "winston-loki": "^6.0.0"
   },
   "devDependencies": {
-    "@sentry/types": "6.3.3",
+    "@sentry/types": "6.3.5",
     "@tsconfig/node14": "1.0.0",
     "@types/express": "4.17.11",
     "@types/humanize-duration": "3.18.1",
