@@ -53,6 +53,11 @@ export async function log(logItem: IModLogItem|IModLogItemDocument, color: strin
 		.then((channel: Discord.TextChannel) => channel.send(embed));
 }
 
+/*
+ !	This function may not have use, as deleted accounts still show up in the API and there's no good
+ !	way to differentiate an actual deleted account from a renamed account
+ */
+// eslint-disable-next-line no-unused-vars
 async function updateMember(member: Discord.GuildMember): Promise<void> {
 	const user = await ModUser.findById(member.id).exec()
 		.catch((e) => {
@@ -88,9 +93,6 @@ async function updateMember(member: Discord.GuildMember): Promise<void> {
 
 // eslint-disable-next-line max-len
 export async function warn(member: Discord.GuildMember, reason: string, moderator: Discord.GuildMember): Promise<void|object> {
-	// Ignore error, since it has no high importance
-	updateMember(member).catch(() => {});
-
 	const logItem = new ModLogItem({
 		userId: member.id,
 		moderator: moderator.id,
@@ -121,6 +123,7 @@ export async function warn(member: Discord.GuildMember, reason: string, moderato
 		.catch(() => ({ info: 'failed to send DM' }));
 }
 
+// eslint-disable-next-line max-len
 export async function unmute(member: Discord.GuildMember, reason?: string, moderator?: Discord.GuildMember): Promise<void> {
 	const guild = await Guild.findById(member.guild.id).exec()
 		.catch((e) => {
@@ -153,7 +156,9 @@ export async function unmute(member: Discord.GuildMember, reason?: string, moder
 		});
 }
 
-export async function mute(member: Discord.GuildMember, duration: number, reason: string, moderator: Discord.GuildMember, tos?: boolean) {
+// eslint-disable-next-line max-len
+export async function mute(member: Discord.GuildMember, duration: number, reason: string, moderator: Discord.GuildMember) {
+	// TODO: Check for existing mute and compare durations to override or cancel
 	const expirationDate = moment().add(duration, 'minutes');
 
 	const logItem = new ModLogItem({
@@ -174,14 +179,14 @@ export async function mute(member: Discord.GuildMember, duration: number, reason
 	});
 	await log(logItem, '#ff9c24');
 
-	const strike = new ModStrike({
+	// TODO: Don't add strike if guild disabled it
+	const strikeItem = new ModStrike({
 		id: logItem.id,
 		userId: member.id,
 		guild: member.guild.id,
-		tos,
 	});
 
-	await strike.save((e) => {
+	await strikeItem.save((e) => {
 		if (e) {
 			Sentry.captureException(e);
 			logger.error(<string><unknown>e, { labels: { module: 'moderation', event: ['mute', 'databaseSave'] } });
@@ -210,6 +215,200 @@ export async function mute(member: Discord.GuildMember, duration: number, reason
 			throw new Error('Saving the mute failed');
 		}
 	});
+
+	// TODO: Plan unmute and add mute role
+}
+
+export async function hardMute(member: Discord.GuildMember, moderator: Discord.GuildMember) {
+	const doc = await ActiveMute.findOne({ userId: member.id, guild: member.guild.id }).exec()
+		.catch((e) => {
+			Sentry.captureException(e);
+			logger.error(e, { labels: { module: 'moderation', event: ['hardMute', 'databaseSearch'] } });
+			throw new Error('Something went wrong, please try again.');
+		});
+
+	if (!doc) throw new Error('Member is not muted');
+
+	// TODO: Get muted role
+	const mutedRole = {
+		value: 'stuff',
+	};
+
+	doc.roles = await member.roles.cache.map((role) => role.id);
+	const index = doc.roles.findIndex((role) => role === mutedRole.value);
+	await doc.roles.splice(index, 1);
+	doc.hardMute = true;
+
+	await member.roles.remove(doc.roles);
+	await doc.save((e) => {
+		if (e) {
+			Sentry.captureException(e);
+			logger.error(<string><unknown>e, { labels: { module: 'moderation', event: ['hardMute', 'databaseSave'] } });
+			throw new Error('Saving the mute failed');
+		}
+	});
+
+	await log({
+		type: 'hardmute',
+		userId: member.id,
+		moderator: moderator.id,
+		reason: 'N/A',
+	} as IModLogItem, '#ff9c24');
+}
+
+// eslint-disable-next-line max-len
+export async function kick(member: Discord.GuildMember, reason: string, moderator: Discord.GuildMember) {
+	const logItem = new ModLogItem({
+		userId: member.id,
+		guild: member.guild.id,
+		type: 'kick',
+		reason,
+		moderator: moderator.id,
+	} as IModLogItem);
+
+	await logItem.save((e) => {
+		if (e) {
+			Sentry.captureException(e);
+			logger.error(<string><unknown>e, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
+			throw new Error('Logging the kick failed');
+		}
+	});
+	await log(logItem, '#ff9c24');
+
+	const strikeItem = new ModStrike({
+		id: logItem.id,
+		userId: member.id,
+		guild: member.guild.id,
+	});
+
+	await strikeItem.save((e) => {
+		if (e) {
+			Sentry.captureException(e);
+			logger.error(<string><unknown>e, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
+			throw new Error('Saving the strike failed');
+		}
+	});
+
+	const embed = new MessageEmbed()
+		.setTitle('Kick')
+		.setDescription(`You have been kicked for: ${reason}`)
+		.setFooter(`Issued in: ${member.guild.name}`)
+		.setTimestamp();
+
+	await member.send(embed)
+		.catch(() => {});
+
+	await member.kick(reason)
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['kick', 'discord'] } });
+			throw new Error('Something went wrong, please try again.');
+		});
+}
+
+// TODO: Write tempban function
+// eslint-disable-next-line max-len
+export async function tempBan(member: Discord.GuildMember, duration: number, reason: string, moderator: Discord.GuildMember) {
+
+}
+
+// eslint-disable-next-line max-len
+export async function ban(member: Discord.GuildMember, reason: string, moderator: Discord.GuildMember) {
+	const logItem = new ModLogItem({
+		userId: member.id,
+		guild: member.guild.id,
+		type: 'ban',
+		reason,
+		moderator: moderator.id,
+	} as IModLogItem);
+
+	await logItem.save((e) => {
+		if (e) {
+			Sentry.captureException(e);
+			logger.error(<string><unknown>e, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+			throw new Error('Logging the kick failed');
+		}
+	});
+	await log(logItem, '#ff9c24');
+
+	const strikeItem = new ModStrike({
+		id: logItem.id,
+		userId: member.id,
+		guild: member.guild.id,
+	});
+
+	await strikeItem.save((e) => {
+		if (e) {
+			Sentry.captureException(e);
+			logger.error(<string><unknown>e, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+			throw new Error('Saving the strike failed');
+		}
+	});
+
+	await ActiveMute.findOneAndDelete({ userId: member.id, guild: member.guild.id }).exec()
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+			throw new Error('Something went wrong, please try again.');
+		});
+
+	const embed = new MessageEmbed()
+		.setTitle('Ban')
+		.setDescription(`You have been banned for: ${reason}`)
+		.setFooter(`Issued in: ${member.guild.name}`)
+		.setTimestamp();
+
+	await member.send(embed)
+		.catch(() => {});
+
+	await member.ban({ reason })
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['ban', 'discord'] } });
+			throw new Error('Something went wrong, please try again.');
+		});
+}
+
+// eslint-disable-next-line max-len
+export async function strike(member: Discord.GuildMember, reason: string, moderator: Discord.GuildMember) {
+	const strikes = await ModStrike.find({ userId: member.id, guild: member.guild.id }).lean().exec()
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['strike', 'databaseSearch'] } });
+			throw new Error('Something went wrong, please try again.');
+		});
+
+	const guild = await Guild.findById(member.guild.id).lean().exec()
+		.catch((err) => {
+			Sentry.captureException(err);
+			logger.error(err, { labels: { module: 'moderation', event: ['strike', 'databaseSearch'] } });
+			throw new Error('Something went wrong, please try again.');
+		});
+
+	const currentStrike = guild?.settings.moderation.strikeSystem[strikes.length];
+	if (!currentStrike) throw new Error('Something went wrong, please try again.');
+
+	if (currentStrike.type === 'mute') {
+		await mute(member, <number>currentStrike.duration, reason, moderator)
+			.catch((err) => {
+				throw err;
+			});
+	} else if (currentStrike.type === 'kick') {
+		await kick(member, reason, moderator)
+			.catch((err) => {
+				throw err;
+			});
+	} else if (currentStrike.type === 'tempban') {
+		await tempBan(member, <number>currentStrike.duration, reason, moderator)
+			.catch((err) => {
+				throw err;
+			});
+	} else if (currentStrike.type === 'ban') {
+		await ban(member, reason, moderator)
+			.catch((err) => {
+				throw err;
+			});
+	}
 }
 
 export function init(newClient: Discord.Client, newLogger: winston.Logger) {

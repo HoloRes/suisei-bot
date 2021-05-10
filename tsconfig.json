@@ -1,15 +1,21 @@
 {
-  "compilerOptions": {
-	"outDir": "./dist",
-	"target": "es6",
-	"typeRoots": ["./node_modules/@types", "./src/types"],
-	"resolveJsonModule": true,
-	"plugins": [
-	  { "transform": "typescript-is/lib/transform-inline/transformer" }
-	]
-  },
-  "include": [
-	"./src/**/*"
-  ],
-  "extends": "@tsconfig/node14/tsconfig.json"
+	"compilerOptions": {
+		"outDir": "./dist",
+		"target": "es6",
+		"typeRoots": [
+			"./node_modules/@types",
+			"./src/types"
+		],
+		"resolveJsonModule": true,
+		"plugins": [
+			{
+				"transform": "typescript-is/lib/transform-inline/transformer"
+			}
+		],
+		"strict": true
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"extends": "@tsconfig/node14/tsconfig.json"
 }

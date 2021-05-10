@@ -84,6 +84,7 @@ if (config.logTransports?.file) {
 		filename: path.join(__dirname, '../logs', `${date}.log`),
 		level: config.logTransports.file.level ?? 'info',
 	}));
+	logger.debug('Added File transport');
 }
 
 const app = config.api ? express() : undefined;
