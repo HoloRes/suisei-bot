@@ -5,7 +5,7 @@ export interface IModLogItem {
 	id: string,
 	guild: string,
 	userId: string,
-	type: 'warn' | 'unmute' | 'mute' | 'kick' | 'tempban' | 'ban',
+	type: 'warn' | 'unmute' | 'mute' | 'hardmute' | 'kick' | 'tempban' | 'ban',
 	duration?: string,
 	moderator: string,
 	reason: string,

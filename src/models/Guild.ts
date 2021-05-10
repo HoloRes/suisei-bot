@@ -50,11 +50,11 @@ const GuildSchema: Schema = new Schema({
 				default: [
 					{
 						type: 'mute',
-						duration: 24 * 3600 * 1000,
+						duration: 24 * 60,
 					},
 					{
 						type: 'mute',
-						duration: 7 * 24 * 3600 * 1000,
+						duration: 7 * 24 * 60,
 					},
 					{
 						type: 'ban',
