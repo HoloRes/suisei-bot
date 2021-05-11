@@ -7,13 +7,15 @@ ENV COMMIT_SHA=$sha
 
 ENV NODE_ENV=production
 
-# Create a folder for the bot
+RUN curl -f https://get.pnpm.io/v6.js | node - add --global pnpm@6
+
+# Create a folder to build the source in
 WORKDIR /tmp
 COPY package.json .
 COPY package-lock.json .
 
 # Install packages
-RUN npm ci --also=dev
+RUN pnpm install -D
 
 # Symlink $ to source code dir
 RUN npx basetag link
@@ -29,11 +31,12 @@ WORKDIR /app
 
 COPY package.json .
 COPY package-lock.json .
-RUN npm ci
+RUN pnpm install -P
 
 RUN cp -r /tmp/dist/* . \
     && rm -rf /tmp
 
+EXPOSE 80
 
 # Set start command
 CMD ["node", "index.js", "--trace-events-enabled", "--trace-warnings"]
