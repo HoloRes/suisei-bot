@@ -5,17 +5,17 @@ FROM node:lts-buster
 ARG sha
 ENV COMMIT_SHA=$sha
 
-ENV NODE_ENV=production
-
-RUN curl -f https://get.pnpm.io/v6.js | node - add --global pnpm@6
+RUN apk add curl \
+    && curl -f https://get.pnpm.io/v6.js | node - add --global pnpm
 
 # Create a folder to build the source in
 WORKDIR /tmp
 COPY package.json .
 COPY package-lock.json .
+COPY pnpm-lock.yaml .
 
 # Install packages
-RUN pnpm install -D
+RUN npm ci
 
 # Symlink $ to source code dir
 RUN npx basetag link
@@ -27,12 +27,15 @@ COPY . .
 RUN npm run build
 
 # Copy dist and only install production packages
+ENV NODE_ENV=production
 WORKDIR /app
 
 COPY package.json .
 COPY package-lock.json .
+COPY pnpm-lock.yaml .
 RUN pnpm install -P
 
+# Copy build to dist
 RUN cp -r /tmp/dist/* . \
     && rm -rf /tmp
 

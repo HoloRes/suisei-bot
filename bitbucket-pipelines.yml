@@ -13,7 +13,7 @@ pipelines:
             script:
               - curl -f https://get.pnpm.io/v6.js | node - add --global pnpm@6
               - pnpm install -D
-              - npx eslint ./src/
+              - npx eslint ./src/**
             caches:
               - pnpm
 
@@ -53,15 +53,6 @@ pipelines:
             image: hadolint/hadolint:latest-debian
             script:
               - hadolint Dockerfile
-
-        - step:
-            name: Get Sentry report
-            script:
-              - pipe: holores/sentry-code-report:0.1.0
-                variables:
-                  SENTRY_ORG: $SENTRY_ORG
-                  SENTRY_PROJECT_ID: $SENTRY_PROJECT_ID
-                  SENTRY_URL: $SENTRY_URL
 
     - step:
         script:
