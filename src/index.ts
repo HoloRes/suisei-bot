@@ -90,6 +90,13 @@ if (config.logTransports?.file) {
 const app = config.api ? express() : undefined;
 app?.listen(config.api?.port);
 
+if (config.api && app) {
+	// Heartbeat route, used for deployment validation
+	app.get('/heartbeat', (req, res) => {
+		res.status(200).send('OK');
+	});
+}
+
 if (config.sentry) {
 	const integrations = [];
 
