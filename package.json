@@ -47,7 +47,8 @@
   "scripts": {
     "start": "node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint --fix .",
+    "lint": "eslint ./src/**",
+    "lint:fix": "eslint --fix ./src/**",
     "build": "ttsc -p tsconfig.production.json",
     "dev": "ts-node-dev -C ttypescript src/index.ts"
   },

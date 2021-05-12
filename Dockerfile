@@ -1,11 +1,13 @@
 # Select NodeJS LTS image
 FROM node:lts-buster
 
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
 # For Sentry release tracking
 ARG sha
 ENV COMMIT_SHA=$sha
 
-RUN apk add curl \
+RUN apk add curl=7.55.0-r2 --no-cache \
     && curl -f https://get.pnpm.io/v6.js | node - add --global pnpm
 
 # Create a folder to build the source in

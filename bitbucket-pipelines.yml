@@ -13,7 +13,7 @@ pipelines:
             script:
               - curl -f https://get.pnpm.io/v6.js | node - add --global pnpm@6
               - pnpm install -D
-              - npx eslint ./src/**
+              - pnpm run lint
             caches:
               - pnpm
 
