@@ -21,11 +21,13 @@ pipelines:
             name: Scan using Snyk
             script:
               - npm install -g snyk # binary download also available
-              - snyk test --all-projects --json -d > snyk-test-output.json
+              - npm ci
               - pipe: snyk/snyk-scan:0.4.6
                 variables:
                   SNYK_TOKEN: $SNYK_TOKEN
-                  SNYK_TEST_JSON_INPUT: "snyk-test-output.json"
+                  LANGUAGE: "npm"
+                  CODE_INSIGHTS_RESULTS: "true"
+                  MONITOR: "true"
 
         - step:
             name: Build
