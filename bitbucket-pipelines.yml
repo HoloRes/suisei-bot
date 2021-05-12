@@ -13,7 +13,11 @@ pipelines:
             script:
               - curl -f https://get.pnpm.io/v6.js | node - add --global pnpm@6
               - pnpm install -D
-              - pnpm run lint
+              - pnpm run lint:ci
+              - python .bitbucket/parse.py
+              - 'curl --request PUT --proxy "http://localhost:29418" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_FULL_NAME}/commit/${BITBUCKET_COMMIT}/reports/eslint" --header "Content-Type: application/json" -d @report.json'
+              - 'curl --request delete --proxy "http://localhost:29418" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_FULL_NAME}/commit/${BITBUCKET_COMMIT}/reports/eslint/annotations/eslint-annotation"'
+              - 'curl --request PUT --proxy "http://localhost:29418" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_FULL_NAME}/commit/${BITBUCKET_COMMIT}/reports/eslint/annotations/eslint-annotation" --header "Content-Type: application/json" -d @annotations.json'
             caches:
               - pnpm
 
@@ -33,13 +37,13 @@ pipelines:
               - IMAGE_NAME=$BITBUCKET_REPO_SLUG
               - REPO_URL=$BITBUCKET_GIT_HTTP_ORIGIN
               - docker build . --file Dockerfile --tag ${IMAGE_NAME}
-                 --label "org.opencontainers.image.url"="${REPO_URL}"
-                 --label "org.opencontainers.image.source"="${REPO_URL}"
-                 --label "org.opencontainers.image.title"="${BITBUCKET_REPO_SLUG}"
-                 --label "org.opencontainers.image.licenses"="MIT"
-                 --label "org.opencontainers.image.description"="A Discord bot specifically built for VTuber servers"
-                 --label "org.opencontainers.image.revision"="${BITBUCKET_COMMIT}"
-                 --label "org.opencontainers.image.version"="$BITBUCKET_BRANCH"
+                --label "org.opencontainers.image.url"="${REPO_URL}"
+                --label "org.opencontainers.image.source"="${REPO_URL}"
+                --label "org.opencontainers.image.title"="${BITBUCKET_REPO_SLUG}"
+                --label "org.opencontainers.image.licenses"="MIT"
+                --label "org.opencontainers.image.description"="A Discord bot specifically built for VTuber servers"
+                --label "org.opencontainers.image.revision"="${BITBUCKET_COMMIT}"
+                --label "org.opencontainers.image.version"="${BITBUCKET_BRANCH}"
               - docker save ${IMAGE_NAME} --output "${IMAGE_NAME}.tar"
             services:
               - docker
