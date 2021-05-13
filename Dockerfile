@@ -7,9 +7,6 @@ SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 ARG sha
 ENV COMMIT_SHA=$sha
 
-RUN apk add curl=7.67.0-r3 --no-cache \
-    && curl -f https://get.pnpm.io/v6.js | node - add --global pnpm
-
 # Create a folder to build the source in
 WORKDIR /tmp
 COPY package.json .
@@ -35,7 +32,7 @@ WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
 COPY pnpm-lock.yaml .
-RUN pnpm install -P
+RUN npm ci
 
 # Copy build to dist
 RUN cp -r /tmp/dist/* . \
