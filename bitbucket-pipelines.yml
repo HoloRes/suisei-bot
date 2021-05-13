@@ -63,10 +63,9 @@ pipelines:
           script:
             - IMAGE_NAME=$BITBUCKET_REPO_SLUG
             - docker load --input "${IMAGE_NAME}.tar"
-            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
             - pipe: anchore/anchore-scan:0.2.14
               variables:
-                IMAGE_NAME: "${IMAGE_NAME}:${VERSION}"
+                IMAGE_NAME: "${IMAGE_NAME}"
       - step:
           script:
             - echo ${DOCKER_PASSWORD} | docker login ghcr.io --username "$DOCKER_USERNAME" --password-stdin
@@ -76,6 +75,8 @@ pipelines:
             - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
             - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
             - docker push "${IMAGE}:${VERSION}"
+          services:
+            - docker
 
 
   pull-requests:
