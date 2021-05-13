@@ -11,7 +11,6 @@ ENV COMMIT_SHA=$sha
 WORKDIR /tmp
 COPY package.json .
 COPY package-lock.json .
-COPY pnpm-lock.yaml .
 
 # Install packages
 RUN npm ci
@@ -28,7 +27,6 @@ WORKDIR /app
 
 COPY package.json .
 COPY package-lock.json .
-COPY pnpm-lock.yaml .
 RUN npm ci
 
 # Copy build to dist
