@@ -9,6 +9,7 @@ import * as SentryTracing from '@sentry/tracing';
 import * as path from 'path';
 import mongoose from 'mongoose';
 import Discord from 'discord.js';
+import helmet from 'helmet';
 
 // Types
 import { IConfig } from './types';
@@ -89,6 +90,7 @@ if (config.logTransports?.file) {
 
 const app = config.api ? express() : undefined;
 app?.listen(config.api?.port);
+app?.use(helmet());
 
 if (config.api && app) {
 	// Heartbeat route, used for deployment validation
