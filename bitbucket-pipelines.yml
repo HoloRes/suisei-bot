@@ -11,11 +11,10 @@ pipelines:
         - step:
             name: Code linting
             script:
-              - curl -f https://get.pnpm.io/v6.js | node - add --global pnpm@6
-              - pnpm install -D
-              - pnpm run lint:ci
+              - npm install
+              - npm run lint:ci
             caches:
-              - pnpm
+              - node
 
         - step:
             name: Scan using Snyk
@@ -28,6 +27,9 @@ pipelines:
                   LANGUAGE: "npm"
                   CODE_INSIGHTS_RESULTS: "true"
                   MONITOR: "true"
+                  DONT_BREAK_BUILD: "true"
+            caches:
+              - node
 
         - step:
             name: Build
@@ -56,14 +58,24 @@ pipelines:
             script:
               - hadolint Dockerfile
 
-    - step:
-        script:
-          - IMAGE_NAME=$BITBUCKET_REPO_SLUG
-          - docker load --input "${IMAGE_NAME}.tar"
-          - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-          - pipe: anchore/anchore-scan:0.2.14
-            variables:
-              IMAGE_NAME: "${IMAGE_NAME}:${VERSION}"
+    - parallel:
+      - step:
+          script:
+            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
+            - docker load --input "${IMAGE_NAME}.tar"
+            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - pipe: anchore/anchore-scan:0.2.14
+              variables:
+                IMAGE_NAME: "${IMAGE_NAME}:${VERSION}"
+      - step:
+          script:
+            - echo ${DOCKER_PASSWORD} | docker login ghcr.io --username "$DOCKER_USERNAME" --password-stdin
+            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
+            - docker load --input "${IMAGE_NAME}.tar"
+            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
+            - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
+            - docker push "${IMAGE}:${VERSION}"
 
 
   pull-requests:
@@ -91,12 +103,9 @@ pipelines:
             - IMAGE_NAME=$BITBUCKET_REPO_SLUG
             - docker load --input "${IMAGE_NAME}.tar"
             - ENVIRONMENT="staging"
-            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-            - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
+            - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
             - docker tag "${IMAGE_NAME}" "${IMAGE}:${ENVIRONMENT}"
-            - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
             - docker push "${IMAGE}:${ENVIRONMENT}"
-            - docker push "${IMAGE}:${VERSION}"
             # Call Ansible
             - ./.bitbucket/tower.bash staging "$VERSION"
 
@@ -105,19 +114,6 @@ pipelines:
 
   branches:
     master:
-      - step:
-          name: Build and Test
-          script:
-            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
-            - docker build . --file Dockerfile --tag ${IMAGE_NAME}
-            - docker save ${IMAGE_NAME} --output "${IMAGE_NAME}.tar"
-          services:
-            - docker
-          caches:
-            - docker
-          artifacts:
-            - "*.tar"
-
       - step:
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
@@ -149,18 +145,10 @@ pipelines:
             - IMAGE_NAME=$BITBUCKET_REPO_SLUG
             - docker load --input "${IMAGE_NAME}.tar"
             - ENVIRONMENT="prod"
-            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-            - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
+            - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
             - docker tag "${IMAGE_NAME}" "${IMAGE}:${ENVIRONMENT}"
-            - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
             - docker push "${IMAGE}:${ENVIRONMENT}"
-            - docker push "${IMAGE}:${VERSION}"
             # Call Ansible
             - ./.bitbucket/tower.bash production "$VERSION"
-
           services:
             - docker
-
-definitions:
-  caches:
-    pnpm: ~/.pnpm-store
