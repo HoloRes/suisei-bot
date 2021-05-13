@@ -59,18 +59,11 @@ pipelines:
               - hadolint Dockerfile
 
     - step:
-        name: Scan and push to GHCR
+        name: Push to GHCR
         script:
           - IMAGE_NAME=$BITBUCKET_REPO_SLUG
           - docker load --input "${IMAGE_NAME}.tar"
-          - pipe: anchore/anchore-scan:0.2.14
-            variables:
-              IMAGE_NAME: "${IMAGE_NAME}"
-              VULN_REPORT_SEVERITY_CUTOFF: "MEDIUM"
-              DEBUG: "true"
           - echo ${DOCKER_PASSWORD} | docker login ghcr.io --username "$DOCKER_USERNAME" --password-stdin
-          - IMAGE_NAME=$BITBUCKET_REPO_SLUG
-          - docker load --input "${IMAGE_NAME}.tar"
           - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
           - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
           - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
