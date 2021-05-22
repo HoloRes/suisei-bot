@@ -16,7 +16,7 @@ module.exports = {
 	],
 	settings: {
 		'import/parsers': {
-			'@typescript-eslint/parser': ['.ts', '.tsx'],
+			'@typescript-eslint/parser': ['.ts'],
 		},
 		'import/resolver': {
 			typescript: {
@@ -37,9 +37,7 @@ module.exports = {
 			'ignorePackages',
 			{
 				js: 'never',
-				jsx: 'never',
 				ts: 'never',
-				tsx: 'never',
 			},
 		],
 	},
