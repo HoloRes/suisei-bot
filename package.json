@@ -8,7 +8,7 @@
     "@sentry/node": "^6.3.6",
     "@sentry/tracing": "^6.3.6",
     "axios": "^0.21.1",
-    "discord.js": "^12.5.3",
+    "discord.js": "github:discordjs/discord.js",
     "express": "^4.17.1",
     "googleapis": "^73.0.0",
     "helmet": "^4.6.0",

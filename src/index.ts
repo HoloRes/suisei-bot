@@ -8,7 +8,7 @@ import * as Sentry from '@sentry/node';
 import * as SentryTracing from '@sentry/tracing';
 import * as path from 'path';
 import mongoose from 'mongoose';
-import Discord from 'discord.js';
+import Discord, { Intents } from 'discord.js';
 import helmet from 'helmet';
 
 // Types
@@ -132,7 +132,16 @@ if (config.mongodb) {
 	});
 }
 
-export const client = new Discord.Client();
+export const client = new Discord.Client({
+	partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
+	intents: [
+		Intents.FLAGS.GUILD_MESSAGES,
+		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+		Intents.FLAGS.GUILD_BANS,
+		Intents.FLAGS.GUILD_MEMBERS,
+	],
+});
 
 client.on('ready', () => {
 	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);

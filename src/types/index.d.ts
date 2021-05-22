@@ -2,6 +2,7 @@ import Discord from 'discord.js';
 
 export interface ICommand {
 	run: <C = Discord.Client, M = Discord.Message, A = string[]>(client: C, message: M, args: A) => void,
+	runSlash: <I = Discord.CommandInteraction>(interaction: I) => void,
 	config: {
 		command: string,
 		permissionLevel?: Discord.PermissionString,
