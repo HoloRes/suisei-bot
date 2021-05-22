@@ -21,7 +21,7 @@ async function getMember(message: Discord.Message, arg: string): Promise<Discord
 }
 
 // eslint-disable-next-line consistent-return,max-len
-async function getChannel(message: Discord.Message, arg: string): Promise<Discord.GuildChannel | undefined> {
+async function getChannel(message: Discord.Message, arg: string): Promise<Discord.Channel | undefined> {
 	if (message.mentions.channels && message.mentions.channels?.size > 0) {
 		return message.mentions.channels?.first();
 	}

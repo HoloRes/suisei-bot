@@ -6,7 +6,7 @@ pipelines:
         - step:
             name: Mirror to GitHub
             script:
-              - get fetch
+              - git fetch
               - git pull
               - git checkout master # Do this to also push master to GitHub
               - git push --mirror git@github.com:HoloRes/suisei-bot.git

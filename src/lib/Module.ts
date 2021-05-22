@@ -69,10 +69,24 @@ export default class Module {
 		});
 	}
 
+	slashCommandHandler(): void {
+		this.client?.on('interaction', (interaction) => {
+			if (!interaction.isCommand()) return;
+
+			// @ts-expect-error Command is already checked above
+			const command = this.commands.get(interaction.command.name);
+			if (command) command.runSlash(interaction as Discord.CommandInteraction);
+		});
+	}
+
 	start(client: Discord.Client, logger: winston.Logger): void {
 		this.client = client;
 		this.logger = logger;
 		this.reload();
 		this.commandHandler();
 	}
+}
+
+export function getPrefix(): string {
+	return config.defaultPrefix;
 }
