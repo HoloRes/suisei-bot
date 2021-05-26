@@ -18,7 +18,7 @@ pipelines:
               - git remote set-url origin http://bitbucket.org/$BITBUCKET_REPO_FULL_NAME
               - git reflog expire --expire=all --all
               #- echo ".bitbucket/pipelines/generated" >> .git/info/exclude
-              - chmod 777 repo
+              #- chmod 777 repo
               - git push --mirror git@github.com:HoloRes/suisei-bot.git
 
         - step:
