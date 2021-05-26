@@ -9,7 +9,7 @@ pipelines:
             name: Mirror to GitHub
             script:
               - umask 000
-              - GIT_LFS_SKIP_SMUDGE=1 retry 6 git clone --mirror https://x-token-auth:$REPOSITORY_OAUTH_ACCESS_TOKEN@bitbucket.org/$BITBUCKET_REPO_FULL_NAME.git repo
+              - GIT_LFS_SKIP_SMUDGE=1 git clone --mirror https://x-token-auth:$REPOSITORY_OAUTH_ACCESS_TOKEN@bitbucket.org/$BITBUCKET_REPO_FULL_NAME.git repo
               - git config user.name bitbucket-pipelines
               - git config user.email commits-noreply@bitbucket.org
               - git config push.default current
