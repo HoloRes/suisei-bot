@@ -5,10 +5,20 @@ pipelines:
     - parallel:
         - step:
             clone:
-              depth: full
+              enabled: false
             name: Mirror to GitHub
             script:
-              - for i in $(git branch -r | grep -vE "HEAD|master" | sed 's/^[ ]\+//');
+              - umask 000
+              - GIT_LFS_SKIP_SMUDGE=1 retry 6 git clone --mirror https://x-token-auth:$REPOSITORY_OAUTH_ACCESS_TOKEN@bitbucket.org/$BITBUCKET_REPO_FULL_NAME.git repo
+              - git config user.name bitbucket-pipelines
+              - git config user.email commits-noreply@bitbucket.org
+              - git config push.default current
+              - git config http.${BITBUCKET_GIT_HTTP_ORIGIN}.proxy http://localhost:29418/
+              - git remote set-url origin http://bitbucket.org/$BITBUCKET_REPO_FULL_NAME
+              - git reflog expire --expire=all --all
+              - echo ".bitbucket/pipelines/generated" >> .git/info/exclude
+              - chmod 777 repo
+              - cd repo
               - git push --mirror git@github.com:HoloRes/suisei-bot.git
 
         - step:
