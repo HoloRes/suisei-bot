@@ -8,8 +8,7 @@ pipelines:
               depth: full
             name: Mirror to GitHub
             script:
-              - git fetch
-              - git pull
+              - for remote in `git branch -r | grep -v /HEAD`; do git checkout --track $remote ; done
               - git push --mirror git@github.com:HoloRes/suisei-bot.git
 
         - step:
