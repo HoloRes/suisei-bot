@@ -8,7 +8,10 @@ pipelines:
               depth: full
             name: Mirror to GitHub
             script:
-              - for remote in `git branch -r | grep -v /HEAD`; do git checkout --track $remote ; done
+              - for i in $(git for-each-ref --format=%(refname:short) \
+                --no-merged=origin/HEAD refs/remotes/origin); do \
+                git switch --track $i; \
+                done
               - git push --mirror git@github.com:HoloRes/suisei-bot.git
 
         - step:
