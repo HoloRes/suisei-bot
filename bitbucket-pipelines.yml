@@ -4,6 +4,8 @@ pipelines:
   default:
     - parallel:
         - step:
+            clone:
+              depth: full
             name: Mirror to GitHub
             script:
               - git fetch
