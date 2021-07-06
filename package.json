@@ -42,7 +42,7 @@
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-import-resolver-typescript": "2.4.0",
     "eslint-plugin-import": "2.23.3",
-    "husky": "6.0.0",
+    "husky": "7.0.1",
     "lint-staged": "11.0.0",
     "ts-node": "9.1.1",
     "ts-node-dev": "1.1.6",
