@@ -10,7 +10,7 @@
     "axios": "^0.21.1",
     "discord.js": "github:discordjs/discord.js",
     "express": "^4.17.1",
-    "googleapis": "^73.0.0",
+    "googleapis": "^81.0.0",
     "helmet": "^4.6.0",
     "html-entities": "^2.3.2",
     "humanize-duration": "^3.26.0",
