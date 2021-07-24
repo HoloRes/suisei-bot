@@ -28,8 +28,8 @@
     "winston-loki": "^6.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "12.1.4",
-    "@commitlint/config-conventional": "12.1.4",
+    "@commitlint/cli": "13.1.0",
+    "@commitlint/config-conventional": "13.1.0",
     "@sentry/types": "6.4.1",
     "@tsconfig/node14": "1.0.0",
     "@types/express": "4.17.11",
