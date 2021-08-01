@@ -16,7 +16,7 @@ COPY package-lock.json .
 RUN npm i -g npm
 
 # Install Git
-RUN apk add git
+RUN apk add git=2.24.4-r0 --no-cache
 
 # Use HTTP instead of SSH
 RUN git config --global url."https://github.com/".insteadOf git@github.com: \
