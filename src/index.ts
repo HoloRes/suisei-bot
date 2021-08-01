@@ -10,6 +10,7 @@ import * as path from 'path';
 import mongoose from 'mongoose';
 import Discord, { Intents } from 'discord.js';
 import helmet from 'helmet';
+import 'reflect-metadata';
 
 // Types
 import { IConfig } from './types';
@@ -28,7 +29,8 @@ import DevModule from './modules/dev';
 import UtilityModule from './modules/util';
 
 // Local files
-const config: IConfig = require('../config');
+// eslint-disable-next-line import/extensions
+const config: IConfig = require('../config.js');
 
 // Init
 const myFormat = winston.format.printf(({
@@ -94,7 +96,7 @@ app?.use(helmet());
 
 if (config.api && app) {
 	// Heartbeat route, used for deployment validation
-	app.get('/heartbeat', (req, res) => {
+	app.get('/heartbeat', (_, res) => {
 		res.status(200).send('OK');
 	});
 }
