@@ -107,5 +107,5 @@ dist
 .idea/
 
 # Config files
-config.json
-config.js
+/config.json
+/config.js

@@ -12,6 +12,10 @@ WORKDIR /tmp
 COPY package.json .
 COPY package-lock.json .
 
+# Use HTTP instead of SSH
+RUN git config --global url."https://github.com/".insteadOf git@github.com: \
+    && git config --global url."https://".insteadOf ssh://
+
 # Install packages
 RUN npm ci
 
