@@ -12,12 +12,18 @@ WORKDIR /tmp
 COPY package.json .
 COPY package-lock.json .
 
+# Update npm
+RUN npm i -g npm
+
+# Install Git
+RUN apk add git
+
 # Use HTTP instead of SSH
 RUN git config --global url."https://github.com/".insteadOf git@github.com: \
     && git config --global url."https://".insteadOf ssh://
 
 # Install packages
-RUN npm ci
+RUN npm i --ignore-scripts
 
 # Symlink $ to source code dir
 RUN npx basetag link
@@ -34,7 +40,10 @@ WORKDIR /app
 
 COPY package.json .
 COPY package-lock.json .
-RUN npm ci
+RUN npm ci --ignore-scripts
+
+# Remove Git
+RUN apk del git
 
 # Copy build to dist
 RUN cp -r /tmp/dist/* . \
