@@ -1,75 +1,83 @@
-image: node:lts-buster
+image: node:16-buster
+
+definitions:
+  steps:
+    - step: &mirror
+        clone:
+          enabled: false
+        name: Mirror to GitHub
+        script:
+          - umask 000
+          - GIT_LFS_SKIP_SMUDGE=1 git clone --mirror https://x-token-auth:$REPOSITORY_OAUTH_ACCESS_TOKEN@bitbucket.org/$BITBUCKET_REPO_FULL_NAME.git repo
+          - cd repo
+          - git config user.name bitbucket-pipelines
+          - git config user.email commits-noreply@bitbucket.org
+          - git config push.default current
+          - git config http.${BITBUCKET_GIT_HTTP_ORIGIN}.proxy http://localhost:29418/
+          - git remote set-url origin http://bitbucket.org/$BITBUCKET_REPO_FULL_NAME
+          - git reflog expire --expire=all --all
+          #- echo ".bitbucket/pipelines/generated" >> .git/info/exclude
+          #- chmod 777 repo
+          - git push --mirror git@github.com:HoloRes/suisei-bot.git
+
+    - step: &lint
+        name: Code linting
+        script:
+          - npm install
+          - npm run lint:ci
+        caches:
+          - node
+
+    - step: &lintDockerfile
+        name: Lint the Dockerfile
+        image: hadolint/hadolint:latest-debian
+        script:
+          - hadolint Dockerfile
+
+    - step: &snyk
+        name: Scan using Snyk
+        script:
+          - npm install -g snyk # binary download also available
+          - npm ci
+          - pipe: snyk/snyk-scan:0.4.6
+            variables:
+              SNYK_TOKEN: $SNYK_TOKEN
+              LANGUAGE: "npm"
+              CODE_INSIGHTS_RESULTS: "true"
+              MONITOR: "true"
+              DONT_BREAK_BUILD: "true"
+        caches:
+          - node
+
+    - step: &build
+        name: Build
+        script:
+          - IMAGE_NAME=$BITBUCKET_REPO_SLUG
+          - REPO_URL=$BITBUCKET_GIT_HTTP_ORIGIN
+          - docker build . --file Dockerfile --tag ${IMAGE_NAME}
+            --label "org.opencontainers.image.url"="${REPO_URL}"
+            --label "org.opencontainers.image.source"="${REPO_URL}"
+            --label "org.opencontainers.image.title"="${BITBUCKET_REPO_SLUG}"
+            --label "org.opencontainers.image.licenses"="MIT"
+            --label "org.opencontainers.image.description"="A Discord bot specifically built for VTuber servers"
+            --label "org.opencontainers.image.revision"="${BITBUCKET_COMMIT}"
+            --label "org.opencontainers.image.version"="${BITBUCKET_BRANCH}"
+          - docker save ${IMAGE_NAME} --output "${IMAGE_NAME}.tar"
+        services:
+          - docker
+        caches:
+          - docker
+        artifacts:
+          - "*.tar"
 
 pipelines:
   default:
     - parallel:
-        - step:
-            clone:
-              enabled: false
-            name: Mirror to GitHub
-            script:
-              - umask 000
-              - GIT_LFS_SKIP_SMUDGE=1 git clone --mirror https://x-token-auth:$REPOSITORY_OAUTH_ACCESS_TOKEN@bitbucket.org/$BITBUCKET_REPO_FULL_NAME.git repo
-              - cd repo
-              - git config user.name bitbucket-pipelines
-              - git config user.email commits-noreply@bitbucket.org
-              - git config push.default current
-              - git config http.${BITBUCKET_GIT_HTTP_ORIGIN}.proxy http://localhost:29418/
-              - git remote set-url origin http://bitbucket.org/$BITBUCKET_REPO_FULL_NAME
-              - git reflog expire --expire=all --all
-              #- echo ".bitbucket/pipelines/generated" >> .git/info/exclude
-              #- chmod 777 repo
-              - git push --mirror git@github.com:HoloRes/suisei-bot.git
-
-        - step:
-            name: Code linting
-            script:
-              - npm install
-              - npm run lint:ci
-            caches:
-              - node
-
-        - step:
-            name: Scan using Snyk
-            script:
-              - npm install -g snyk # binary download also available
-              - npm ci
-              - pipe: snyk/snyk-scan:0.4.6
-                variables:
-                  SNYK_TOKEN: $SNYK_TOKEN
-                  LANGUAGE: "npm"
-                  CODE_INSIGHTS_RESULTS: "true"
-                  MONITOR: "true"
-                  DONT_BREAK_BUILD: "true"
-            caches:
-              - node
-
-        - step:
-            name: Build
-            script:
-              - IMAGE_NAME=$BITBUCKET_REPO_SLUG
-              - REPO_URL=$BITBUCKET_GIT_HTTP_ORIGIN
-              - docker build . --file Dockerfile --tag ${IMAGE_NAME}
-                --label "org.opencontainers.image.url"="${REPO_URL}"
-                --label "org.opencontainers.image.source"="${REPO_URL}"
-                --label "org.opencontainers.image.title"="${BITBUCKET_REPO_SLUG}"
-                --label "org.opencontainers.image.licenses"="MIT"
-                --label "org.opencontainers.image.description"="A Discord bot specifically built for VTuber servers"
-                --label "org.opencontainers.image.revision"="${BITBUCKET_COMMIT}"
-                --label "org.opencontainers.image.version"="${BITBUCKET_BRANCH}"
-              - docker save ${IMAGE_NAME} --output "${IMAGE_NAME}.tar"
-            services:
-              - docker
-            caches:
-              - docker
-            artifacts:
-              - "*.tar"
-
-        - step:
-            name: Lint the Dockerfile
-            image: hadolint/hadolint:latest-debian
-            script:
-              - hadolint Dockerfile
+        - step: *mirror
+        - step: *lint
+        - step: *lintDockerfile
+        - step: *snyk
+        - step: *build
 
     - step:
         name: Push to GHCR
@@ -84,9 +92,15 @@ pipelines:
         services:
           - docker
 
-
   pull-requests:
     master:
+      - parallel:
+        - step: *mirror
+        - step: *lint
+        - step: *lintDockerfile
+        - step: *snyk
+        - step: *build
+
       - step:
           name: Create Sentry release
           script:
@@ -96,31 +110,36 @@ pipelines:
                 SENTRY_ORG: $SENTRY_ORG
                 SENTRY_URL: $SENTRY_URL
                 SENTRY_PROJECT: $SENTRY_PROJECT
-                ENVIRONMENT: 'staging'
-
-      - step:
-          name: Deploy to Staging
-          deployment: Staging
-          script:
-            # Install Python
-            - apt update -y
-            - sudo apt install -y python3-pip
-            # Create and push Docker image
-            - echo ${DOCKER_PASSWORD} | docker login ghcr.io --username "$DOCKER_USERNAME" --password-stdin
-            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
-            - docker load --input "${IMAGE_NAME}.tar"
-            - ENVIRONMENT="staging"
-            - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
-            - docker tag "${IMAGE_NAME}" "${IMAGE}:${ENVIRONMENT}"
-            - docker push "${IMAGE}:${ENVIRONMENT}"
-            # Call Ansible
-            - ./.bitbucket/tower.bash staging "$VERSION"
+                ENVIRONMENT: "staging"
 
           services:
             - docker
 
   branches:
     master:
+      - parallel:
+        - step: *mirror
+        - step: *lint
+        - step: *lintDockerfile
+        - step: *snyk
+        - step: *build
+
+      - step:
+          name: Publish docker tag
+          script:
+            # Extract package.json version
+            - export PACKAGE_VERSION=$(node --eval="process.stdout.write(require('./package.json').version)")
+            # Create and push Docker image
+            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - echo ${DOCKER_PASSWORD} | docker login ghcr.io --username "$DOCKER_USERNAME" --password-stdin
+            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
+            - docker load --input "${IMAGE_NAME}.tar"
+            - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
+            - docker tag "${IMAGE_NAME}" "${IMAGE}:${PACKAGE_VERSION}"
+            - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
+            - docker push "${IMAGE}:${PACKAGE_VERSION}"
+            - docker push "${IMAGE}:${VERSION}"
+      
       - step:
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
@@ -138,24 +157,4 @@ pipelines:
                 SENTRY_ORG: $SENTRY_ORG
                 SENTRY_URL: $SENTRY_URL
                 SENTRY_PROJECT: $SENTRY_PROJECT
-                ENVIRONMENT: 'production'
-
-      - step:
-          name: Deploy to Production
-          deployment: Production
-          script:
-            # Install Python
-            - apt update -y
-            - sudo apt install -y python3-pip
-            # Create and push Docker image
-            - echo ${DOCKER_PASSWORD} | docker login ghcr.io --username "$DOCKER_USERNAME" --password-stdin
-            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
-            - docker load --input "${IMAGE_NAME}.tar"
-            - ENVIRONMENT="prod"
-            - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
-            - docker tag "${IMAGE_NAME}" "${IMAGE}:${ENVIRONMENT}"
-            - docker push "${IMAGE}:${ENVIRONMENT}"
-            # Call Ansible
-            - ./.bitbucket/tower.bash production "$VERSION"
-          services:
-            - docker
+                ENVIRONMENT: "production"
