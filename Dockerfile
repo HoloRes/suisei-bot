@@ -12,6 +12,8 @@ COPY package-lock.json .
 
 # Install packages
 RUN npm ci --ignore-scripts
+
+# Symlink $ to source code dir
 RUN npx basetag link
 
 # Copy remaining files except files in .dockerignore
