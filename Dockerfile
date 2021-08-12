@@ -1,5 +1,5 @@
 # Select NodeJS LTS Alpine image, alpine for smaller size
-FROM node:lts-alpine
+FROM node:16-alpine
 
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
@@ -14,13 +14,6 @@ COPY package-lock.json .
 
 # Update npm
 RUN npm i -g npm
-
-# Install Git
-RUN apk add git=2.24.4-r0 --no-cache
-
-# Use HTTP instead of SSH
-RUN git config --global url."https://github.com/".insteadOf git@github.com: \
-    && git config --global url."https://".insteadOf ssh://
 
 # Install packages
 RUN npm i --ignore-scripts
@@ -38,9 +31,6 @@ WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
 RUN npm ci --ignore-scripts
-
-# Remove Git
-RUN apk del git
 
 # Copy build to dist
 RUN cp -r /tmp/dist/* . \
