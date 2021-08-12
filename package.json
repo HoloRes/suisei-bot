@@ -8,7 +8,9 @@
     "@sentry/node": "^6.3.6",
     "@sentry/tracing": "^6.3.6",
     "axios": "^0.21.1",
-    "discord.js": "github:discordjs/discord.js",
+    "bufferutil": "^4.0.3",
+    "discord.js": "^13.0.1",
+    "erlpack": "github:discord/erlpack",
     "express": "^4.17.1",
     "googleapis": "^73.0.0",
     "helmet": "^4.6.0",
@@ -25,8 +27,10 @@
     "socket.io": "^4.1.1",
     "twitter-lite": "^1.1.0",
     "typescript-is": "^0.18.2",
+    "utf-8-validate": "^5.0.5",
     "winston": "^3.3.3",
-    "winston-loki": "^6.0.0"
+    "winston-loki": "^6.0.0",
+    "zlib-sync": "^0.1.7"
   },
   "devDependencies": {
     "@commitlint/cli": "12.1.4",
