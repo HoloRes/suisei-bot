@@ -838,7 +838,7 @@ exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, re
 });
 
 scheduleJob('*/5 * * * *', async () => {
-	const docs = await Mute.find({ expireAt: { $lte: new Date() } }).lean.exec()
+	const docs = await Mute.find({ expireAt: { $lte: new Date() } }).lean().exec()
 		.catch((err) => {
 			Sentry.captureException(err);
 			return logger.error(err, { labels: { module: 'moderation', event: ['unmuteCron'] } });
