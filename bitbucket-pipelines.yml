@@ -69,17 +69,8 @@ definitions:
           - docker
         artifacts:
           - "*.tar"
-
-pipelines:
-  default:
-    - parallel:
-        - step: *mirror
-        - step: *lint
-        - step: *lintDockerfile
-        - step: *snyk
-        - step: *build
-
-    - step:
+    
+    - step: &publish
         name: Push to GHCR
         script:
           - IMAGE_NAME=$BITBUCKET_REPO_SLUG
@@ -92,6 +83,16 @@ pipelines:
         services:
           - docker
 
+pipelines:
+  default:
+    - parallel:
+        - step: *mirror
+        - step: *lint
+        - step: *lintDockerfile
+        - step: *snyk
+        - step: *build
+    - step: *publish
+
   pull-requests:
     master:
       - parallel:
@@ -100,6 +101,8 @@ pipelines:
         - step: *lintDockerfile
         - step: *snyk
         - step: *build
+
+      - step: *publish
 
       - step:
           name: Create Sentry release
@@ -111,7 +114,6 @@ pipelines:
                 SENTRY_URL: $SENTRY_URL
                 SENTRY_PROJECT: $SENTRY_PROJECT
                 ENVIRONMENT: "staging"
-
           services:
             - docker
 
@@ -139,6 +141,8 @@ pipelines:
             - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
             - docker push "${IMAGE}:${PACKAGE_VERSION}"
             - docker push "${IMAGE}:${VERSION}"
+          services:
+            - docker
       
       - step:
           script:
