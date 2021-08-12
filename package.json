@@ -35,6 +35,7 @@
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --fix .",
+    "lint:ci": "eslint \"./src/**\" ;exit 0",
     "postinstall": "basetag link"
   },
   "repository": {
