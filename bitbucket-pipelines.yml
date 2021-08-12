@@ -104,7 +104,7 @@ pipelines:
       - step:
           name: Create Sentry release
           script:
-            - pipe: holores/sentry-new-release:0.4.0
+            - pipe: holores/sentry-new-release:0.5.0
               variables:
                 SENTRY_AUTH_TOKEN: $SENTRY_TOKEN
                 SENTRY_ORG: $SENTRY_ORG
@@ -151,7 +151,7 @@ pipelines:
       - step:
           name: Create Sentry release
           script:
-            - pipe: holores/sentry-new-release:0.4.0
+            - pipe: holores/sentry-new-release:0.5.0
               variables:
                 SENTRY_AUTH_TOKEN: $SENTRY_TOKEN
                 SENTRY_ORG: $SENTRY_ORG
