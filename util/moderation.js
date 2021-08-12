@@ -837,6 +837,35 @@ exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, re
 	}
 });
 
+scheduleJob('*/5 * * * *', async () => {
+	const docs = await Mute.find({ expireAt: { $lte: new Date() } }).lean.exec()
+		.catch((err) => {
+			Sentry.captureException(err);
+			return logger.error(err, { labels: { module: 'moderation', event: ['unmuteCron'] } });
+		});
+
+	docs.forEach(async (doc) => {
+		if (doc.leftAt) return;
+		const guild = await client.guilds.fetch(config.discord.serverId)
+			.catch((err) => {
+				Sentry.captureException(err);
+				return logger.error(err, { labels: { module: 'moderation', event: ['unmuteCron', 'discord'] } });
+			});
+
+		const member = await guild.members.fetch(doc.userId)
+			.catch((err) => {
+				Sentry.captureException(err);
+				return logger.error(err, { labels: { module: 'moderation', event: ['unmuteCron', 'discord'] } });
+			});
+
+		unmute(member)
+			.catch((err) => {
+				Sentry.captureException(err);
+				return logger.error(err, { labels: { module: 'moderation', event: ['unmuteCron'] } });
+			});
+	});
+});
+
 exports.init = () => {
 	Mute.find({}, (err, docs) => {
 		if (err) return logger.error(err);
