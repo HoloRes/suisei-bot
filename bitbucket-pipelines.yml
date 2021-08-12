@@ -139,6 +139,8 @@ pipelines:
             - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
             - docker push "${IMAGE}:${PACKAGE_VERSION}"
             - docker push "${IMAGE}:${VERSION}"
+          services:
+            - docker
       
       - step:
           script:

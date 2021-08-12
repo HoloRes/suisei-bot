@@ -1,5 +1,5 @@
-# Select NodeJS LTS Alpine image, alpine for smaller size
-FROM node:lts-alpine
+# Select NodeJS LTS image
+FROM node:lts-buster
 
 # For Sentry release tracking
 ARG sha
@@ -11,7 +11,8 @@ COPY package.json .
 COPY package-lock.json .
 
 # Install packages
-RUN npm ci
+RUN npm ci --ignore-scripts
+RUN npx basetag link
 
 # Copy remaining files except files in .dockerignore
 COPY . .
