@@ -11,7 +11,7 @@
     "bufferutil": "^4.0.3",
     "discord.js": "^13.0.1",
     "express": "^4.17.1",
-    "googleapis": "^73.0.0",
+    "googleapis": "^85.0.0",
     "helmet": "^4.6.0",
     "html-entities": "^2.3.2",
     "humanize-duration": "^3.26.0",
