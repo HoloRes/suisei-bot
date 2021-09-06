@@ -149,7 +149,13 @@ function unmute(member, reason, moderator) {
 			await member.fetch();
 			if (!member.roles.cache.has(setting.value)) return reject(new ModerationError('', 'This member is not muted'));
 
-			member.roles.remove(setting.value);
+			await member.roles.remove(setting.value)
+				.catch((err2) => {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['unmute', 'discord'] } });
+					return reject(new ModerationError(err2, 'Failed to remove role'));
+				});
+
 			if (reason && moderator) {
 				log({
 					userId: member.id,
