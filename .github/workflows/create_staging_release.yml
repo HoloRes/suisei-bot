@@ -1,7 +1,7 @@
 name: Create staging Docker image
 on:
   pull_request:
-    branches: [master]
+    branches: [v2]
 
 jobs:
   deploy:
