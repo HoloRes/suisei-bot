@@ -4,7 +4,7 @@
   "description": "A custom bot for the Hololive Resort Discord",
   "main": "dist/index.js",
   "dependencies": {
-    "@discordx/utilities": "^1.7.1",
+    "@discordx/utilities": "^2.0.0",
     "@holores/holoapi": "^1.0.6",
     "@sentry/node": "^6.3.6",
     "@sentry/tracing": "^6.3.6",
