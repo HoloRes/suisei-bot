@@ -39,7 +39,7 @@ definitions:
         script:
           - npm install -g snyk # binary download also available
           - npm ci
-          - pipe: snyk/snyk-scan:0.4.6
+          - pipe: snyk/snyk-scan:0.5.1
             variables:
               SNYK_TOKEN: $SNYK_TOKEN
               LANGUAGE: "npm"
