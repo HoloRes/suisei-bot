@@ -66,8 +66,8 @@ try {
 	} else if (config.developer.type === 'role') {
 		assertEquals<DeveloperRole>(config.developer);
 	}
-} catch (e) {
-	logger.error(`${e.name}: ${e.message}`);
+} catch (err: any) {
+	logger.error(`${err?.name}: ${err?.message}`);
 	logger.verbose('Invalid config, quiting');
 	process.exit(1);
 }
@@ -121,17 +121,9 @@ if (config.sentry) {
 }
 
 if (config.mongodb) {
-	mongoose.connect(`${config.mongodb.protocol}://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-		useFindAndModify: false,
-	});
+	mongoose.connect(`${config.mongodb.protocol}://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`);
 } else if (config.overrides?.mongodb) {
-	mongoose.connect(`${config.overrides.mongodb.protocol}://${config.overrides.mongodb.username}:${config.overrides.mongodb.password}@${config.overrides.mongodb.host}/${config.overrides.mongodb.database}`, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-		useFindAndModify: false,
-	});
+	mongoose.connect(`${config.overrides.mongodb.protocol}://${config.overrides.mongodb.username}:${config.overrides.mongodb.password}@${config.overrides.mongodb.host}/${config.overrides.mongodb.database}`);
 }
 
 export const client = new Discord.Client({
