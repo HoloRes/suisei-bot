@@ -148,7 +148,7 @@ pipelines:
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
             - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
-            - pipe: anchore/anchore-scan:0.2.14
+            - pipe: anchore/anchore-scan:0.2.17
               variables:
                 IMAGE_NAME: "${IMAGE}:${VERSION}"
 
