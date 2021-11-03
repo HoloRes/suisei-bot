@@ -104,7 +104,7 @@ const updateMember = (member) => new Promise((resolve, reject) => {
 });
 
 // eslint-disable-next-line no-async-promise-executor
-exports.warn = async (member, reason, moderator) => {
+exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject) => {
 	const logItem = new LogItem({
 		userId: member.id,
 		type: 'warn',
@@ -116,7 +116,7 @@ exports.warn = async (member, reason, moderator) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['warn', 'databaseSave'] } });
-			throw new ModerationError(err);
+			reject(new ModerationError(err));
 		}
 		log(logItem, '#ffde26');
 	});
@@ -130,10 +130,12 @@ exports.warn = async (member, reason, moderator) => {
 		.setTimestamp();
 
 	await member.send(embed)
-		.catch(() => ({ info: 'failed to send DM' }));
+		.catch(() => {
+			resolve({ info: 'failed to send DM' });
+		});
 
-	return {};
-};
+	resolve({});
+});
 
 function unmute(member, reason, moderator) {
 	return new Promise((resolve, reject) => {
@@ -186,116 +188,118 @@ function unmute(member, reason, moderator) {
 
 exports.unmute = unmute;
 
-async function mute(member, duration, reason, moderator, tos) {
-	const expirationDate = moment().add(duration, 'minutes');
-	const date = Date.now();
+function mute(member, duration, reason, moderator, tos) {
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (resolve, reject) => {
+		const expirationDate = moment().add(duration, 'minutes');
 
-	const logItem = new LogItem({
-		userId: member.id,
-		type: 'mute',
-		reason,
-		moderator: moderator.id,
-		duration: humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds(), { largest: 2, round: true }),
-		date,
-	});
-	await logItem.save((err) => {
-		if (err) {
-			Sentry.captureException(err);
-			logger.error(err, { labels: { module: 'moderation', event: ['mute', 'databaseSave'] } });
-			throw new ModerationError(err);
-		}
-		log(logItem, '#ff9c24');
-
-		const strike = new Strike({
-			_id: logItem._id,
+		const logItem = new LogItem({
 			userId: member.id,
-			date,
+			type: 'mute',
+			reason,
+			moderator: moderator.id,
+			duration: humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds(), { largest: 2, round: true }),
+			date: new Date(),
 		});
-		strike.save((err2) => {
-			if (err2) {
-				Sentry.captureException(err2);
-				logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'databaseSave'] } });
-				throw new ModerationError(err2);
+		await logItem.save((err) => {
+			if (err) {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'moderation', event: ['mute', 'databaseSave'] } });
+				reject(new ModerationError(err));
 			}
-		});
+			log(logItem, '#ff9c24');
 
-		if (tos) {
-			const tosStrike = new Strike({
-				_id: -logItem._id,
+			const strike = new Strike({
+				_id: logItem._id,
 				userId: member.id,
-				date,
 			});
-			tosStrike.save((err2) => {
+			strike.save((err2) => {
 				if (err2) {
 					Sentry.captureException(err2);
-					logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-					throw new ModerationError(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'databaseSave'] } });
+					reject(new ModerationError(err2));
 				}
 			});
-		}
 
-		Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
-			if (err2) {
-				Sentry.captureException(err2);
-				logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'databaseSearch'] } });
+			if (tos) {
+				const tosStrike = new Strike({
+					_id: -logItem._id,
+					userId: member.id,
+				});
+				tosStrike.save((err2) => {
+					if (err2) {
+						Sentry.captureException(err2);
+						logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+						reject(new ModerationError(err2));
+					}
+				});
 			}
 
-			if (!err2 && doc) {
-				try {
-					plannedUnmutes[doc._id].cancel();
-				} catch (err3) {
-					Sentry.captureException(err3);
-					logger.error(err3, { labels: { module: 'moderation', event: ['mute'] } });
+			Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
+				if (err2) {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'databaseSearch'] } });
 				}
-			}
-		});
 
-		const muteDoc = new Mute({
-			_id: logItem._id,
-			expireAt: expirationDate.toISOString(),
-			userId: member.id,
-		});
-		muteDoc.save((err2) => {
-			if (err2) {
-				Sentry.captureException(err2);
-				logger.error(err2, { labels: { module: 'moderation', event: ['warn', 'databaseSave'] } });
-				throw new ModerationError(err2);
-			}
-		});
-
-		plannedUnmutes[logItem._id] = scheduleJob(expirationDate.toDate(), () => {
-			unmute(member);
-		});
-	});
-
-	await Setting.findById('mutedRole', async (err, setting) => {
-		if (err) {
-			Sentry.captureException(err);
-			logger.error(err, { labels: { module: 'moderation', event: ['mute', 'databaseSearch'] } });
-			throw new ModerationError(err);
-		}
-
-		if (!setting) throw new ModerationError(err, 'Mute role not found.');
-		member.roles.add(setting.value, `Muted by ${moderator.user.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`)
-			.catch((err2) => {
-				Sentry.captureException(err2);
-				logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'discord'] } });
-				throw new ModerationError(err2);
+				if (!err2 && doc) {
+					try {
+						plannedUnmutes[doc._id].cancel();
+					} catch (err3) {
+						Sentry.captureException(err3);
+						logger.error(err3, { labels: { module: 'moderation', event: ['mute'] } });
+					}
+				}
 			});
+
+			const muteDoc = new Mute({
+				_id: logItem._id,
+				expireAt: expirationDate.toISOString(),
+				userId: member.id,
+			});
+			muteDoc.save((err2) => {
+				if (err2) {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['warn', 'databaseSave'] } });
+					reject(new ModerationError(err2));
+				}
+			});
+
+			plannedUnmutes[logItem._id] = scheduleJob(expirationDate.toDate(), () => {
+				unmute(member);
+			});
+		});
+
+		await Setting.findById('mutedRole', async (err, setting) => {
+			if (err) {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'moderation', event: ['mute', 'databaseSearch'] } });
+				reject(new ModerationError(err));
+			}
+
+			if (!setting) reject(new ModerationError(err, 'Mute role not found.'));
+			member.roles.add(setting.value, `Muted by ${moderator.user.tag} for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}`)
+				.catch((err2) => {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['mute', 'discord'] } });
+					reject(new ModerationError(err2));
+				});
+		});
+
+		updateMember(member);
+
+		const embed = new MessageEmbed()
+			.setTitle('Mute')
+			.setDescription(`You have been muted for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}\nReason: ${reason}`)
+			.setFooter(`Issued by: ${moderator.user.tag}`)
+			.setTimestamp();
+
+		await member.send(embed)
+			.catch(() => {
+				resolve({ info: 'failed to send DM' });
+			});
+
+		resolve({});
 	});
-
-	updateMember(member);
-
-	const embed = new MessageEmbed()
-		.setTitle('Mute')
-		.setDescription(`You have been muted for ${humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds())}\nReason: ${reason}`)
-		.setFooter(`Issued by: ${moderator.user.tag}`)
-		.setTimestamp();
-
-	await member.send(embed)
-		.catch(() => ({ info: 'failed to send DM' }));
-
-	return {};
 }
 
 exports.mute = mute;
@@ -344,157 +348,162 @@ exports.hardmute = (member, moderator) => new Promise((resolve, reject) => {
 	});
 });
 
-async function kick(member, reason, moderator, tos) {
-	const date = Date.now();
-
-	const logItem = new LogItem({
-		userId: member.id,
-		type: 'kick',
-		reason,
-		moderator: moderator.id,
-		date,
-	});
-	await logItem.save((err) => {
-		if (err) {
-			Sentry.captureException(err);
-			logger.error(err, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
-			throw new ModerationError(err);
-		}
-		log(logItem, '#f54242');
-
-		if (!tos) {
-			const strike = new Strike({
-				_id: logItem._id,
-				userId: member.id,
-				date,
-			});
-			strike.save((err2) => {
-				Sentry.captureException(err2);
-				logger.error(err2, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
-				throw new ModerationError(err2);
-			});
-		}
-	});
-	if (!tos) {
-		Mute.findOneAndDelete({ userId: member.id }, (err, doc) => {
+function kick(member, reason, moderator, tos) {
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (resolve, reject) => {
+		const logItem = new LogItem({
+			userId: member.id,
+			type: 'kick',
+			reason,
+			moderator: moderator.id,
+			date: new Date(),
+		});
+		await logItem.save((err) => {
 			if (err) {
 				Sentry.captureException(err);
-				logger.error(err, { labels: { module: 'moderation', event: ['kick', 'databaseSearch'] } });
+				logger.error(err, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
+				reject(new ModerationError(err));
 			}
+			log(logItem, '#f54242');
 
-			if (!err && doc) {
-				try {
-					plannedUnmutes[doc._id].cancel();
-				} catch (e) {
+			if (!tos) {
+				const strike = new Strike({
+					_id: logItem._id,
+					userId: member.id,
+				});
+				strike.save((err2) => {
+					Sentry.captureException(err2);
+					logger.error(err2, { labels: { module: 'moderation', event: ['kick', 'databaseSave'] } });
+					reject(new ModerationError(err2));
+				});
+			}
+		});
+		if (!tos) {
+			Mute.findOneAndDelete({ userId: member.id }, (err, doc) => {
+				if (err) {
 					Sentry.captureException(err);
-					logger.error(err, { labels: { module: 'moderation', event: ['kick', 'unmute'] } });
+					logger.error(err, { labels: { module: 'moderation', event: ['kick', 'databaseSearch'] } });
 				}
-			}
-		});
-	}
 
-	updateMember(member);
+				if (!err && doc) {
+					try {
+						plannedUnmutes[doc._id].cancel();
+					} catch (e) {
+						Sentry.captureException(err);
+						logger.error(err, { labels: { module: 'moderation', event: ['kick', 'unmute'] } });
+					}
+				}
+			});
+		}
 
-	const embed = new MessageEmbed()
-		.setTitle('Kick')
-		.setDescription(`You have been kicked for: ${reason}`)
-		.setFooter(`Issued by: ${moderator.user.tag}`)
-		.setTimestamp();
+		updateMember(member);
 
-	await member.send(embed)
-		.catch(() => ({ type: 'success', info: 'failed to send DM' }));
+		const embed = new MessageEmbed()
+			.setTitle('Kick')
+			.setDescription(`You have been kicked for: ${reason}`)
+			.setFooter(`Issued by: ${moderator.user.tag}`)
+			.setTimestamp();
 
-	await member.kick(reason)
-		.catch((err) => {
-			Sentry.captureException(err);
-			logger.error(err, { labels: { module: 'moderation', event: ['kick', 'discord'] } });
-			throw new ModerationError(err);
-		});
+		await member.send(embed)
+			.catch(() => {
+				resolve({ type: 'success', info: 'failed to send DM' });
+			});
 
-	return {};
+		await member.kick(reason)
+			.catch((err) => {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'moderation', event: ['kick', 'discord'] } });
+				reject(new ModerationError(err));
+			});
+
+		resolve({});
+	});
 }
 
 exports.kick = kick;
 
-async function ban(member, reason, moderator, tos) {
-	const date = Date.now();
-
-	const logItem = new LogItem({
-		userId: member.id,
-		type: 'ban',
-		reason,
-		moderator: moderator.id,
-		date,
-	});
-	await logItem.save((err) => {
-		if (err) {
-			Sentry.captureException(err);
-			logger.error(err, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-			throw new ModerationError(err);
-		}
-		log(logItem, '#f54242');
-
-		const strike = new Strike({
-			_id: logItem._id,
+function ban(member, reason, moderator, tos) {
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (resolve, reject) => {
+		const logItem = new LogItem({
 			userId: member.id,
-			date,
+			type: 'ban',
+			reason,
+			moderator: moderator.id,
+			date: new Date(),
 		});
-		strike.save((err2) => {
-			if (err2) {
-				Sentry.captureException(err2);
-				logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-				throw new ModerationError(err2);
+		await logItem.save((err) => {
+			if (err) {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+				reject(new ModerationError(err));
 			}
-		});
+			log(logItem, '#f54242');
 
-		if (tos) {
-			const tosStrike = new Strike({
-				_id: -logItem._id,
+			const strike = new Strike({
+				_id: logItem._id,
 				userId: member.id,
-				date,
 			});
-			tosStrike.save((err2) => {
+			strike.save((err2) => {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
-					throw new ModerationError(err2);
+					reject(new ModerationError(err2));
 				}
 			});
-		}
-	});
 
-	Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
-		if (err2) {
-			Sentry.captureException(err2);
-			logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSearch'] } });
-		}
-
-		if (!err2 && doc) {
-			try {
-				plannedUnmutes[doc._id].cancel();
-			} catch (err3) {
-				logger.error(err3, { labels: { module: 'moderation', event: ['ban', 'databaseSearch'] } });
+			if (tos) {
+				const tosStrike = new Strike({
+					_id: -logItem._id,
+					userId: member.id,
+				});
+				tosStrike.save((err2) => {
+					if (err2) {
+						Sentry.captureException(err2);
+						logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSave'] } });
+						reject(new ModerationError(err2));
+					}
+				});
 			}
-		}
-	});
-
-	updateMember(member);
-
-	const embed = new MessageEmbed()
-		.setTitle('Ban')
-		.setDescription(`You have been banned for: ${reason}`)
-		.setFooter(`Issued by: ${moderator.user.tag}`)
-		.setTimestamp();
-
-	await member.send(embed)
-		.catch(() => ({ info: 'failed to send DM' }));
-
-	await member.ban({ reason })
-		.catch((err) => {
-			Sentry.captureException(err);
-			logger.error(err, { labels: { module: 'moderation', event: ['ban', 'discord'] } });
-			throw new ModerationError(err);
 		});
+
+		Mute.findOneAndDelete({ userId: member.id }, (err2, doc) => {
+			if (err2) {
+				Sentry.captureException(err2);
+				logger.error(err2, { labels: { module: 'moderation', event: ['ban', 'databaseSearch'] } });
+			}
+
+			if (!err2 && doc) {
+				try {
+					plannedUnmutes[doc._id].cancel();
+				} catch (err3) {
+					logger.error(err3, { labels: { module: 'moderation', event: ['ban', 'databaseSearch'] } });
+				}
+			}
+		});
+
+		updateMember(member);
+
+		const embed = new MessageEmbed()
+			.setTitle('Ban')
+			.setDescription(`You have been banned for: ${reason}`)
+			.setFooter(`Issued by: ${moderator.user.tag}`)
+			.setTimestamp();
+
+		await member.send(embed)
+			.catch(() => {
+				resolve({ info: 'failed to send DM' });
+			});
+
+		await member.ban({ reason })
+			.catch((err) => {
+				Sentry.captureException(err);
+				logger.error(err, { labels: { module: 'moderation', event: ['ban', 'discord'] } });
+				reject(new ModerationError(err));
+			});
+
+		resolve({});
+	});
 }
 
 exports.ban = ban;
@@ -534,14 +543,15 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 	});
 });
 
-exports.massban = async (users, reason, moderator) => {
+// eslint-disable-next-line no-async-promise-executor
+exports.massban = (users, reason, moderator) => new Promise(async (resolve, reject) => {
 	const timer = (ms) => new Promise((res) => setTimeout(res, ms));
 
 	const guild = await client.guilds.fetch(config.discord.serverId)
 		.catch((err) => {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['massban', 'discord'] } });
-			throw new ModerationError(err);
+			reject(new ModerationError(err));
 		});
 
 	for (let i = 0; i < users.length; i++) {
@@ -562,15 +572,17 @@ exports.massban = async (users, reason, moderator) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['massban', 'databaseSearch'] } });
-			return {};
+			return resolve({});
 		}
-		if (!doc) return {};
+		if (!doc) return resolve({});
 		client.channels.fetch(doc.value)
 			.then((channel) => {
 				channel.send(embed);
 			});
 	});
-};
+
+	resolve({});
+});
 
 exports.tosviolation = (member, reason, moderator) => new Promise((resolve, reject) => {
 	Strike.find({ userId: member.id }, (err2, strikes) => {
@@ -703,14 +715,16 @@ exports.updateReason = (caseID, reason) => new Promise((resolve, reject) => {
 	});
 });
 
-exports.addNote = async (member, note) => {
+// eslint-disable-next-line no-async-promise-executor
+exports.addNote = (member, note) => new Promise(async (resolve, reject) => {
 	await updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['addNote', 'databaseSearch'] } });
-			throw new ModerationError(err);
+			reject(new ModerationError(err));
+			return;
 		}
 
 		doc.notes.push({
@@ -721,24 +735,26 @@ exports.addNote = async (member, note) => {
 			if (err2) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'moderation', event: ['addNote', 'databaseSave'] } });
-				throw new ModerationError(err2);
-			} else return {};
+				reject(new ModerationError(err2));
+			} else resolve({});
 		});
 	});
-};
+});
 
-exports.updateNote = async (member, noteID, note) => {
+// eslint-disable-next-line no-async-promise-executor
+exports.updateNote = (member, noteID, note) => new Promise(async (resolve, reject) => {
 	await updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['updateNote', 'databaseSearch'] } });
-			throw new ModerationError(err);
+			reject(new ModerationError(err));
+			return;
 		}
 
 		const index = doc.notes.findIndex((noteI) => noteI._id === noteID);
-		if (index === -1) throw new ModerationError('', 'Note not found');
+		if (index === -1) reject(new ModerationError('', 'Note not found'));
 		else {
 			// eslint-disable-next-line no-param-reassign
 			doc.notes[index].value = note;
@@ -746,37 +762,39 @@ exports.updateNote = async (member, noteID, note) => {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['updateNote', 'databaseSave'] } });
-					throw new ModerationError(err2);
-				} else return {};
+					reject(new ModerationError(err2));
+				} else resolve({});
 			});
 		}
 	});
-};
+});
 
-exports.removeNote = async (member, noteID) => {
+// eslint-disable-next-line no-async-promise-executor
+exports.removeNote = (member, noteID) => new Promise(async (resolve, reject) => {
 	await updateMember(member);
 
 	User.findById(member.id, (err, doc) => {
 		if (err) {
 			Sentry.captureException(err);
 			logger.error(err, { labels: { module: 'moderation', event: ['removeNote', 'databaseSearch'] } });
-			throw new ModerationError(err);
+			reject(new ModerationError(err));
+			return;
 		}
 
 		const index = doc.notes.findIndex((note) => note._id === noteID);
-		if (index === -1) throw new ModerationError('', 'Note not found');
+		if (index === -1) reject(new ModerationError('', 'Note not found'));
 		else {
 			doc.notes.splice(index, 1);
 			doc.save((err2) => {
 				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err2, { labels: { module: 'moderation', event: ['removeNote', 'databaseSave'] } });
-					throw new ModerationError(err2);
-				} else return {};
+					reject(new ModerationError(err2));
+				} else resolve({});
 			});
 		}
 	});
-};
+});
 
 exports.getNotes = (member) => new Promise((resolve, reject) => {
 	User.findById(member.id, (err, doc) => {
@@ -794,37 +812,36 @@ exports.getNotes = (member) => new Promise((resolve, reject) => {
 	});
 });
 
-exports.getMemberFromMessage = async (message, args) => {
+// eslint-disable-next-line no-async-promise-executor
+exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, reject) => {
 	if (message.mentions.members.size > 0) {
 		const member = await message.mentions.members.first().fetch();
-		if (member.hasPermission('MANAGE_GUILD')) throw new ModerationError('', 'This member is a moderator');
-		else if (member.user.bot) throw new ModerationError('', 'This user is a bot');
-		else return member;
+		if (member.hasPermission('MANAGE_GUILD')) reject(new ModerationError('', 'This member is a moderator'));
+		else if (member.user.bot) reject(new ModerationError('', 'This user is a bot'));
+		else resolve(member);
 	} else {
 		message.guild.members.fetch(args[0])
 			.then((member) => {
-				if (!member.user) throw new ModerationError('', 'Member not found');
-				else if (member.hasPermission('MANAGE_GUILD')) throw new ModerationError('', 'This member is a moderator');
-				else if (member.user.bot) throw new ModerationError('', 'This user is a bot');
-				else return member;
+				if (!member.user) reject(new ModerationError('', 'Member not found'));
+				else if (member.hasPermission('MANAGE_GUILD')) reject(new ModerationError('', 'This member is a moderator'));
+				else if (member.user.bot) reject(new ModerationError('', 'This user is a bot'));
+				else resolve(member);
 			})
 			.catch(() => {
 				message.guild.members.fetch()
 					.then(() => {
 						const member = message.guild.members.fetch({ query: args[0], limit: 1 })
-							.catch(() => {
-								throw new ModerationError('', 'Member not found');
-							});
+							.catch(() => reject(new ModerationError('', 'Member not found')));
 
-						if (!member.user) throw new ModerationError('', 'Member not found');
+						if (!member.user) reject(new ModerationError('', 'Member not found'));
 
-						else if (member.hasPermission('MANAGE_GUILD')) throw new ModerationError('', 'This member is a moderator');
-						else if (member.user.bot) throw new ModerationError('', 'This user is a bot');
-						else return member;
+						else if (member.hasPermission('MANAGE_GUILD')) reject(new ModerationError('', 'This member is a moderator'));
+						else if (member.user.bot) reject(new ModerationError('', 'This user is a bot'));
+						else return resolve(member);
 					});
 			});
 	}
-};
+});
 
 scheduleJob('*/5 * * * *', async () => {
 	const docs = await Mute.find({ expireAt: { $lte: new Date() } }).lean().exec()

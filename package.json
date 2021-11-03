@@ -1,6 +1,6 @@
 {
   "name": "suisei-mic",
-  "version": "2.2.3",
+  "version": "2.2.2",
   "description": "A custom bot for the Hololive Resort Discord",
   "main": "index.js",
   "dependencies": {
