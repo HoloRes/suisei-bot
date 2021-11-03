@@ -160,3 +160,48 @@ pipelines:
                 SENTRY_URL: $SENTRY_URL
                 SENTRY_PROJECT: $SENTRY_PROJECT
                 ENVIRONMENT: "production"
+    v2:
+      - parallel:
+        - step: *mirror
+        - step: *lint
+        - step: *lintDockerfile
+        - step: *snyk
+        - step: *build
+
+      - step:
+          name: Publish docker tag
+          script:
+            # Extract package.json version
+            - export PACKAGE_VERSION=$(node --eval="process.stdout.write(require('./package.json').version)")
+            # Create and push Docker image
+            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - echo ${DOCKER_PASSWORD} | docker login ghcr.io --username "$DOCKER_USERNAME" --password-stdin
+            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
+            - docker load --input "${IMAGE_NAME}.tar"
+            - IMAGE=ghcr.io/${DOCKER_NAMESPACE}/${IMAGE_NAME}
+            - docker tag "${IMAGE_NAME}" "${IMAGE}:${PACKAGE_VERSION}"
+            - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
+            - docker push "${IMAGE}:${PACKAGE_VERSION}"
+            - docker push "${IMAGE}:${VERSION}"
+          services:
+            - docker
+      
+      - step:
+          script:
+            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
+            - pipe: anchore/anchore-scan:0.2.14
+              variables:
+                IMAGE_NAME: "${IMAGE}:${VERSION}"
+
+      - step:
+          name: Create Sentry release
+          script:
+            - pipe: holores/sentry-new-release:0.5.0
+              variables:
+                SENTRY_AUTH_TOKEN: $SENTRY_TOKEN
+                SENTRY_ORG: $SENTRY_ORG
+                SENTRY_URL: $SENTRY_URL
+                SENTRY_PROJECT: $SENTRY_PROJECT
+                ENVIRONMENT: "production"
+
