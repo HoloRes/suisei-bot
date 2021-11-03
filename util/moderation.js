@@ -110,7 +110,7 @@ exports.warn = (member, reason, moderator) => new Promise(async (resolve, reject
 		type: 'warn',
 		reason,
 		moderator: moderator.id,
-		date: new Date(),
+		date: Date.now(),
 	});
 	await logItem.save((err) => {
 		if (err) {
@@ -192,6 +192,7 @@ function mute(member, duration, reason, moderator, tos) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
 		const expirationDate = moment().add(duration, 'minutes');
+		const date = Date.now();
 
 		const logItem = new LogItem({
 			userId: member.id,
@@ -199,7 +200,7 @@ function mute(member, duration, reason, moderator, tos) {
 			reason,
 			moderator: moderator.id,
 			duration: humanizeDuration(moment.duration(duration, 'minutes').asMilliseconds(), { largest: 2, round: true }),
-			date: new Date(),
+			date,
 		});
 		await logItem.save((err) => {
 			if (err) {
@@ -212,6 +213,7 @@ function mute(member, duration, reason, moderator, tos) {
 			const strike = new Strike({
 				_id: logItem._id,
 				userId: member.id,
+				date,
 			});
 			strike.save((err2) => {
 				if (err2) {
@@ -225,6 +227,7 @@ function mute(member, duration, reason, moderator, tos) {
 				const tosStrike = new Strike({
 					_id: -logItem._id,
 					userId: member.id,
+					date,
 				});
 				tosStrike.save((err2) => {
 					if (err2) {
@@ -351,12 +354,14 @@ exports.hardmute = (member, moderator) => new Promise((resolve, reject) => {
 function kick(member, reason, moderator, tos) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
+		const date = Date.now();
+
 		const logItem = new LogItem({
 			userId: member.id,
 			type: 'kick',
 			reason,
 			moderator: moderator.id,
-			date: new Date(),
+			date,
 		});
 		await logItem.save((err) => {
 			if (err) {
@@ -370,6 +375,7 @@ function kick(member, reason, moderator, tos) {
 				const strike = new Strike({
 					_id: logItem._id,
 					userId: member.id,
+					date,
 				});
 				strike.save((err2) => {
 					Sentry.captureException(err2);
@@ -425,12 +431,14 @@ exports.kick = kick;
 function ban(member, reason, moderator, tos) {
 	// eslint-disable-next-line no-async-promise-executor
 	return new Promise(async (resolve, reject) => {
+		const date = Date.now();
+
 		const logItem = new LogItem({
 			userId: member.id,
 			type: 'ban',
 			reason,
 			moderator: moderator.id,
-			date: new Date(),
+			date,
 		});
 		await logItem.save((err) => {
 			if (err) {
@@ -443,6 +451,7 @@ function ban(member, reason, moderator, tos) {
 			const strike = new Strike({
 				_id: logItem._id,
 				userId: member.id,
+				date,
 			});
 			strike.save((err2) => {
 				if (err2) {
@@ -456,6 +465,7 @@ function ban(member, reason, moderator, tos) {
 				const tosStrike = new Strike({
 					_id: -logItem._id,
 					userId: member.id,
+					date,
 				});
 				tosStrike.save((err2) => {
 					if (err2) {
@@ -523,7 +533,7 @@ exports.strike = (member, reason, moderator) => new Promise((resolve, reject) =>
 				.catch(reject);
 		} else {
 			const activeStrikes = docs.filter(
-				(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
+				(doc) => ((Date.now() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
 			).length;
 
 			if (activeStrikes === 0) {
@@ -594,7 +604,7 @@ exports.tosviolation = (member, reason, moderator) => new Promise((resolve, reje
 		}
 
 		const activeStrikes = strikes.filter(
-			(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
+			(doc) => ((Date.now() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
 		).length;
 
 		if (activeStrikes > 0) {
@@ -663,7 +673,7 @@ exports.getMemberModLogs = (member) => new Promise((resolve, reject) => {
 			}
 
 			const activeStrikes = strikes.filter(
-				(doc) => ((new Date() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
+				(doc) => ((Date.now() - doc.strikeDate) / (1000 * 3600 * 24)) <= 30,
 			).length;
 
 			resolve({
@@ -844,7 +854,7 @@ exports.getMemberFromMessage = (message, args) => new Promise(async (resolve, re
 });
 
 scheduleJob('*/5 * * * *', async () => {
-	const docs = await Mute.find({ expireAt: { $lte: new Date() } }).lean().exec()
+	const docs = await Mute.find({ expireAt: { $lte: Date.now() } }).lean().exec()
 		.catch((err) => {
 			Sentry.captureException(err);
 			return logger.error(err, { labels: { module: 'moderation', event: ['unmuteCron'] } });
