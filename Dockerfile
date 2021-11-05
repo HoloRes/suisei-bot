@@ -1,5 +1,5 @@
-# Select NodeJS LTS image
-FROM node:lts-buster
+# Select NodeJS 14 image
+FROM node:14-buster
 
 # For Sentry release tracking
 ARG sha
@@ -12,7 +12,7 @@ COPY package-lock.json .
 
 # Install packages and symlink $ to source code dir
 RUN npm ci --ignore-scripts \
-    && npx basetag link
+    && npm rebuild
 
 # Copy remaining files except files in .dockerignore
 COPY . .
