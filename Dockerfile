@@ -10,11 +10,9 @@ WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
 
-# Install packages
-RUN npm ci --ignore-scripts
-
-# Symlink $ to source code dir
-RUN npx basetag link
+# Install packages and symlink $ to source code dir
+RUN npm ci --ignore-scripts \
+    && npx basetag link
 
 # Copy remaining files except files in .dockerignore
 COPY . .
