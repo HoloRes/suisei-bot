@@ -141,10 +141,11 @@ pipelines:
             - docker push "${IMAGE}:${VERSION}"
           services:
             - docker
-      
+
       - step:
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
             - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
             - pipe: anchore/anchore-scan:0.2.14
               variables:
@@ -185,10 +186,11 @@ pipelines:
             - docker push "${IMAGE}:${VERSION}"
           services:
             - docker
-      
+
       - step:
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - IMAGE_NAME=$BITBUCKET_REPO_SLUG
             - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
             - pipe: anchore/anchore-scan:0.2.14
               variables:
