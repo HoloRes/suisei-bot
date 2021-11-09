@@ -7,8 +7,6 @@
 [![Jira badge](https://img.shields.io/badge/-Jira-blue?style=flat&logo=jira)](https://holores.atlassian.net/browse/SUI)
 
 ## This branch holds the code for version 3.0.0, the upcoming version that will support multiserver
-**Current status:** Waiting on Discord.JS v13 release.
-
 This is a full rewrite, so a lot (at the moment of writing all) functionality is not implemented yet.
 
 For a stable version you can deploy, although needing some modification to do so, can be found on the [master branch](https://github.com/HoloRes/suisei/tree/master) and the prod tag of the [Docker image](https://github.com/orgs/HoloRes/packages?repo_name=suisei).
