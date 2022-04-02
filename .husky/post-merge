@@ -3,5 +3,5 @@
 
 changed_files="$(git diff-tree -r --name-only --no-commit-id HEAD@{1} HEAD)"
 
-echo "$changed_files" | grep -E --quiet "package-lock.json" && eval "npm i"
+echo "$changed_files" | grep -E --quiet "package-lock.json" && eval "pnpm i"
 exit 0
