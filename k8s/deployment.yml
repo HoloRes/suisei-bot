@@ -24,7 +24,7 @@ spec:
         app: suisei-mic
     spec:
       containers:
-        - image: ghcr.io/holores/suisei-suisei-mic:{{version}}
+        - image: ghcr.io/holores/suisei-bot:{{version}}
           name: suisei-mic
           volumeMounts:
             - mountPath: /app/config.js
