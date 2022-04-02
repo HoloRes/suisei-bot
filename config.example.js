@@ -1,15 +1,9 @@
-// * For more info configuring the bot, see the documentation: <link>
+// * For more info configuring the bot, see the documentation: https://docs.suisei.app
 
 module.exports = {
 	mode: 'standalone',
 	modules: {
-		developer: false,
-		youtube: true,
-		twitter: true,
-		moderation: true,
-		pingLists: true,
-		utility: true,
-		autoPublish: true,
+		// Do not modify what you don't understand, this WILL break functionality
 	},
 	developer: {
 		type: 'user',
@@ -25,6 +19,7 @@ module.exports = {
 		password: '',
 		database: '',
 		host: '',
+		protocol: 'mongodb',
 	},
 	api: {
 		port: 80,

@@ -1,14 +1,8 @@
+import { IModulesConfig } from "@suiseis-mic/sapphire-modules";
+
 interface BaseConfig {
 	mode: 'standalone' | 'master' | 'slave',
-	modules: {
-		developer: boolean,
-		moderation: boolean,
-		youtube: boolean,
-		twitter: boolean,
-		pingLists: boolean,
-		utility: boolean,
-		autoPublish: boolean,
-	},
+	modules: IModulesConfig,
 	discord: {
 		token: string,
 		defaultPrefix?: string,
@@ -49,6 +43,10 @@ interface BaseConfig {
 	sentry?: {
 		dsn: string,
 	},
+}
+
+export interface BaseConfigCheck {
+	[key: string]: any & Required<BaseConfig>
 }
 
 export interface MasterConfig extends BaseConfig {

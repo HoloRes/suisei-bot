@@ -2,17 +2,18 @@
   "name": "suisei-bot",
   "version": "3.0.0",
   "description": "A custom bot for the Hololive Resort Discord",
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "engines": {
     "node": "^16",
     "pnpm": ">=3"
   },
   "dependencies": {
     "@holores/holoapi": "^1.0.6",
-    "@sapphire/framework": "^2.4.1",
+    "@sapphire/discord.js-utilities": "^4.9.4",
+    "@sapphire/framework": "^3.0.0-next.0ea9553.0",
     "@sentry/node": "^6.19.3",
     "@sentry/tracing": "^6.19.3",
-    "@suiseis-mic/sapphire-modules": "^1.0.0",
+    "@suiseis-mic/sapphire-modules": "^1.0.2",
     "axios": "^0.25.0",
     "bufferutil": "^4.0.6",
     "discord.js": "^13.6.0",

@@ -8,29 +8,25 @@ import * as Sentry from '@sentry/node';
 import * as SentryTracing from '@sentry/tracing';
 import * as path from 'path';
 import mongoose from 'mongoose';
-import Discord, { Intents } from 'discord.js';
+import { Intents } from 'discord.js';
+import { LogLevel, SapphireClient } from '@sapphire/framework';
+import { ModuleLoader } from '@suiseis-mic/sapphire-modules';
 import helmet from 'helmet';
 import 'reflect-metadata';
 
 // Types
-import { IConfig } from './types';
 import {
-	StandAloneConfig,
-	SlaveConfig,
-	MasterConfig,
+	BaseConfigCheck,
 	DeveloperRole,
 	DeveloperUser,
+	MasterConfig,
+	SlaveConfig,
+	StandAloneConfig,
 } from './types/config';
 
-// Modules
-import MainModule from './modules/main';
-import AutoPublishModule from './modules/AutoPublish';
-import DevModule from './modules/dev';
-import UtilityModule from './modules/util';
-
 // Local files
-// eslint-disable-next-line import/extensions
-const config: IConfig = require('../config.js');
+// eslint-disable-next-line import/extensions,global-require
+export const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config.js');
 
 // Init
 const myFormat = winston.format.printf(({
@@ -52,7 +48,7 @@ export const logger = winston.createLogger({
 
 // Config validation
 try {
-	assertEquals<IConfig>(config);
+	assertEquals<BaseConfigCheck>(config);
 	if (config.mode === 'master') {
 		assertEquals<MasterConfig>(config);
 	} else if (config.mode === 'slave') {
@@ -67,7 +63,7 @@ try {
 		assertEquals<DeveloperRole>(config.developer);
 	}
 } catch (err: any) {
-	logger.error(`${err?.name}: ${err?.message}`);
+	if (err) logger.error(`${err.name}: ${err.message}`);
 	logger.verbose('Invalid config, quiting');
 	process.exit(1);
 }
@@ -121,29 +117,31 @@ if (config.sentry) {
 }
 
 if (config.mongodb) {
-	mongoose.connect(`${config.mongodb.protocol}://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`);
+	mongoose.connect(`${config.mongodb.protocol ?? 'mongodb'}://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`);
 } else if (config.overrides?.mongodb) {
-	mongoose.connect(`${config.overrides.mongodb.protocol}://${config.overrides.mongodb.username}:${config.overrides.mongodb.password}@${config.overrides.mongodb.host}/${config.overrides.mongodb.database}`);
+	mongoose.connect(`${config.overrides.mongodb.protocol ?? 'mongodb'}://${config.overrides.mongodb.username}:${config.overrides.mongodb.password}@${config.overrides.mongodb.host}/${config.overrides.mongodb.database}`);
 }
 
-export const client = new Discord.Client({
+export const client = new SapphireClient({
 	partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
 	intents: [
 		Intents.FLAGS.GUILD_MESSAGES,
 		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
 		Intents.FLAGS.GUILD_BANS,
 		Intents.FLAGS.GUILD_MEMBERS,
+		Intents.FLAGS.GUILDS,
 	],
+	defaultPrefix: config.discord.defaultPrefix ?? '!',
+	loadMessageCommandListeners: true,
+	logger: {
+		level: LogLevel.Debug,
+	},
 });
 
-client.on('ready', () => {
-	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);
+ModuleLoader.init(config.modules, process.env.NODE_ENV === 'production' ? `${process.cwd()}/dist/modules` : `${process.cwd()}/src/modules`);
 
-	MainModule.start(client, logger);
-	if (config.modules.developer) DevModule.start(client, logger);
-	if (config.modules.utility) UtilityModule.start(client, logger);
-	if (config.modules.autoPublish) AutoPublishModule.start(client, logger);
+client.once('ready', () => {
+	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);
 });
 
 client.login(config.discord.token);
