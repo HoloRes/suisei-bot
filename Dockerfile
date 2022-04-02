@@ -28,10 +28,11 @@ WORKDIR /app
 
 COPY package.json .
 COPY pnpm-lock.yaml .
-RUN pnpm i --ignore-scripts
+RUN pnpm i --ignore-scripts\
+    && sed -i 's|"main": "src/index.ts"|"main": "dist/index.js"|g' package.json
 
 # Copy build to dist
-RUN cp -r /tmp/dist/* . \
+RUN cp -r /tmp/dist . \
     && rm -rf /tmp
 
 EXPOSE 80
