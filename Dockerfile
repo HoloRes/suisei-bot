@@ -38,4 +38,4 @@ RUN cp -r /tmp/dist . \
 EXPOSE 80
 
 # Set start command
-CMD ["node", "index.js", "--trace-events-enabled", "--trace-warnings"]
+CMD ["node", "dist/index.js", "--trace-events-enabled", "--trace-warnings"]
