@@ -25,6 +25,7 @@ definitions:
         script:
           - npm i -g pnpm
           - pnpm install
+          - echo "module.exports = {}" > config.js
           - pnpm run lint:ci
         caches:
           - node
