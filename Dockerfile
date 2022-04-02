@@ -12,11 +12,9 @@ WORKDIR /tmp
 COPY package.json .
 COPY package-lock.json .
 
-# Update npm
-RUN npm i -g pnpm
-
-# Install packages
-RUN pnpm i --ignore-scripts
+# Update npm and install packages
+RUN npm i -g pnpm \
+    && pnpm i --ignore-scripts
 
 # Copy remaining files except files in .dockerignore
 COPY . .

@@ -23,8 +23,9 @@ definitions:
     - step: &lint
         name: Code linting
         script:
-          - npm install
-          - npm run lint:ci
+          - npm i -g pnpm
+          - pnpm install
+          - pnpm run lint:ci
         caches:
           - node
 
@@ -33,21 +34,6 @@ definitions:
         image: hadolint/hadolint:latest-debian
         script:
           - hadolint Dockerfile
-
-    - step: &snyk
-        name: Scan using Snyk
-        script:
-          - npm install -g snyk # binary download also available
-          - npm ci
-          - pipe: snyk/snyk-scan:0.4.6
-            variables:
-              SNYK_TOKEN: $SNYK_TOKEN
-              LANGUAGE: "npm"
-              CODE_INSIGHTS_RESULTS: "true"
-              MONITOR: "true"
-              DONT_BREAK_BUILD: "true"
-        caches:
-          - node
 
     - step: &build
         name: Build
@@ -89,7 +75,6 @@ pipelines:
         - step: *mirror
         - step: *lint
         - step: *lintDockerfile
-        - step: *snyk
         - step: *build
     - step: *publish
 
@@ -99,7 +84,6 @@ pipelines:
         - step: *mirror
         - step: *lint
         - step: *lintDockerfile
-        - step: *snyk
         - step: *build
 
       - step: *publish
@@ -123,7 +107,6 @@ pipelines:
         - step: *mirror
         - step: *lint
         - step: *lintDockerfile
-        - step: *snyk
         - step: *build
 
       - step:
@@ -168,7 +151,6 @@ pipelines:
           - step: *mirror
           - step: *lint
           - step: *lintDockerfile
-          - step: *snyk
           - step: *build
       - step: *publish
       - step:
