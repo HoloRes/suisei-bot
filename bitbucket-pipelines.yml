@@ -159,7 +159,7 @@ pipelines:
           deployment: staging
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-            - sed -i "s|{{image}}|$VERSION|g" k8s/deployment.yml
+            - sed -i "s|{{version}}|$VERSION|g" k8s/deployment.yml
             - pipe: atlassian/kubectl-run:3.2.0
               variables:
                 KUBE_CONFIG: $KUBE_CONFIG
