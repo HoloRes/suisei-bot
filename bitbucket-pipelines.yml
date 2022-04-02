@@ -69,7 +69,7 @@ definitions:
           - docker
         artifacts:
           - "*.tar"
-    
+
     - step: &publish
         name: Push to GHCR
         script:
@@ -143,7 +143,7 @@ pipelines:
             - docker push "${IMAGE}:${VERSION}"
           services:
             - docker
-      
+
       - step:
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
@@ -162,3 +162,23 @@ pipelines:
                 SENTRY_URL: $SENTRY_URL
                 SENTRY_PROJECT: $SENTRY_PROJECT
                 ENVIRONMENT: "production"
+
+    3.0.0:
+      - parallel:
+          - step: *mirror
+          - step: *lint
+          - step: *lintDockerfile
+          - step: *snyk
+          - step: *build
+      - step: *publish
+      - step:
+          name: Deploy
+          deployment: staging
+          script:
+            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - sed -i "s|{{image}}|$VERSION|g" k8s/deployment.yml
+            - pipe: atlassian/kubectl-run:3.2.0
+              variables:
+                KUBE_CONFIG: $KUBE_CONFIG
+                KUBECTL_COMMAND: 'apply'
+                RESOURCE_PATH: 'k8s/deployment.yml'

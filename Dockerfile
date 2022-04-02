@@ -13,27 +13,24 @@ COPY package.json .
 COPY package-lock.json .
 
 # Update npm
-RUN npm i -g npm
+RUN npm i -g pnpm
 
 # Install packages
-RUN npm i --ignore-scripts
-
-# Symlink $ to source code dir
-RUN npx basetag link
+RUN pnpm i --ignore-scripts
 
 # Copy remaining files except files in .dockerignore
 COPY . .
 
 # Compile to TS
-RUN npm run build
+RUN pnpm build
 
 # Copy dist and only install production packages
 ENV NODE_ENV=production
 WORKDIR /app
 
 COPY package.json .
-COPY package-lock.json .
-RUN npm ci --ignore-scripts
+COPY pnpm-lock.yaml .
+RUN pnpm i --ignore-scripts
 
 # Copy build to dist
 RUN cp -r /tmp/dist/* . \

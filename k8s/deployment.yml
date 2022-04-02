@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: suisei-mic
+spec: {}
+
+---
+apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      run: suisei-mic
+    name: suisei-mic
+    namespace: suisei-mic
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        run: suisei-mic
+    template:
+      metadata:
+        labels:
+          run: suisei-mic
+          app: suisei-mic
+      spec:
+        containers:
+          - image: ghcr.io/holores/suisei-suisei-mic:{{version}}
+            name: suisei-mic
+            volumeMounts:
+              - mountPath: /app/config.js
+                name: suisei-config
+                subPath: config.js
+        volumes:
+          - name: suisei-config
+            configMap:
+              name: suisei-config-file
