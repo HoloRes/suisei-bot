@@ -10,7 +10,7 @@ ENV COMMIT_SHA=$sha
 # Create a folder to build the source in
 WORKDIR /tmp
 COPY package.json .
-COPY package-lock.json .
+COPY pnpm-lock.yaml .
 
 # Update npm and install packages
 RUN npm i -g pnpm \
