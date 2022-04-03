@@ -138,7 +138,7 @@ export const client = new SapphireClient({
 	},
 });
 
-ModuleLoader.init(config.modules, process.env.NODE_ENV === 'production' ? `${process.cwd()}/dist/modules` : `${process.cwd()}/src/modules`);
+ModuleLoader.init(config.modules);
 
 client.once('ready', () => {
 	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);

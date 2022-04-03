@@ -5,11 +5,11 @@ specifiers:
   '@commitlint/config-conventional': ^16.2.1
   '@holores/holoapi': ^1.0.6
   '@sapphire/discord.js-utilities': ^4.9.4
-  '@sapphire/framework': ^3.0.0-next.0ea9553.0
+  '@sapphire/framework': 3.0.0-next.379f5db.0
   '@sentry/node': ^6.19.3
   '@sentry/tracing': ^6.19.3
   '@sentry/types': ^6.19.3
-  '@suiseis-mic/sapphire-modules': ^1.0.2
+  '@suiseis-mic/sapphire-modules': 1.0.5
   '@tsconfig/node16': ^1.0.2
   '@types/express': ^4.17.13
   '@types/humanize-duration': ^3.27.1
@@ -22,7 +22,7 @@ specifiers:
   discord.js: ^13.6.0
   eslint: ^8.12.0
   eslint-config-airbnb-base: 15.0.0
-  eslint-import-resolver-typescript: ^2.7.0
+  eslint-import-resolver-typescript: ^2.7.1
   eslint-plugin-import: ^2.25.4
   express: ^4.17.3
   googleapis: 100.0.0
@@ -31,7 +31,7 @@ specifiers:
   humanize-duration: ^3.27.1
   husky: ^7.0.4
   lint-staged: ^12.3.7
-  moment: ^2.29.1
+  moment: ^2.29.2
   moment-timezone: ^0.5.34
   mongoose: ^6.2.9
   mongoose-sequence: ^5.3.1
@@ -55,10 +55,10 @@ specifiers:
 dependencies:
   '@holores/holoapi': 1.0.6
   '@sapphire/discord.js-utilities': 4.9.4
-  '@sapphire/framework': 3.0.0-next.0ea9553.0
+  '@sapphire/framework': 3.0.0-next.379f5db.0
   '@sentry/node': 6.19.3
   '@sentry/tracing': 6.19.3
-  '@suiseis-mic/sapphire-modules': 1.0.2_d6955b83f926115bf12ffeabab6deaae
+  '@suiseis-mic/sapphire-modules': 1.0.5_d6955b83f926115bf12ffeabab6deaae
   axios: 0.26.1
   bufferutil: 4.0.6
   discord.js: 13.6.0_d6955b83f926115bf12ffeabab6deaae
@@ -67,7 +67,7 @@ dependencies:
   helmet: 5.0.2
   html-entities: 2.3.3
   humanize-duration: 3.27.1
-  moment: 2.29.1
+  moment: 2.29.2
   moment-timezone: 0.5.34
   mongoose: 6.2.9
   mongoose-sequence: 5.3.1_mongoose@6.2.9
@@ -97,7 +97,7 @@ devDependencies:
   '@typescript-eslint/parser': 5.17.0_eslint@8.12.0+typescript@4.6.3
   eslint: 8.12.0
   eslint-config-airbnb-base: 15.0.0_dae71b730d6620b67a20047a747b2eda
-  eslint-import-resolver-typescript: 2.7.0_dae71b730d6620b67a20047a747b2eda
+  eslint-import-resolver-typescript: 2.7.1_dae71b730d6620b67a20047a747b2eda
   eslint-plugin-import: 2.25.4_eslint@8.12.0
   husky: 7.0.4
   lint-staged: 12.3.7
@@ -218,7 +218,7 @@ packages:
       '@types/node': 17.0.23
       chalk: 4.1.2
       cosmiconfig: 7.0.1
-      cosmiconfig-typescript-loader: 1.0.6_ee885bc7281b682b6adbed6ae09ee090
+      cosmiconfig-typescript-loader: 1.0.7_ee885bc7281b682b6adbed6ae09ee090
       lodash: 4.17.21
       resolve-from: 5.0.0
       typescript: 4.6.3
@@ -577,8 +577,8 @@ packages:
       tslib: 2.3.1
     dev: false
 
-  /@sapphire/framework/3.0.0-next.0ea9553.0:
-    resolution: {integrity: sha512-2X1JVTRUsjQ+dcy9ZUGCq3CjecNrxvo983jhx8X6yqQkmuo+eLeqjuHm+sMWYSUf2rFUHO+ELQki5mOPf3ssLw==}
+  /@sapphire/framework/3.0.0-next.379f5db.0:
+    resolution: {integrity: sha512-g722CRQ436E8tEzucgl0Qybg7X24+bfi8HePifCMcHAZmJXhHD6zy8MjRYpNHy+C8bTNZuQfnjy4FxFWTICwbA==}
     engines: {node: '>=16.6.0', npm: '>=7.0.0'}
     dependencies:
       '@sapphire/discord-utilities': 2.10.3
@@ -710,10 +710,10 @@ packages:
     engines: {node: '>= 0.6.0'}
     dev: false
 
-  /@suiseis-mic/sapphire-modules/1.0.2_d6955b83f926115bf12ffeabab6deaae:
-    resolution: {integrity: sha512-q46FGUko+lfVKjnyqqv6e0gh/vUzcyONJv+fGiNmQo/6zPF3L5eh5TOOWrEzT9El6NL5Ankcky5pd41fhd54fQ==}
+  /@suiseis-mic/sapphire-modules/1.0.5_d6955b83f926115bf12ffeabab6deaae:
+    resolution: {integrity: sha512-+EdAoEzvnBtuVJgWGgbXG5RtnUuJXHki1Zfo5kdyAgOEFStRPrm44essf720Qxe8Uh6D0ECjH2c4gdYlKOTgDQ==}
     dependencies:
-      '@sapphire/framework': 3.0.0-next.0ea9553.0
+      '@sapphire/framework': 3.0.0-next.379f5db.0
       discord.js: 13.6.0_d6955b83f926115bf12ffeabab6deaae
     transitivePeerDependencies:
       - bufferutil
@@ -1547,8 +1547,8 @@ packages:
       vary: 1.1.2
     dev: false
 
-  /cosmiconfig-typescript-loader/1.0.6_ee885bc7281b682b6adbed6ae09ee090:
-    resolution: {integrity: sha512-2nEotziYJWtNtoTjKbchj9QrdTT6DBxCvqjNKoDKARw+e2yZmTQCa07uRrykLIZuvSgp69YXLH89UHc0WhdMfQ==}
+  /cosmiconfig-typescript-loader/1.0.7_ee885bc7281b682b6adbed6ae09ee090:
+    resolution: {integrity: sha512-PxBM//vKuwRmo7xqamKDL+q/FvGig+wKS5pOzaXO/DJbtNzbIYi1bDk251pftEdPRRetEN8RSIyF35n8zLtibA==}
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@types/node': '*'
@@ -1902,8 +1902,8 @@ packages:
       resolve: 1.22.0
     dev: true
 
-  /eslint-import-resolver-typescript/2.7.0_dae71b730d6620b67a20047a747b2eda:
-    resolution: {integrity: sha512-MNHS3u5pebvROX4MjGP9coda589ZGfL1SqdxUV4kSrcclfDRWvNE2D+eljbnWVMvWDVRgT89nhscMHPKYGcObQ==}
+  /eslint-import-resolver-typescript/2.7.1_dae71b730d6620b67a20047a747b2eda:
+    resolution: {integrity: sha512-00UbgGwV8bSgUv34igBDbTOtKhqoRMy9bFjNehT40bXg6585PNIct8HhXZ0SybqB9rWtXj9crcku8ndDn/gIqQ==}
     engines: {node: '>=4'}
     peerDependencies:
       eslint: '*'
@@ -3203,11 +3203,11 @@ packages:
   /moment-timezone/0.5.34:
     resolution: {integrity: sha512-3zAEHh2hKUs3EXLESx/wsgw6IQdusOT8Bxm3D9UrHPQR7zlMmzwybC8zHEM1tQ4LJwP7fcxrWr8tuBg05fFCbg==}
     dependencies:
-      moment: 2.29.1
+      moment: 2.29.2
     dev: false
 
-  /moment/2.29.1:
-    resolution: {integrity: sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==}
+  /moment/2.29.2:
+    resolution: {integrity: sha512-UgzG4rvxYpN15jgCmVJwac49h9ly9NurikMWGPdVxm8GZD6XjkKPxDTjQQ43gtGgnV3X0cAyWDdP2Wexoquifg==}
     dev: false
 
   /mongodb-connection-string-url/2.5.2:
