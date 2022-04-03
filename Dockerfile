@@ -1,5 +1,4 @@
-# Select NodeJS LTS Alpine image, alpine for smaller size
-FROM node:16-alpine
+FROM node:16-buster-slim
 
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
