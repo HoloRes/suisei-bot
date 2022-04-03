@@ -1,6 +1,6 @@
 FROM node:16-buster-slim
 
-SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # For Sentry release tracking
 ARG sha
