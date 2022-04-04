@@ -9,8 +9,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    run: suisei-mic
-  name: suisei-mic
+    run: suisei-mic-beta
+  name: suisei-mic-beta
   namespace: suisei-mic
 spec:
   replicas: 1
