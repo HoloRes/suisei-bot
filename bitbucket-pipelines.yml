@@ -146,8 +146,19 @@ pipelines:
                 SENTRY_URL: $SENTRY_URL
                 SENTRY_PROJECT: $SENTRY_PROJECT
                 ENVIRONMENT: "production"
+      - step:
+          name: Deploy
+          deployment: production
+          script:
+            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+            - sed -i "s|{{version}}|$VERSION|g" k8s/deployment.yml
+            - pipe: atlassian/kubectl-run:3.2.0
+              variables:
+                KUBE_CONFIG: $KUBE_CONFIG
+                KUBECTL_COMMAND: 'apply'
+                RESOURCE_PATH: 'k8s/deployment.yml'
 
-    3.0.0:
+    develop:
       - parallel:
           - step: *mirror
           - step: *lint
@@ -159,9 +170,9 @@ pipelines:
           deployment: staging
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-            - sed -i "s|{{version}}|$VERSION|g" k8s/deployment.yml
+            - sed -i "s|{{version}}|$VERSION|g" k8s/deployment.beta.yml
             - pipe: atlassian/kubectl-run:3.2.0
               variables:
                 KUBE_CONFIG: $KUBE_CONFIG
                 KUBECTL_COMMAND: 'apply'
-                RESOURCE_PATH: 'k8s/deployment.yml'
+                RESOURCE_PATH: 'k8s/deployment.beta.yml'
