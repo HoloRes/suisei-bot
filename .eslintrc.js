@@ -24,11 +24,9 @@ module.exports = {
 			},
 		},
 	},
-	ignorePatterns: ['**/*.d.ts'],
 	rules: {
 		indent: ['error', 'tab'],
 		'no-tabs': 'off',
-		'no-underscore-dangle': 'off', // Disabled as mongoose uses _id,
 		'no-plusplus': ['error', {
 			allowForLoopAfterthoughts: true,
 		}],

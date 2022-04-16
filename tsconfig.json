@@ -3,7 +3,7 @@
 		"outDir": "./dist",
 		"typeRoots": [
 			"./node_modules/@types",
-			"./src/types"
+			"./src/lib/types"
 		],
 		"resolveJsonModule": true,
 		"plugins": [

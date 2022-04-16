@@ -1,16 +1,15 @@
 import { Command } from '@sapphire/framework';
 import { CommandInteraction, Message } from 'discord.js';
 
-export class PingCommand extends Command {
+export class ConfigCommand extends Command {
 	public constructor(context: Command.Context, options: Command.Options) {
 		super(context, {
 			...options,
-			name: 'ping',
-			aliases: ['pong'],
-			description: 'ping pong',
-			preconditions: ['OwnerOnly'] as any,
+			name: 'config',
+			description: 'Update server settings',
+			preconditions: ['StaffOnly'] as any,
 			chatInputCommand: {
-				register: true,
+				register: false,
 			},
 		});
 	}

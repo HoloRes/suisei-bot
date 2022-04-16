@@ -1,39 +1,38 @@
 // Packages
 import { assertEquals } from 'typescript-is';
+import process from 'process';
+import * as Sentry from '@sentry/node';
+import { RewriteFrames } from '@sentry/integrations';
+import { getRootData } from '@sapphire/pieces';
+import { join } from 'node:path';
+import { Intents } from 'discord.js';
+import { ModuleLoader } from '@suiseis-mic/sapphire-modules';
+import '@sapphire/plugin-api/register';
+import 'reflect-metadata';
+import { container } from '@sapphire/framework';
 import winston from 'winston';
 import LokiTransport from 'winston-loki';
-import process from 'process';
-import express from 'express';
-import * as Sentry from '@sentry/node';
-import * as SentryTracing from '@sentry/tracing';
-import * as path from 'path';
-import mongoose from 'mongoose';
-import { Intents } from 'discord.js';
-import { LogLevel, SapphireClient } from '@sapphire/framework';
-import { ModuleLoader } from '@suiseis-mic/sapphire-modules';
-import helmet from 'helmet';
-import 'reflect-metadata';
+import flagsmith from 'flagsmith-nodejs';
+import { SuiseiClient } from './lib/SuiseiClient';
 
 // Types
-import {
+import type {
 	BaseConfigCheck,
-	DeveloperRole,
-	DeveloperUser,
 	MasterConfig,
 	SlaveConfig,
 	StandAloneConfig,
-} from './types/config';
+} from './lib/types/config';
 
 // Local files
 // eslint-disable-next-line import/extensions,global-require
-export const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config.js');
+const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config.js');
 
 // Init
 const myFormat = winston.format.printf(({
 	level, message, label, timestamp,
 }) => `${timestamp} ${label ? `[${label}]` : ''} ${level}: ${message}`);
 
-export const logger = winston.createLogger({
+const logger = winston.createLogger({
 	transports: [
 		new winston.transports.Console({
 			format: winston.format.combine(
@@ -45,6 +44,8 @@ export const logger = winston.createLogger({
 		}),
 	],
 });
+// @ts-expect-error not compatible types
+container.logger = logger;
 
 // Config validation
 try {
@@ -56,19 +57,14 @@ try {
 	} else if (config.mode === 'standalone') {
 		assertEquals<StandAloneConfig>(config);
 	}
-
-	if (config.developer.type === 'user') {
-		assertEquals<DeveloperUser>(config.developer);
-	} else if (config.developer.type === 'role') {
-		assertEquals<DeveloperRole>(config.developer);
-	}
 } catch (err: any) {
 	if (err) logger.error(`${err.name}: ${err.message}`);
-	logger.verbose('Invalid config, quiting');
+	logger.error('Invalid config, quiting');
 	process.exit(1);
 }
 
 logger.debug('Config validated. Initializing.');
+container.config = config;
 if (config.logTransports?.loki) {
 	logger.add(new LokiTransport({
 		host: config.logTransports.loki.host,
@@ -78,67 +74,44 @@ if (config.logTransports?.loki) {
 	logger.debug('Added Loki transport');
 }
 if (config.logTransports?.file) {
-	const date = new Date();
+	const date = new Date().toISOString();
 	logger.add(new winston.transports.File({
-		filename: path.join(__dirname, '../logs', `${date}.log`),
+		filename: join(__dirname, '../logs', `${date}.log`),
 		level: config.logTransports.file.level ?? 'info',
 	}));
 	logger.debug('Added File transport');
 }
 
-const app = config.api ? express() : undefined;
-app?.listen(config.api?.port);
-app?.use(helmet());
-
-if (config.api && app) {
-	// Heartbeat route, used for deployment validation
-	app.get('/heartbeat', (_, res) => {
-		res.status(200).send('OK');
-	});
-}
+flagsmith.init({
+	api: config.config.api,
+	environmentID: config.config.environmentId,
+});
 
 if (config.sentry) {
-	const integrations = [];
-
-	if (app) {
-		integrations.push(new Sentry.Integrations.Http({ tracing: true }));
-		integrations.push(new SentryTracing.Integrations.Express({ app }));
-	}
-
 	Sentry.init({
 		dsn: config.sentry.dsn,
-		tracesSampleRate: 0.5,
-		integrations,
+		integrations: [
+			new Sentry.Integrations.Modules(),
+			new Sentry.Integrations.Http({ breadcrumbs: true, tracing: true }),
+			new RewriteFrames({ root: join(getRootData().root, '..') }),
+		],
 	});
-
-	app?.use(Sentry.Handlers.requestHandler() as express.RequestHandler);
-	app?.use(Sentry.Handlers.tracingHandler());
-	app?.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 }
 
-if (config.mongodb) {
-	mongoose.connect(`${config.mongodb.protocol ?? 'mongodb'}://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`);
-} else if (config.overrides?.mongodb) {
-	mongoose.connect(`${config.overrides.mongodb.protocol ?? 'mongodb'}://${config.overrides.mongodb.username}:${config.overrides.mongodb.password}@${config.overrides.mongodb.host}/${config.overrides.mongodb.database}`);
-}
-
-export const client = new SapphireClient({
+// TODO: Move client init to function, split up this file
+const client = new SuiseiClient({
 	partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
 	intents: [
 		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
 		Intents.FLAGS.GUILD_BANS,
-		Intents.FLAGS.GUILD_MEMBERS,
 		Intents.FLAGS.GUILDS,
 	],
-	defaultPrefix: config.discord.defaultPrefix ?? '!',
+	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
 	loadMessageCommandListeners: true,
-	logger: {
-		level: LogLevel.Debug,
-	},
 });
 
-ModuleLoader.init(config.modules);
+// TODO: Get from Flagsmith
+ModuleLoader.init({});
 
 client.once('ready', () => {
 	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);
