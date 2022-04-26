@@ -20,10 +20,12 @@
     "@sentry/tracing": "^6.19.6",
     "@suiseis-mic/sapphire-modules": "1.0.5",
     "bufferutil": "^4.0.6",
+    "colorette": "^2.0.16",
     "discord.js": "^13.6.0",
     "execa": "^6.1.0",
     "flagsmith-nodejs": "^1.1.2",
     "node-schedule": "^2.1.0",
+    "prisma": "^3.12.0",
     "prisma-aurora": "^1.3.6",
     "reflect-metadata": "^0.1.13",
     "socket.io": "^4.4.1",
@@ -32,8 +34,7 @@
     "utf-8-validate": "^5.0.9",
     "winston": "^3.7.2",
     "winston-loki": "^6.0.5",
-    "zlib-sync": "^0.1.7",
-    "prisma": "^3.12.0"
+    "zlib-sync": "^0.1.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.2.3",

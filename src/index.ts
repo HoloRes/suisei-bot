@@ -22,6 +22,7 @@ import type {
 	SlaveConfig,
 	StandAloneConfig,
 } from './lib/types/config';
+import loadModules from './lib/util/moduleLoader';
 
 // Local files
 // eslint-disable-next-line import/extensions,global-require
@@ -98,23 +99,24 @@ if (config.sentry) {
 	});
 }
 
-// TODO: Move client init to function, split up this file
-const client = new SuiseiClient({
-	partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
-	intents: [
-		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_BANS,
-		Intents.FLAGS.GUILDS,
-	],
-	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
-	loadMessageCommandListeners: true,
-});
+let client: SuiseiClient;
 
-// TODO: Get from Flagsmith
-ModuleLoader.init({});
+function main() {
+	client = new SuiseiClient({
+		partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
+		intents: [
+			Intents.FLAGS.GUILD_MESSAGES,
+			Intents.FLAGS.GUILD_BANS,
+			Intents.FLAGS.GUILDS,
+		],
+		defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
+		loadMessageCommandListeners: true,
+	});
 
-client.once('ready', () => {
-	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);
-});
+	// TODO: Get from Flagsmith
+	ModuleLoader.init({});
 
-client.login(config.discord.token);
+	client.login(config.discord.token);
+}
+
+loadModules().then(() => main());
