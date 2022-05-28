@@ -65,7 +65,7 @@ const holoClient = new HoloApiClient();
 exports.holoClient = holoClient;
 
 // Local JS files
-const youtubeNotifications = require('$/util/youtube');
+// const youtubeNotifications = require('$/util/youtube');
 const twitterNotifications = require('$/util/twitter');
 const dashboardRouter = require('$/routers/dashboard');
 const moderation = require('$/util/moderation');
@@ -108,7 +108,7 @@ if (config.environment === 'production') {
 app.use('/dash', dashboardRouter);
 
 // YouTube
-youtubeNotifications.init(logger, holoClient, client);
+// youtubeNotifications.init(logger, holoClient, client);
 
 // Moderation
 moderation.init();
