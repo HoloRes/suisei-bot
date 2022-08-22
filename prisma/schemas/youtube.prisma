@@ -1,0 +1,19 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "cockroachdb"
+    url      = env("DATABASE_URL")
+}
+
+model YoutubeSubscription {
+    id			String		@id
+	channels	String[]
+}
+
+model Livestream {
+	id			String	@id
+	title		String
+	messageIds	String[]
+}

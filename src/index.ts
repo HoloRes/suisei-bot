@@ -6,13 +6,14 @@ import { RewriteFrames } from '@sentry/integrations';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
 import { Intents } from 'discord.js';
-import { ModuleLoader } from '@suiseis-mic/sapphire-modules';
 import '@sapphire/plugin-api/register';
 import 'reflect-metadata';
 import { container } from '@sapphire/framework';
 import winston from 'winston';
 import LokiTransport from 'winston-loki';
-import flagsmith from 'flagsmith-nodejs';
+// import Flagsmith from 'flagsmith-nodejs';
+import '@sapphire/plugin-hmr/register';
+import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
 import { SuiseiClient } from './lib/SuiseiClient';
 
 // Types
@@ -22,7 +23,6 @@ import type {
 	SlaveConfig,
 	StandAloneConfig,
 } from './lib/types/config';
-import loadModules from './lib/util/moduleLoader';
 
 // Local files
 // eslint-disable-next-line import/extensions,global-require
@@ -65,7 +65,10 @@ try {
 }
 
 logger.debug('Config validated. Initializing.');
+// Set config in the Saphire container
 container.config = config;
+
+// Set the log transports
 if (config.logTransports?.loki) {
 	logger.add(new LokiTransport({
 		host: config.logTransports.loki.host,
@@ -83,11 +86,14 @@ if (config.logTransports?.file) {
 	logger.debug('Added File transport');
 }
 
-flagsmith.init({
-	api: config.config.api,
-	environmentID: config.config.environmentId,
+// Enable Flagsmith
+/* const flagsmith = new Flagsmith({
+	api: config.config.api ?? 'https://config.suisei.app',
+	environmentKey: config.config.environmentId,
 });
+container.remoteConfig = flagsmith; */
 
+// Enable Sentry if needed
 if (config.sentry) {
 	Sentry.init({
 		dsn: config.sentry.dsn,
@@ -99,24 +105,38 @@ if (config.sentry) {
 	});
 }
 
-let client: SuiseiClient;
+// Client init logic
+const client = new SuiseiClient({
+	partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
+	intents: [
+		Intents.FLAGS.GUILD_MESSAGES,
+		Intents.FLAGS.GUILD_BANS,
+		Intents.FLAGS.GUILDS,
+	],
+	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
+	loadMessageCommandListeners: true,
+	api: {
+		listenOptions: {
+			port: config.api?.port,
+		},
+	},
+	tasks: {
+		strategy: new ScheduledTaskRedisStrategy({
+			bull: {
+				connection: {
+					host: config.redis?.host,
+				},
+			},
+		}),
+	},
+	hmr: {
+		enabled: process.env.NODE_ENV === 'development',
+	},
+});
 
-function main() {
-	client = new SuiseiClient({
-		partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
-		intents: [
-			Intents.FLAGS.GUILD_MESSAGES,
-			Intents.FLAGS.GUILD_BANS,
-			Intents.FLAGS.GUILDS,
-		],
-		defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
-		loadMessageCommandListeners: true,
-	});
-
-	// TODO: Get from Flagsmith
-	ModuleLoader.init({});
-
-	client.login(config.discord.token);
+async function main() {
+	await client.login(config.discord.token);
 }
 
-loadModules().then(() => main());
+// eslint-disable-next-line no-void
+void main();

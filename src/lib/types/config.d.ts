@@ -1,4 +1,4 @@
-interface BaseConfig {
+export interface BaseConfig {
 	mode: 'standalone' | 'master' | 'slave';
 	discord: {
 		token: string;
@@ -22,11 +22,17 @@ interface BaseConfig {
 		protocol: string;
 		query?: string;
 	};
+	redis: {
+		password?: string;
+		host: string;
+		port?: number;
+		db?: number;
+	};
 	owners: string[];
 	api: {
 		port: number;
 		baseUrl: string;
-		origins?: string[];
+		origin?: string;
 	};
 	overrides?: {
 		discord?: {
@@ -46,6 +52,9 @@ interface BaseConfig {
 		file?: {
 			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error';
 		};
+	};
+	holodex?: {
+		apikey: string;
 	};
 	sentry?: {
 		dsn: string;
@@ -71,6 +80,7 @@ export interface SlaveConfig extends BaseConfig {
 	};
 	owners?: never;
 	db?: never;
+	redis?: never;
 	api?: never;
 }
 

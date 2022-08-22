@@ -1,13 +1,15 @@
-import { SapphireClient, container } from '@sapphire/framework';
+import { SapphireClient, container, SapphireClientOptions } from '@sapphire/framework';
 import { Enumerable } from '@sapphire/decorators';
 import { PrismaClient } from '@prisma/client';
-import { ClientOptions } from 'discord.js';
+import type { Logger as WinstonLogger } from 'winston';
+import HolodexClient from '@holores/holodex';
+import { MasterConfig, SlaveConfig, StandAloneConfig } from './types/config';
 
 export class SuiseiClient extends SapphireClient {
 	@Enumerable(false)
 	public dev = process.env.NODE_ENV !== 'production';
 
-	public constructor(options: ClientOptions) {
+	public override async login(token: string) {
 		let connectionUrl: string;
 		if (container.isSlave()) {
 			// TODO: Init communication system with master node
@@ -24,9 +26,11 @@ export class SuiseiClient extends SapphireClient {
 			},
 		});
 
-		super({
-			...options,
-		} as any);
+		container.holodexClient = new HolodexClient({
+			apiKey: container.config.holodex?.apikey ?? '',
+		});
+
+		return super.login(token);
 	}
 
 	public async destroy() {
@@ -37,3 +41,37 @@ export class SuiseiClient extends SapphireClient {
 
 container.isMaster = () => container.config.mode === 'master';
 container.isSlave = () => container.config.mode === 'slave';
+
+/* eslint-disable no-unused-vars, no-use-before-define */
+declare module 'discord.js' {
+	interface Client {
+	}
+
+	interface ClientOptions extends SapphireClientOptions {
+	}
+}
+
+declare module '@sapphire/pieces' {
+	interface Container {
+		db: PrismaClient;
+		// @ts-ignore
+		logger: WinstonLogger;
+		// remoteConfig: IFlagsmith;
+		holodexClient: HolodexClient;
+		config: MasterConfig | SlaveConfig | StandAloneConfig;
+		isMaster: () => this is MasterContainer;
+		isSlave: () => this is SlaveContainer;
+	}
+
+	interface SlaveContainer extends Container {
+		isMaster: () => false;
+		isSlave: () => true;
+		config: SlaveConfig;
+	}
+
+	interface MasterContainer extends Container {
+		isMaster: () => true;
+		isSlave: () => false;
+		config: MasterConfig;
+	}
+}

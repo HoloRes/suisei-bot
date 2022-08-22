@@ -2,11 +2,10 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-	provider = "prisma-client-js"
-	previewFeatures = ["cockroachdb"]
+    provider = "prisma-client-js"
 }
 
 datasource db {
-	provider = "cockroachdb"
-	url      = env("DATABASE_URL")
+    provider = "cockroachdb"
+    url      = env("DATABASE_URL")
 }
