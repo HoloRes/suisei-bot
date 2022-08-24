@@ -1,7 +1,6 @@
-import { SapphireClient, container, SapphireClientOptions } from '@sapphire/framework';
+import { container, SapphireClient, SapphireClientOptions } from '@sapphire/framework';
 import { Enumerable } from '@sapphire/decorators';
 import { PrismaClient } from '@prisma/client';
-import type { Logger as WinstonLogger } from 'winston';
 import HolodexClient from '@holores/holodex';
 import { MasterConfig, SlaveConfig, StandAloneConfig } from './types/config';
 
@@ -54,8 +53,6 @@ declare module 'discord.js' {
 declare module '@sapphire/pieces' {
 	interface Container {
 		db: PrismaClient;
-		// @ts-ignore
-		logger: WinstonLogger;
 		// remoteConfig: IFlagsmith;
 		holodexClient: HolodexClient;
 		config: MasterConfig | SlaveConfig | StandAloneConfig;

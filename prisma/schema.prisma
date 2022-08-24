@@ -17,9 +17,25 @@ model Server {
   adminRole        String?
 }
 
-model YoutubeSubscription {
-  id       String   @id
-  channels String[]
+model YoutubeChannel {
+  id            String         @id
+  name          String
+  englishName   String?
+  photo         String?
+  org           String?
+  subOrg        String?
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  // Discord channel id
+  id        String
+  message   String
+  // YouTube channel id
+  channelId String
+  channel   YoutubeChannel @relation(fields: [channelId], references: [id])
+
+  @@id([id, channelId])
 }
 
 model Livestream {

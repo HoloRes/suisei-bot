@@ -8,9 +8,8 @@ import { join } from 'node:path';
 import { Intents } from 'discord.js';
 import '@sapphire/plugin-api/register';
 import 'reflect-metadata';
-import { container } from '@sapphire/framework';
-import winston from 'winston';
-import LokiTransport from 'winston-loki';
+import { ApplicationCommandRegistries, container, LogLevel } from '@sapphire/framework';
+import '@sapphire/plugin-logger/register';
 // import Flagsmith from 'flagsmith-nodejs';
 import '@sapphire/plugin-hmr/register';
 import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
@@ -28,26 +27,6 @@ import type {
 // eslint-disable-next-line import/extensions,global-require
 const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config.js');
 
-// Init
-const myFormat = winston.format.printf(({
-	level, message, label, timestamp,
-}) => `${timestamp} ${label ? `[${label}]` : ''} ${level}: ${message}`);
-
-const logger = winston.createLogger({
-	transports: [
-		new winston.transports.Console({
-			format: winston.format.combine(
-				winston.format.timestamp(),
-				winston.format.cli(),
-				myFormat,
-			),
-			level: config.logTransports?.console?.level ?? 'info',
-		}),
-	],
-});
-// @ts-expect-error not compatible types
-container.logger = logger;
-
 // Config validation
 try {
 	assertEquals<BaseConfigCheck>(config);
@@ -59,32 +38,14 @@ try {
 		assertEquals<StandAloneConfig>(config);
 	}
 } catch (err: any) {
-	if (err) logger.error(`${err.name}: ${err.message}`);
-	logger.error('Invalid config, quiting');
+	if (err) container.logger.error(`${err.name}: ${err.message}`);
+	console.error('Invalid config, quiting');
 	process.exit(1);
 }
 
-logger.debug('Config validated. Initializing.');
+console.info('Config validated. Initializing.');
 // Set config in the Saphire container
 container.config = config;
-
-// Set the log transports
-if (config.logTransports?.loki) {
-	logger.add(new LokiTransport({
-		host: config.logTransports.loki.host,
-		level: config.logTransports.loki.level ?? 'info',
-		labels: { service: 'suisei' },
-	}));
-	logger.debug('Added Loki transport');
-}
-if (config.logTransports?.file) {
-	const date = new Date().toISOString();
-	logger.add(new winston.transports.File({
-		filename: join(__dirname, '../logs', `${date}.log`),
-		level: config.logTransports.file.level ?? 'info',
-	}));
-	logger.debug('Added File transport');
-}
 
 // Enable Flagsmith
 /* const flagsmith = new Flagsmith({
@@ -115,6 +76,9 @@ const client = new SuiseiClient({
 	],
 	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
 	loadMessageCommandListeners: true,
+	logger: {
+		level: process.env.NODE_ENV !== 'production' ? LogLevel.Debug : LogLevel.Info,
+	},
 	api: {
 		listenOptions: {
 			port: config.api?.port,
@@ -136,6 +100,50 @@ const client = new SuiseiClient({
 
 async function main() {
 	await client.login(config.discord.token);
+
+	// Register commands
+	// This needs to be done outside, since there's no override available for the Subcommand class
+	const subscriptionsRegistry = ApplicationCommandRegistries.acquire('subscriptions');
+	subscriptionsRegistry.registerChatInputCommand((builder) => {
+		builder
+			.setName('subscriptions')
+			.setDescription('Manage YouTube notification subscriptions')
+			.addSubcommand((command) => command
+				.setName('add')
+				.setDescription('Add a subscription')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('vtuber')
+					.setDescription('VTuber to send notifications for')
+					.setAutocomplete(true))
+				.addChannelOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('channel')
+					.setDescription('Channel to send notifications in'))
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('message')
+					.setDescription('Message to include in the notification')))
+			.addSubcommand((command) => command
+				.setName('remove')
+				.setDescription('Remove a subscription')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('vtuber')
+					.setDescription('VTuber to send notifications for')
+					.setAutocomplete(true))
+				.addChannelOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('channel')
+					.setDescription('Channel to send notifications in')))
+			.addSubcommand((command) => command
+				.setName('list')
+				.setDescription('List all subscriptions')
+				.addChannelOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('channel')
+					.setDescription('Channel to send notifications in')));
+	});
 }
 
 // eslint-disable-next-line no-void

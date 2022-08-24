@@ -1,4 +1,4 @@
-import { ApplicationCommandRegistry, Command } from '@sapphire/framework';
+import { Command } from '@sapphire/framework';
 import { Formatters, Message } from 'discord.js';
 import * as util from 'util';
 import { ApplyOptions } from '@sapphire/decorators';
@@ -9,14 +9,6 @@ import { ApplyOptions } from '@sapphire/decorators';
 	preconditions: ['OwnerOnly'],
 })
 export class EvalCommand extends Command {
-	public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
-		registry.registerChatInputCommand((builder) => {
-			builder
-				.setName(this.name)
-				.setDescription(this.description);
-		});
-	}
-
 	public override async messageRun(message: Message) {
 		const args = message.content.split(' ').slice(1);
 

@@ -1,6 +1,5 @@
 import { SapphireClientOptions } from '@sapphire/framework';
 import { PrismaClient } from '@prisma/client';
-import type { Logger as WinstonLogger } from 'winston';
 import { MasterConfig, SlaveConfig, StandAloneConfig } from './config';
 
 declare module 'discord.js' {
@@ -14,8 +13,6 @@ declare module 'discord.js' {
 declare module '@sapphire/pieces' {
 	interface Container {
 		db: PrismaClient;
-		// @ts-ignore
-		logger: WinstonLogger;
 		// remoteConfig: IFlagsmith;
 		config: MasterConfig | SlaveConfig | StandAloneConfig;
 		isMaster: () => this is MasterContainer;
