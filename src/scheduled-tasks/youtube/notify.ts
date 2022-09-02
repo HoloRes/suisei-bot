@@ -111,11 +111,13 @@ export class YoutubeNotifyTask extends ScheduledTask {
 
 		}) */
 
-		await this.container.db.livestream.delete({
-			where: {
-				id: stream.id,
-			},
-		});
+		try {
+			await this.container.db.livestream.delete({
+				where: {
+					id: stream.id,
+				},
+			});
+		} catch {}
 	}
 
 	public async run() {
