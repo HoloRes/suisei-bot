@@ -103,6 +103,34 @@ async function main() {
 
 	// Register commands
 	// This needs to be done outside, since there's no override available for the Subcommand class
+	const configRegistry = ApplicationCommandRegistries.acquire('config');
+	configRegistry.registerChatInputCommand((builder) => {
+		builder
+			.setName('config')
+			.setDescription('Manage guild config')
+			.addSubcommand((command) => command
+				.setName('set')
+				.setDescription('Set a config option')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('key')
+					.setDescription('Config key to set')
+					.setAutocomplete(true))
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('value')
+					.setDescription('Value to set it to')))
+			.addSubcommand((command) => command
+				.setName('get')
+				.setDescription('Get a config value')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('key')
+					.setDescription('Config key to get')
+					.setAutocomplete(true)));
+	});
+
+	// YouTube subscriptions
 	const subscriptionsRegistry = ApplicationCommandRegistries.acquire('subscriptions');
 	subscriptionsRegistry.registerChatInputCommand((builder) => {
 		builder

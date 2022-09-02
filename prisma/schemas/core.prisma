@@ -10,13 +10,10 @@ datasource db {
 }
 
 model Server {
-    id String @id
-
+    id               String   @id
     prefix           String?
     disabledCommands String[]
-
-    updateChannel String?
-
-    staffRole String?
-    adminRole String?
+    updateChannel    String?
+    staffRole        String?
+    adminRole        String?
 }

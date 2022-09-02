@@ -1,33 +1,31 @@
-import { ApplicationCommandRegistry, Command } from '@sapphire/framework';
-import { CommandInteraction, Message } from 'discord.js';
 import { ApplyOptions } from '@sapphire/decorators';
+import { Subcommand } from '@sapphire/plugin-subcommands';
 
-@ApplyOptions<Command.Options>({
+@ApplyOptions<Subcommand.Options>({
 	name: 'config',
 	description: 'Update server settings',
+	subcommands: [
+		{
+			name: 'set',
+			chatInputRun: 'chatInputSet',
+		},
+		{
+			name: 'get',
+			chatInputRun: 'chatInputGet',
+		},
+	],
 	preconditions: ['StaffOnly'],
 })
-export class ConfigCommand extends Command {
-	public override registerApplicationCommands(registry: ApplicationCommandRegistry) {
-		registry.registerChatInputCommand((builder) => {
-			builder
-				.setName(this.name)
-				.setDescription(this.description);
-		});
+export class ConfigCommand extends Subcommand {
+	public async chatInputSet(interaction: Subcommand.ChatInputInteraction) {
+		return interaction.reply('Not implemented yet');
 	}
 
-	public override async chatInputRun(message: CommandInteraction) {
-		await message.reply('Ping?');
-		const msg = await message.fetchReply();
-		if (msg instanceof Message) {
-			const content = `Pong from JavaScript! Bot Latency ${Math.round(this.container.client.ws.ping)}ms. API Latency ${msg.createdTimestamp - message.createdTimestamp}ms.`;
-			message.editReply(content);
-		}
+	public async chatInputGet(interaction: Subcommand.ChatInputInteraction) {
+		return interaction.reply('Not implemented yet');
 	}
 
-	public override async messageRun(message: Message) {
-		const msg = await message.reply('Ping?');
-		const content = `Pong from JavaScript! Bot Latency ${Math.round(this.container.client.ws.ping)}ms. API Latency ${msg.createdTimestamp - message.createdTimestamp}ms.`;
-		msg.edit(content);
+	public override async autocompleteRun(interaction: Subcommand.AutocompleteInteraction) {
+		return interaction.respond([]);
 	}
 }
