@@ -2,29 +2,27 @@
 
 module.exports = {
 	mode: 'standalone',
-	modules: {
-		// Do not modify what you don't understand, this WILL break functionality
-	},
 	developer: {
 		type: 'user',
 		userId: '000000000000000000',
 	},
 	discord: {
 		token: '',
-		defaultPrefix: '!',
-		developerPrefix: '_',
-	},
-	mongodb: {
-		username: '',
-		password: '',
-		database: '',
-		host: '',
-		protocol: 'mongodb',
+		id: '',
+		secret: '',
 	},
 	api: {
 		port: 80,
 		token: 'admin',
 		cors: ['http://example.com'],
+	},
+	db: {
+		username: '',
+		password: '',
+		database: '',
+		host: '',
+		protocol: '',
+		query: '',
 	},
 	logTransports: {
 		file: {

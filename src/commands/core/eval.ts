@@ -1,21 +1,15 @@
 import { Command } from '@sapphire/framework';
 import { Formatters, Message } from 'discord.js';
 import * as util from 'util';
+import { ApplyOptions } from '@sapphire/decorators';
 
+@ApplyOptions<Command.Options>({
+	name: 'eval',
+	description: 'Evaluate code',
+	preconditions: ['OwnerOnly'],
+})
 export class EvalCommand extends Command {
-	public constructor(context: Command.Context, options: Command.Options) {
-		super(context, {
-			...options,
-			name: 'eval',
-			description: 'Evaluate code',
-			preconditions: ['OwnerOnly'] as any,
-			chatInputCommand: {
-				register: false,
-			},
-		});
-	}
-
-	public async messageRun(message: Message) {
+	public override async messageRun(message: Message) {
 		const args = message.content.split(' ').slice(1);
 
 		function clean(text: string | any) {

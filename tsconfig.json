@@ -2,8 +2,8 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"typeRoots": [
-			"./node_modules/@types",
-			"./src/types"
+			"./src/lib/types",
+			"./node_modules/@types"
 		],
 		"resolveJsonModule": true,
 		"plugins": [

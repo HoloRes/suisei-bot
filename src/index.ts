@@ -1,50 +1,31 @@
 // Packages
 import { assertEquals } from 'typescript-is';
-import winston from 'winston';
-import LokiTransport from 'winston-loki';
 import process from 'process';
-import express from 'express';
 import * as Sentry from '@sentry/node';
-import * as SentryTracing from '@sentry/tracing';
-import * as path from 'path';
-import mongoose from 'mongoose';
+import { RewriteFrames } from '@sentry/integrations';
+import { getRootData } from '@sapphire/pieces';
+import { join } from 'node:path';
 import { Intents } from 'discord.js';
-import { LogLevel, SapphireClient } from '@sapphire/framework';
-import { ModuleLoader } from '@suiseis-mic/sapphire-modules';
-import helmet from 'helmet';
+import '@sapphire/plugin-api/register';
 import 'reflect-metadata';
+import { ApplicationCommandRegistries, container, LogLevel } from '@sapphire/framework';
+import '@sapphire/plugin-logger/register';
+// import Flagsmith from 'flagsmith-nodejs';
+import '@sapphire/plugin-hmr/register';
+import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
+import { SuiseiClient } from './lib/SuiseiClient';
 
 // Types
-import {
+import type {
 	BaseConfigCheck,
-	DeveloperRole,
-	DeveloperUser,
 	MasterConfig,
 	SlaveConfig,
 	StandAloneConfig,
-} from './types/config';
+} from './lib/types/config';
 
 // Local files
 // eslint-disable-next-line import/extensions,global-require
-export const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config.js');
-
-// Init
-const myFormat = winston.format.printf(({
-	level, message, label, timestamp,
-}) => `${timestamp} ${label ? `[${label}]` : ''} ${level}: ${message}`);
-
-export const logger = winston.createLogger({
-	transports: [
-		new winston.transports.Console({
-			format: winston.format.combine(
-				winston.format.timestamp(),
-				winston.format.cli(),
-				myFormat,
-			),
-			level: config.logTransports?.console?.level ?? 'info',
-		}),
-	],
-});
+const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config.js');
 
 // Config validation
 try {
@@ -56,92 +37,142 @@ try {
 	} else if (config.mode === 'standalone') {
 		assertEquals<StandAloneConfig>(config);
 	}
-
-	if (config.developer.type === 'user') {
-		assertEquals<DeveloperUser>(config.developer);
-	} else if (config.developer.type === 'role') {
-		assertEquals<DeveloperRole>(config.developer);
-	}
 } catch (err: any) {
-	if (err) logger.error(`${err.name}: ${err.message}`);
-	logger.verbose('Invalid config, quiting');
+	if (err) container.logger.error(`${err.name}: ${err.message}`);
+	console.error('Invalid config, quiting');
 	process.exit(1);
 }
 
-logger.debug('Config validated. Initializing.');
-if (config.logTransports?.loki) {
-	logger.add(new LokiTransport({
-		host: config.logTransports.loki.host,
-		level: config.logTransports.loki.level ?? 'info',
-		labels: { service: 'suisei' },
-	}));
-	logger.debug('Added Loki transport');
-}
-if (config.logTransports?.file) {
-	const date = new Date();
-	logger.add(new winston.transports.File({
-		filename: path.join(__dirname, '../logs', `${date}.log`),
-		level: config.logTransports.file.level ?? 'info',
-	}));
-	logger.debug('Added File transport');
-}
+console.info('Config validated. Initializing.');
+// Set config in the Saphire container
+container.config = config;
 
-const app = config.api ? express() : undefined;
-app?.listen(config.api?.port);
-app?.use(helmet());
+// Enable Flagsmith
+/* const flagsmith = new Flagsmith({
+	api: config.config.api ?? 'https://config.suisei.app',
+	environmentKey: config.config.environmentId,
+});
+container.remoteConfig = flagsmith; */
 
-if (config.api && app) {
-	// Heartbeat route, used for deployment validation
-	app.get('/heartbeat', (_, res) => {
-		res.status(200).send('OK');
-	});
-}
-
+// Enable Sentry if needed
 if (config.sentry) {
-	const integrations = [];
-
-	if (app) {
-		integrations.push(new Sentry.Integrations.Http({ tracing: true }));
-		integrations.push(new SentryTracing.Integrations.Express({ app }));
-	}
-
 	Sentry.init({
 		dsn: config.sentry.dsn,
-		tracesSampleRate: 0.5,
-		integrations,
+		integrations: [
+			new Sentry.Integrations.Modules(),
+			new Sentry.Integrations.Http({ breadcrumbs: true, tracing: true }),
+			new RewriteFrames({ root: join(getRootData().root, '..') }),
+		],
 	});
-
-	app?.use(Sentry.Handlers.requestHandler() as express.RequestHandler);
-	app?.use(Sentry.Handlers.tracingHandler());
-	app?.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 }
 
-if (config.mongodb) {
-	mongoose.connect(`${config.mongodb.protocol ?? 'mongodb'}://${config.mongodb.username}:${config.mongodb.password}@${config.mongodb.host}/${config.mongodb.database}`);
-} else if (config.overrides?.mongodb) {
-	mongoose.connect(`${config.overrides.mongodb.protocol ?? 'mongodb'}://${config.overrides.mongodb.username}:${config.overrides.mongodb.password}@${config.overrides.mongodb.host}/${config.overrides.mongodb.database}`);
-}
-
-export const client = new SapphireClient({
+// Client init logic
+const client = new SuiseiClient({
 	partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
 	intents: [
 		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
 		Intents.FLAGS.GUILD_BANS,
-		Intents.FLAGS.GUILD_MEMBERS,
 		Intents.FLAGS.GUILDS,
 	],
-	defaultPrefix: config.discord.defaultPrefix ?? '!',
+	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
 	loadMessageCommandListeners: true,
 	logger: {
-		level: LogLevel.Debug,
+		level: process.env.NODE_ENV !== 'production' ? LogLevel.Debug : LogLevel.Info,
+	},
+	api: {
+		listenOptions: {
+			port: config.api?.port,
+		},
+	},
+	tasks: {
+		strategy: new ScheduledTaskRedisStrategy({
+			bull: {
+				connection: {
+					host: config.redis?.host,
+				},
+			},
+		}),
+	},
+	hmr: {
+		enabled: process.env.NODE_ENV === 'development',
 	},
 });
 
-ModuleLoader.init(config.modules);
+async function main() {
+	await client.login(config.discord.token);
 
-client.once('ready', () => {
-	logger.info(`Started, running version ${process.env.COMMIT_SHA ?? 'unknown'}`);
-});
+	// Register commands
+	// This needs to be done outside, since there's no override available for the Subcommand class
+	const configRegistry = ApplicationCommandRegistries.acquire('config');
+	configRegistry.registerChatInputCommand((builder) => {
+		builder
+			.setName('config')
+			.setDescription('Manage guild config')
+			.addSubcommand((command) => command
+				.setName('set')
+				.setDescription('Set a config option')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('key')
+					.setDescription('Config key to set')
+					.setAutocomplete(true))
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('value')
+					.setDescription('Value to set it to')))
+			.addSubcommand((command) => command
+				.setName('get')
+				.setDescription('Get a config value')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('key')
+					.setDescription('Config key to get')
+					.setAutocomplete(true)));
+	});
 
-client.login(config.discord.token);
+	// YouTube subscriptions
+	const subscriptionsRegistry = ApplicationCommandRegistries.acquire('subscriptions');
+	subscriptionsRegistry.registerChatInputCommand((builder) => {
+		builder
+			.setName('subscriptions')
+			.setDescription('Manage YouTube notification subscriptions')
+			.addSubcommand((command) => command
+				.setName('add')
+				.setDescription('Add a subscription')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('vtuber')
+					.setDescription('VTuber to send notifications for')
+					.setAutocomplete(true))
+				.addChannelOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('channel')
+					.setDescription('Channel to send notifications in'))
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('message')
+					.setDescription('Message to include in the notification')))
+			.addSubcommand((command) => command
+				.setName('remove')
+				.setDescription('Remove a subscription')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('vtuber')
+					.setDescription('VTuber to send notifications for')
+					.setAutocomplete(true))
+				.addChannelOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('channel')
+					.setDescription('Channel to send notifications in')))
+			.addSubcommand((command) => command
+				.setName('list')
+				.setDescription('List all subscriptions')
+				.addChannelOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('channel')
+					.setDescription('Channel to send notifications in')));
+	});
+}
+
+// eslint-disable-next-line no-void
+void main();
