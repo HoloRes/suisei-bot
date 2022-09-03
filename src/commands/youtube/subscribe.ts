@@ -225,16 +225,19 @@ export class SubscriptionCommand extends Subcommand {
 					{
 						name: {
 							contains: focusedOption.value,
+							mode: 'insensitive',
 						},
 					},
 					{
 						englishName: {
 							contains: focusedOption.value,
+							mode: 'insensitive',
 						},
 					},
 					{
 						org: {
 							contains: focusedOption.value,
+							mode: 'insensitive',
 						},
 					},
 					{
