@@ -68,8 +68,7 @@ export class SubscriptionCommand extends Subcommand {
 		if (channel) {
 			// Check if the channel is already subscribed
 			if (channel.subscriptions.findIndex((sub) => sub.id === notifChannel.id) !== -1) {
-				// eslint-disable-next-line eqeqeq
-				await interaction.editReply(`<#${notifChannel.id}> was already subscribed to ${(channel.englishName && channel.englishName != '') ? channel.englishName : channel.name}`);
+				await interaction.editReply(`<#${notifChannel.id}> was already subscribed to ${channel.englishName || channel.name}`);
 				return;
 			}
 
@@ -91,7 +90,7 @@ export class SubscriptionCommand extends Subcommand {
 			}
 
 			// eslint-disable-next-line eqeqeq
-			await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${(channel.englishName && channel.englishName != '') ? channel.englishName : channel.name}`);
+			await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${channel.englishName || channel.name}`);
 			return;
 		}
 
@@ -119,8 +118,7 @@ export class SubscriptionCommand extends Subcommand {
 			},
 		});
 
-		// eslint-disable-next-line eqeqeq
-		await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${(vtuber.englishName && vtuber.englishName != '') ? vtuber.englishName : vtuber.name}`);
+		await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${vtuber.englishName || vtuber.name}`);
 	}
 
 	public async chatInputSetQuery(interaction: Subcommand.ChatInputInteraction) {
@@ -156,29 +154,31 @@ export class SubscriptionCommand extends Subcommand {
 		}) as ISearchParserResult;
 
 		/* eslint-disable no-nested-ternary */
-		const rawIncludedVtubers = parsedQuery.vtuber === undefined ? ['*'] : typeof parsedQuery.vtuber === 'string' ? [parsedQuery.vtuber] : parsedQuery.vtuber;
-		const rawExcludedVtubers = parsedQuery.exclude.vtuber === undefined ? [] : typeof parsedQuery.exclude.vtuber === 'string' ? [parsedQuery.exclude.vtuber] : parsedQuery.exclude.vtuber;
+		let includedVtubers = !parsedQuery.vtuber ? ['*'] : typeof parsedQuery.vtuber === 'string' ? [parsedQuery.vtuber] : parsedQuery.vtuber;
+		const rawExcludedVtubers: (string | undefined)[] = !parsedQuery.exclude.vtuber ? [] : typeof parsedQuery.exclude.vtuber === 'string' ? [parsedQuery.exclude.vtuber] : parsedQuery.exclude.vtuber;
 
-		const includedVtubers = await Promise.all(rawIncludedVtubers.map(async (channel) => {
-			const vtuber = await this.container.db.youtubeChannel.findFirst({
-				where: {
-					OR: [
-						{
-							id: channel,
-						},
-						{
-							name: channel,
-						},
-						{
-							englishName: channel,
-						},
-					],
-				},
-				select: { id: true },
-			});
+		if (!parsedQuery.exclude.vtuber) {
+			includedVtubers = await Promise.all(includedVtubers.map(async (channel) => {
+				const vtuber = await this.container.db.youtubeChannel.findFirst({
+					where: {
+						OR: [
+							{
+								id: channel,
+							},
+							{
+								name: channel,
+							},
+							{
+								englishName: channel,
+							},
+						],
+					},
+					select: { id: true },
+				});
 
-			return vtuber?.id;
-		}));
+				return vtuber?.id;
+			}));
+		}
 		const excludedVtubers = await Promise.all(rawExcludedVtubers.map(async (channel) => {
 			const vtuber = await this.container.db.youtubeChannel.findFirst({
 				where: {
@@ -288,13 +288,11 @@ export class SubscriptionCommand extends Subcommand {
 				},
 			});
 
-			// eslint-disable-next-line eqeqeq
-			await interaction.editReply(`<#${notifChannel.id}> has unsubscribed from ${(channel.englishName && channel.englishName != '') ? channel.englishName : channel.name}`);
+			await interaction.editReply(`<#${notifChannel.id}> has unsubscribed from ${channel.englishName || channel.name}`);
 			return;
 		}
 
-		// eslint-disable-next-line eqeqeq
-		await interaction.editReply(`<#${notifChannel.id}> is not subscribed to ${(channel.englishName && channel.englishName != '') ? channel.englishName : channel.name}`);
+		await interaction.editReply(`<#${notifChannel.id}> is not subscribed to ${channel.englishName || channel.name}`);
 	}
 
 	public async chatInputList(interaction: Subcommand.ChatInputInteraction) {
@@ -331,8 +329,8 @@ export class SubscriptionCommand extends Subcommand {
 				}
 
 				return embed
-					// eslint-disable-next-line eqeqeq
-					.setTitle((subscription.channel.englishName && subscription.channel.englishName != '') ? subscription.channel.englishName : subscription.channel.name)
+					// eslint-disable-next-line max-len
+					.setTitle(subscription.channel.englishName || subscription.channel.name)
 					.setURL(`https://www.youtube.com/channel/${subscription.channel.id}`)
 					.addFields([
 						{
@@ -358,8 +356,7 @@ export class SubscriptionCommand extends Subcommand {
 			limit: 25,
 		});
 		await interaction.respond(searchResult.hits.map((result) => ({
-			// eslint-disable-next-line eqeqeq
-			name: `${result.englishName != '' ? result.englishName : result.name} (${result.org})`,
+			name: `${result.englishName || result.name} (${result.org})`,
 			value: result.id,
 		})));
 	}

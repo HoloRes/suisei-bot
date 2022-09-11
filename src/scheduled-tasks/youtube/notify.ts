@@ -85,8 +85,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			const msg = await webhook.send({
 				content: sub.message,
 				embeds: [embed],
-				// eslint-disable-next-line eqeqeq
-				username: (channel.englishName && channel.englishName != '') ? channel.englishName : channel.name,
+				username: channel.englishName || channel.name,
 				avatarURL: channel.photo ?? undefined,
 			});
 
@@ -153,8 +152,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			}
 
 			const message = formatStringTemplate(sub.message, {
-				// eslint-disable-next-line eqeqeq
-				name: (channel.englishName && channel.englishName != '') ? channel.englishName : channel.name,
+				name: channel.englishName || channel.name,
 				org: channel.org,
 				subOrg: channel.subOrg,
 			});
@@ -162,8 +160,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			const msg = await webhook.send({
 				content: message,
 				embeds: [embed],
-				// eslint-disable-next-line eqeqeq
-				username: (channel.englishName && channel.englishName != '') ? channel.englishName : channel.name,
+				username: channel.englishName || channel.name,
 				avatarURL: channel.photo ?? undefined,
 			});
 
