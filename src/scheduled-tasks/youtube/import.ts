@@ -1,5 +1,13 @@
 import { ScheduledTask } from '@sapphire/plugin-scheduled-tasks';
 
+interface VTuber {
+	id: string;
+	name: string;
+	englishName?: string;
+	org?: string;
+	subOrg?: string;
+}
+
 export class VtuberImportTask extends ScheduledTask {
 	public constructor(context: ScheduledTask.Context, options: ScheduledTask.Options) {
 		super(context, {
@@ -15,6 +23,7 @@ export class VtuberImportTask extends ScheduledTask {
 		let page = 0;
 		let finished = false;
 		const tasks: Promise<any>[] = [];
+		const documents: VTuber[] = [];
 
 		const fetchNextPage = async () => {
 			this.container.logger.debug(`Fetching page ${page}`);
@@ -33,6 +42,14 @@ export class VtuberImportTask extends ScheduledTask {
 			}
 
 			currentPage.forEach((vtuber) => {
+				documents.push({
+					id: vtuber.id,
+					name: vtuber.name,
+					englishName: vtuber.englishName,
+					org: vtuber.org,
+					subOrg: vtuber.subOrg,
+				});
+
 				const info = {
 					name: vtuber.name,
 					englishName: vtuber.englishName,
@@ -67,6 +84,12 @@ export class VtuberImportTask extends ScheduledTask {
 			// eslint-disable-next-line no-await-in-loop
 			await fetchNextPage();
 		}
+
+		this.container.logger.debug('Create MeiliSearch task');
+		tasks.push(
+			this.container.meiliClient.index('vtubers')
+				.addDocuments(documents),
+		);
 
 		this.container.logger.debug('Waiting on promises');
 		await Promise.all(tasks);

@@ -28,6 +28,10 @@ export interface BaseConfig {
 		port?: number;
 		db?: number;
 	};
+	meilisearch: {
+		host: string;
+		key: string;
+	};
 	owners: string[];
 	api: {
 		port: number;
@@ -82,6 +86,7 @@ export interface SlaveConfig extends BaseConfig {
 	db?: never;
 	redis?: never;
 	api?: never;
+	meilisearch?: never;
 }
 
 export interface StandAloneConfig extends BaseConfig {

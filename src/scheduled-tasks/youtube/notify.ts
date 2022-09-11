@@ -1,6 +1,7 @@
 import { ScheduledTask } from '@sapphire/plugin-scheduled-tasks';
 import { Video, VideoWithChannel } from '@holores/holodex/dist/types';
 import { MessageEmbed } from 'discord.js';
+import formatStringTemplate from 'string-template';
 
 export class YoutubeNotifyTask extends ScheduledTask {
 	public constructor(context: ScheduledTask.Context, options: ScheduledTask.Options) {
@@ -20,7 +21,10 @@ export class YoutubeNotifyTask extends ScheduledTask {
 		});
 
 		// Pre-emptively return if there's nothing to update
-		if (dbStream) return;
+		if (dbStream) {
+			this.container.counters.youtube.success.inc(1);
+			return;
+		}
 
 		// Fetch the Youtube channel from the db
 		const channel = await this.container.db.youtubeChannel.findUnique({
@@ -28,7 +32,10 @@ export class YoutubeNotifyTask extends ScheduledTask {
 				id: stream.channel.id,
 			},
 		});
-		if (!channel) return;
+		if (!channel) {
+			this.container.counters.youtube.success.inc(1);
+			return;
+		}
 
 		// Fetch all subscriptions for this channel
 		const subscriptions = await this.container.db.subscription.findMany({
@@ -78,14 +85,92 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			const msg = await webhook.send({
 				content: sub.message,
 				embeds: [embed],
-				username: channel.englishName ?? channel.name,
+				// eslint-disable-next-line eqeqeq
+				username: (channel.englishName && channel.englishName != '') ? channel.englishName : channel.name,
 				avatarURL: channel.photo ?? undefined,
 			});
 
 			messageIds.push(msg.id);
 		});
 
-		await Promise.all(notifMessages);
+		const queryChannels = await this.container.db.querySubscription.findMany({
+			where: {
+				NOT: {
+					OR: [
+						{
+							excludedVtubers: {
+								has: stream.channel.id,
+							},
+						},
+						{
+							excludedOrgs: {
+								has: channel.org!.toLowerCase(),
+							},
+						},
+						{
+							excludedSubOrgs: channel.subOrg ? {
+								has: channel.subOrg.toLowerCase(),
+							} : undefined,
+						},
+					],
+				},
+				AND: {
+					includedVtubers: {
+						hasSome: [stream.channel.id, '*'],
+					},
+					includedOrgs: {
+						hasSome: [channel.org!.toLowerCase(), '*'],
+					},
+					includedSubOrgs: {
+						hasSome: channel.subOrg ? [channel.subOrg.toLowerCase(), '*'] : ['*'],
+					},
+				},
+			},
+		});
+
+		const queryNotifMessages = queryChannels.map(async (sub) => {
+			const notifChannel = await this.container.client.channels.fetch(sub.id)
+				.catch((err) => {
+					this.container.logger.error(err);
+				});
+
+			// Channel is missing or broken, ignore for now. Should delete the row at some point
+			if (!notifChannel) return;
+
+			if (notifChannel.type !== 'GUILD_TEXT' && notifChannel.type !== 'GUILD_NEWS') return;
+
+			const webhooks = await notifChannel.fetchWebhooks();
+			let webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
+
+			if (!webhook) {
+				const newWebhook = await notifChannel.createWebhook('Stream notification')
+					.catch((err) => {
+						this.container.logger.error(err);
+					});
+
+				if (!newWebhook) return;
+				webhook = newWebhook;
+			}
+
+			const message = formatStringTemplate(sub.message, {
+				// eslint-disable-next-line eqeqeq
+				name: (channel.englishName && channel.englishName != '') ? channel.englishName : channel.name,
+				org: channel.org,
+				subOrg: channel.subOrg,
+			});
+
+			const msg = await webhook.send({
+				content: message,
+				embeds: [embed],
+				// eslint-disable-next-line eqeqeq
+				username: (channel.englishName && channel.englishName != '') ? channel.englishName : channel.name,
+				avatarURL: channel.photo ?? undefined,
+			});
+
+			messageIds.push(msg.id);
+		});
+
+		await Promise.all([...notifMessages, ...queryNotifMessages]);
 
 		await this.container.db.livestream.create({
 			data: {
@@ -94,6 +179,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 				messageIds,
 			},
 		});
+		this.container.counters.youtube.success.inc(1);
 	}
 
 	private async removeStream(stream: Video) {
@@ -117,11 +203,13 @@ export class YoutubeNotifyTask extends ScheduledTask {
 					id: stream.id,
 				},
 			});
+			// eslint-disable-next-line no-empty
 		} catch {}
 	}
 
 	public async run() {
 		this.container.logger.debug('Pushing notifications');
+		let count = 0;
 		const tasks: Promise<void>[] = [];
 
 		const firstStreamsPage = await this.container.holodexClient.videos.getLivePaginated({
@@ -131,6 +219,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			order: 'asc',
 			maxUpcomingHours: 1,
 		});
+		count += firstStreamsPage.total;
 
 		firstStreamsPage.items.forEach((stream) => {
 			tasks.push(this.notify(stream as VideoWithChannel));
@@ -145,6 +234,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 				maxUpcomingHours: 1,
 				offset: page * 9999,
 			});
+			count += currentPage.total;
 
 			currentPage.items.forEach((stream) => {
 				tasks.push(this.notify(stream as VideoWithChannel));
@@ -156,6 +246,9 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			// eslint-disable-next-line no-await-in-loop
 			await fetchNextStreams(i);
 		}
+
+		// Increase Prometheus counter
+		this.container.counters.youtube.total.inc(count);
 
 		const firstPastPage = await this.container.holodexClient.videos.getVideosPaginated({
 			status: 'past',

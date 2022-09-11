@@ -2,13 +2,16 @@ import { container, SapphireClient, SapphireClientOptions } from '@sapphire/fram
 import { Enumerable } from '@sapphire/decorators';
 import { PrismaClient } from '@prisma/client';
 import HolodexClient from '@holores/holodex';
+import { MeiliSearch } from 'meilisearch';
 import { MasterConfig, SlaveConfig, StandAloneConfig } from './types/config';
+import { Counters } from './types/client';
 
 export class SuiseiClient extends SapphireClient {
 	@Enumerable(false)
 	public dev = process.env.NODE_ENV !== 'production';
 
 	public override async login(token: string) {
+		// Connect to the database
 		let connectionUrl: string;
 		if (container.isSlave()) {
 			// TODO: Init communication system with master node
@@ -25,10 +28,18 @@ export class SuiseiClient extends SapphireClient {
 			},
 		});
 
+		// Set Holodex API key
 		container.holodexClient = new HolodexClient({
 			apiKey: container.config.holodex?.apikey ?? '',
 		});
 
+		// Connect to MeiliSearch
+		container.meiliClient = new MeiliSearch({
+			host: container.config.meilisearch!.host,
+			apiKey: container.config.meilisearch!.key,
+		});
+
+		// Log into Discord
 		return super.login(token);
 	}
 
@@ -55,9 +66,11 @@ declare module '@sapphire/pieces' {
 		db: PrismaClient;
 		// remoteConfig: IFlagsmith;
 		holodexClient: HolodexClient;
+		meiliClient: MeiliSearch;
 		config: MasterConfig | SlaveConfig | StandAloneConfig;
 		isMaster: () => this is MasterContainer;
 		isSlave: () => this is SlaveContainer;
+		counters: Counters;
 	}
 
 	interface SlaveContainer extends Container {

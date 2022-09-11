@@ -1,5 +1,6 @@
 import { SapphireClientOptions } from '@sapphire/framework';
 import { PrismaClient } from '@prisma/client';
+import { Counter, Histogram } from 'prom-client';
 import { MasterConfig, SlaveConfig, StandAloneConfig } from './config';
 
 declare module 'discord.js' {
@@ -10,6 +11,13 @@ declare module 'discord.js' {
 	}
 }
 
+export interface Counters {
+	youtube: {
+		total: Counter;
+		success: Counter;
+	};
+}
+
 declare module '@sapphire/pieces' {
 	interface Container {
 		db: PrismaClient;
@@ -17,6 +25,7 @@ declare module '@sapphire/pieces' {
 		config: MasterConfig | SlaveConfig | StandAloneConfig;
 		isMaster: () => this is MasterContainer;
 		isSlave: () => this is SlaveContainer;
+		counters: Counters;
 	}
 
 	interface SlaveContainer extends Container {

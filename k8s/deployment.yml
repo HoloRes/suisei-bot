@@ -34,3 +34,31 @@ spec:
         - name: suisei-config
           configMap:
             name: suisei-config-file
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: suisei-mic
+  name: suisei-mic
+  namespace: suisei-mic
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: suisei-mic
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: suisei-mic-metrics
+  name: suisei-mic-metrics
+  namespace: suisei-mic
+spec:
+  ports:
+    - port: 5000
+  selector:
+    app: suisei-mic

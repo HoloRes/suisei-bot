@@ -1,4 +1,9 @@
 // Packages
+import 'reflect-metadata';
+import '@sapphire/plugin-logger/register';
+import '@sapphire/plugin-api/register';
+import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
+
 import { assertEquals } from 'typescript-is';
 import process from 'process';
 import * as Sentry from '@sentry/node';
@@ -6,13 +11,9 @@ import { RewriteFrames } from '@sentry/integrations';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
 import { Intents } from 'discord.js';
-import '@sapphire/plugin-api/register';
-import 'reflect-metadata';
 import { ApplicationCommandRegistries, container, LogLevel } from '@sapphire/framework';
-import '@sapphire/plugin-logger/register';
-// import Flagsmith from 'flagsmith-nodejs';
-import '@sapphire/plugin-hmr/register';
-import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
+import * as promClient from 'prom-client';
+import express from 'express';
 import { SuiseiClient } from './lib/SuiseiClient';
 
 // Types
@@ -39,10 +40,12 @@ try {
 	}
 } catch (err: any) {
 	if (err) container.logger.error(`${err.name}: ${err.message}`);
+	// eslint-disable-next-line no-console
 	console.error('Invalid config, quiting');
 	process.exit(1);
 }
 
+// eslint-disable-next-line no-console
 console.info('Config validated. Initializing.');
 // Set config in the Saphire container
 container.config = config;
@@ -65,6 +68,34 @@ if (config.sentry) {
 		],
 	});
 }
+
+// Enable Prometheus metrics
+const app = express();
+
+promClient.collectDefaultMetrics();
+container.counters = {
+	youtube: {
+		total: new promClient.Counter({
+			name: 'suisei_mic_youtube_notification_total_count',
+			help: 'Amount of YouTube notifications received from Holodex',
+		}),
+		success: new promClient.Counter({
+			name: 'suisei_mic_youtube_notification_success_count',
+			help: 'Amount of YouTube notifications successfully processed',
+		}),
+	},
+};
+
+app.get('/metrics', async (req, res) => {
+	try {
+		res.set('Content-Type', promClient.register.contentType);
+		res.end(await promClient.register.metrics());
+	} catch (ex) {
+		res.status(500).end(ex);
+	}
+});
+
+app.listen(5000);
 
 // Client init logic
 const client = new SuiseiClient({
@@ -92,9 +123,6 @@ const client = new SuiseiClient({
 				},
 			},
 		}),
-	},
-	hmr: {
-		enabled: process.env.NODE_ENV === 'development',
 	},
 });
 
@@ -152,6 +180,21 @@ async function main() {
 					.setRequired(true)
 					.setName('message')
 					.setDescription('Message to include in the notification')))
+			.addSubcommand((command) => command
+				.setName('setquery')
+				.setDescription('Set a query for notifications')
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('query')
+					.setDescription('Query to filter for e.g. "org:hololive -org:nijisanji" (see docs)'))
+				.addChannelOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('channel')
+					.setDescription('Channel to send notifications in'))
+				.addStringOption((optBuilder) => optBuilder
+					.setRequired(true)
+					.setName('message')
+					.setDescription('Message to include in the notification, can use parameters like {name} or {org} (see docs)')))
 			.addSubcommand((command) => command
 				.setName('remove')
 				.setDescription('Remove a subscription')

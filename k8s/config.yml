@@ -1,9 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: suisei-config-file
   namespace: suisei-mic
 data:
   config.js: |-
-    Config from config.js
+    module.exports = {}

@@ -38,6 +38,17 @@ model Subscription {
   @@id([id, channelId])
 }
 
+model QuerySubscription {
+  id              String   @id
+  message         String
+  includedOrgs    String[]
+  excludedOrgs    String[]
+  includedSubOrgs String[]
+  excludedSubOrgs String[]
+  includedVtubers String[]
+  excludedVtubers String[]
+}
+
 model Livestream {
   id         String   @id
   title      String

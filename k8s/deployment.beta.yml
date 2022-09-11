@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: suisei-mic
-spec: {}
+spec: { }
 
 ---
 apiVersion: apps/v1
@@ -34,3 +34,31 @@ spec:
         - name: suisei-beta-config
           configMap:
             name: suisei-beta-config-file
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: suisei-mic-beta
+  name: suisei-mic-beta
+  namespace: suisei-mic
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: suisei-mic-beta
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: suisei-mic-beta-metrics
+  name: suisei-mic-beta-metrics
+  namespace: suisei-mic
+spec:
+  ports:
+    - port: 5000
+  selector:
+    app: suisei-mic-beta
