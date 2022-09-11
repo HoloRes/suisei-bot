@@ -88,6 +88,7 @@ dependencies:
   flagsmith-nodejs: 2.2.0
   meilisearch: 0.27.0
   node-schedule: 2.1.0
+  prisma: 4.3.1
   prisma-aurora: 1.3.9_prisma@4.3.1
   prom-client: 14.1.0
   reflect-metadata: 0.1.13
@@ -122,7 +123,6 @@ devDependencies:
   lint-staged: 13.0.3
   node-dev: 7.4.3
   npm-run-all: 4.1.5
-  prisma: 4.3.1
   ts-node: 10.9.1_57uwcby55h6tzvkj3v5sfcgxoe
   ts-node-dev: 2.0.0_57uwcby55h6tzvkj3v5sfcgxoe
   ttypescript: 1.5.13_6oasmw356qmm23djlsjgkwvrtm
@@ -691,6 +691,7 @@ packages:
   /@prisma/engines/4.3.1:
     resolution: {integrity: sha512-4JF/uMaEDAPdcdZNOrnzE3BvrbGpjgV0FcPT3EVoi6I86fWkloqqxBt+KcK/+fIRR0Pxj66uGR9wVH8U1Y13JA==}
     requiresBuild: true
+    dev: false
 
   /@prisma/fetch-engine/3.15.1-1.461d6a05159055555eb7dfb337c9fb271cbd4d7e:
     resolution: {integrity: sha512-/Xi9sTBjTm3RexDO8lm/XSO67OUqHRemf74cwOcyLCwLGydrkmZF2IT1whppHG7+xqwrQn7cNzWSf/+7FB3fcA==}
@@ -4358,6 +4359,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@prisma/engines': 4.3.1
+    dev: false
 
   /process-nextick-args/2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
