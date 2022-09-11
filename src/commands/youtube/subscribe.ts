@@ -157,7 +157,7 @@ export class SubscriptionCommand extends Subcommand {
 		let includedVtubers: (string | undefined)[] = !parsedQuery.vtuber ? ['*'] : typeof parsedQuery.vtuber === 'string' ? [parsedQuery.vtuber] : parsedQuery.vtuber;
 		const rawExcludedVtubers = !parsedQuery.exclude.vtuber ? [] : typeof parsedQuery.exclude.vtuber === 'string' ? [parsedQuery.exclude.vtuber] : parsedQuery.exclude.vtuber;
 
-		if (!parsedQuery.exclude.vtuber) {
+		if (parsedQuery.vtuber) {
 			includedVtubers = await Promise.all(includedVtubers.map(async (channel) => {
 				const vtuber = await this.container.db.youtubeChannel.findFirst({
 					where: {
