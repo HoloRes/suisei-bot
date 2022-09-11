@@ -154,8 +154,8 @@ export class SubscriptionCommand extends Subcommand {
 		}) as ISearchParserResult;
 
 		/* eslint-disable no-nested-ternary */
-		let includedVtubers = !parsedQuery.vtuber ? ['*'] : typeof parsedQuery.vtuber === 'string' ? [parsedQuery.vtuber] : parsedQuery.vtuber;
-		const rawExcludedVtubers: (string | undefined)[] = !parsedQuery.exclude.vtuber ? [] : typeof parsedQuery.exclude.vtuber === 'string' ? [parsedQuery.exclude.vtuber] : parsedQuery.exclude.vtuber;
+		let includedVtubers: (string | undefined)[] = !parsedQuery.vtuber ? ['*'] : typeof parsedQuery.vtuber === 'string' ? [parsedQuery.vtuber] : parsedQuery.vtuber;
+		const rawExcludedVtubers = !parsedQuery.exclude.vtuber ? [] : typeof parsedQuery.exclude.vtuber === 'string' ? [parsedQuery.exclude.vtuber] : parsedQuery.exclude.vtuber;
 
 		if (!parsedQuery.exclude.vtuber) {
 			includedVtubers = await Promise.all(includedVtubers.map(async (channel) => {
