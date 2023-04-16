@@ -26,7 +26,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			return;
 		}
 
-		// Fetch the Youtube channel from the db
+		// Fetch the YouTube channel from the db
 		const channel = await this.container.db.youtubeChannel.findUnique({
 			where: {
 				id: stream.channel.id,
@@ -103,9 +103,9 @@ export class YoutubeNotifyTask extends ScheduledTask {
 							},
 						},
 						{
-							excludedOrgs: {
-								has: channel.org!.toLowerCase(),
-							},
+							excludedOrgs: channel.org ? {
+								has: channel.org.toLowerCase(),
+							} : undefined,
 						},
 						{
 							excludedSubOrgs: channel.subOrg ? {
@@ -119,7 +119,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 						hasSome: [stream.channel.id, '*'],
 					},
 					includedOrgs: {
-						hasSome: [channel.org!.toLowerCase(), '*'],
+						hasSome: channel.org ? [channel.org.toLowerCase(), '*'] : ['*'],
 					},
 					includedSubOrgs: {
 						hasSome: channel.subOrg ? [channel.subOrg.toLowerCase(), '*'] : ['*'],
