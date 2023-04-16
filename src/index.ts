@@ -221,5 +221,4 @@ async function main() {
 	});
 }
 
-// eslint-disable-next-line no-void
-void main();
+main().catch(container.logger.error.bind(container.logger));
