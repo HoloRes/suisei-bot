@@ -33,7 +33,6 @@
 		"meilisearch": "^0.32.3",
 		"node-schedule": "^2.1.1",
 		"prisma": "^4.12.0",
-		"prisma-aurora": "^1.3.9",
 		"prom-client": "^14.2.0",
 		"reflect-metadata": "^0.1.13",
 		"search-query-parser": "^1.6.0",
@@ -62,10 +61,11 @@
 		"eslint-config-airbnb-base": "15.0.0",
 		"eslint-import-resolver-typescript": "^3.5.5",
 		"eslint-plugin-import": "^2.27.5",
-		"husky": "^8.0.3",
+		"husky": "^8.0.0",
 		"lint-staged": "^13.2.1",
 		"node-dev": "^8.0.0",
 		"npm-run-all": "^4.1.5",
+		"prisma-import": "^1.0.4",
 		"ts-node": "^10.9.1",
 		"ts-node-dev": "^2.0.0",
 		"ts-patch": "3.0.0-beta3",
@@ -82,10 +82,16 @@
 		"dev:run": "node-dev dist/index.js",
 		"watch": "tspc --watch",
 		"dev": "run-p watch dev:run",
-		"prepare": "pnpm ts-patch install -s && pnpm husky install && node .husky/link.js",
-		"db:push": "aurora && prisma db push",
-		"db:migrate": "aurora && prisma migrate dev",
-		"db:generate": "aurora && prisma generate"
+		"prepare": "ts-patch install -s && husky install",
+		"db:push": "prisma-import -f && prisma db push",
+		"db:migrate": "prisma-import -f && prisma migrate dev",
+		"db:generate": "prisma-import -f && prisma generate"
+	},
+	"prisma": {
+		"import": {
+			"schemas": "prisma/schemas/*.prisma",
+			"output": "prisma/schema.prisma"
+		}
 	},
 	"lint-staged": {
 		"*.{js,ts,jsx,tsx}": [

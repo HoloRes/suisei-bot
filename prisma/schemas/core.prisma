@@ -1,13 +1,5 @@
 // This file holds the core database models required to run the bot
 // Define the client, so we can use db specific features
-generator client {
-    provider = "prisma-client-js"
-}
-
-datasource db {
-    provider = "cockroachdb"
-    url      = env("DATABASE_URL")
-}
 
 model Server {
     id               String   @id

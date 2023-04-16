@@ -10,7 +10,6 @@ ENV COMMIT_SHA=$sha
 WORKDIR /tmp
 COPY package.json .
 COPY pnpm-lock.yaml .
-COPY aurora.config.json .
 COPY prisma ./prisma
 
 # Set noninteractive env variable and set a placeholder database url so Prisma will generate the client
@@ -39,7 +38,6 @@ WORKDIR /app
 
 COPY package.json .
 COPY pnpm-lock.yaml .
-COPY aurora.config.json .
 COPY prisma ./prisma
 
 RUN npm set-script prepare "" \
