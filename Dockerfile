@@ -22,7 +22,7 @@ RUN apt-get update \
     && apt-get install -yq --no-install-recommends build-essential python3 git \
     && rm -rf /var/lib/apt/lists/* \
 	&& npm i -g pnpm \
-    && npm set-script prepare "ts-patch install -s" \
+    && npm pkg set scripts.prepare="ts-patch install -s" \
     && pnpm i \
     && pnpm db:generate
 
@@ -40,7 +40,7 @@ COPY package.json .
 COPY pnpm-lock.yaml .
 COPY prisma ./prisma
 
-RUN npm set-script prepare "" \
+RUN npm pkg delete scripts.prepare \
     && pnpm i \
     && pnpm db:generate \
     && sed -i 's|"main": "src/index.ts"|"main": "dist/index.js"|g' package.json
