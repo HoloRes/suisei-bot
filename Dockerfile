@@ -1,4 +1,4 @@
-FROM node:16-buster-slim
+FROM node:18-buster-slim
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -23,7 +23,7 @@ RUN apt-get update \
     && apt-get install -yq --no-install-recommends build-essential python3 git \
     && rm -rf /var/lib/apt/lists/* \
 	&& npm i -g pnpm \
-    && npm set-script prepare "" \
+    && npm set-script prepare "ts-patch install -s" \
     && pnpm i \
     && pnpm db:generate
 
