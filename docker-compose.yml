@@ -1,25 +1,25 @@
 version: '3'
 
 services:
-  database:
-    image: cockroachdb/cockroach:v22.1.6
-    command: start --insecure
-    ports:
-      - "26257:26257"
-      - "28080:8080"
-    volumes:
-      - db:/cockroach/cockroach-data
+#  database:
+#    image: cockroachdb/cockroach
+#    command: start-single-node --insecure
+#    ports:
+#      - "26257:26257"
+#      - "28080:8080"
+#    volumes:
+#      - db:/cockroach/cockroach-data
 
   redis:
-    image: redis:7
+    image: redis
     command: redis-server --save 60 1
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis:/data
 
   meilisearch:
-    image: getmeili/meilisearch:v0.28
+    image: getmeili/meilisearch
     command: meilisearch --env="development"
     environment:
       - "MEILI_MASTER_KEY=MASTER_KEY"

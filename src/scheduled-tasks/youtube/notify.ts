@@ -1,6 +1,6 @@
 import { ScheduledTask } from '@sapphire/plugin-scheduled-tasks';
 import { Video, VideoWithChannel } from '@holores/holodex/dist/types';
-import { MessageEmbed } from 'discord.js';
+import { ChannelType, EmbedBuilder } from 'discord.js';
 import formatStringTemplate from 'string-template';
 
 export class YoutubeNotifyTask extends ScheduledTask {
@@ -8,7 +8,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 		super(context, {
 			...options,
 			name: 'youtubeNotify',
-			cron: '*/5 * * * *',
+			pattern: '*/5 * * * *',
 		});
 	}
 
@@ -49,7 +49,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 		});
 
 		// Create the embed for the livestream
-		const embed = new MessageEmbed()
+		const embed = new EmbedBuilder()
 			.setTitle(stream.title)
 			.setURL(`https://youtu.be/${stream.id}`)
 			.setImage(`https://i.ytimg.com/vi/${stream.id}/maxresdefault.jpg`)
@@ -67,13 +67,14 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			// Channel is missing or broken, ignore for now. Should delete the row at some point
 			if (!notifChannel) return;
 
-			if (notifChannel.type !== 'GUILD_TEXT' && notifChannel.type !== 'GUILD_NEWS') return;
+			if (notifChannel.type !== ChannelType.GuildAnnouncement
+				&& notifChannel.type !== ChannelType.GuildText) return;
 
 			const webhooks = await notifChannel.fetchWebhooks();
 			let webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
 
 			if (!webhook) {
-				const newWebhook = await notifChannel.createWebhook('Stream notification')
+				const newWebhook = await notifChannel.createWebhook({ name: 'Stream notification' })
 					.catch((err) => {
 						this.container.logger.error(err);
 					});
@@ -136,13 +137,14 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			// Channel is missing or broken, ignore for now. Should delete the row at some point
 			if (!notifChannel) return;
 
-			if (notifChannel.type !== 'GUILD_TEXT' && notifChannel.type !== 'GUILD_NEWS') return;
+			if (notifChannel.type !== ChannelType.GuildAnnouncement
+				&& notifChannel.type !== ChannelType.GuildText) return;
 
 			const webhooks = await notifChannel.fetchWebhooks();
 			let webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
 
 			if (!webhook) {
-				const newWebhook = await notifChannel.createWebhook('Stream notification')
+				const newWebhook = await notifChannel.createWebhook({ name: 'Stream notification' })
 					.catch((err) => {
 						this.container.logger.error(err);
 					});

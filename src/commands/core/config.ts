@@ -17,11 +17,11 @@ import { Subcommand } from '@sapphire/plugin-subcommands';
 	preconditions: ['StaffOnly'],
 })
 export class ConfigCommand extends Subcommand {
-	public async chatInputSet(interaction: Subcommand.ChatInputInteraction) {
+	public async chatInputSet(interaction: Subcommand.ChatInputCommandInteraction) {
 		return interaction.reply('Not implemented yet');
 	}
 
-	public async chatInputGet(interaction: Subcommand.ChatInputInteraction) {
+	public async chatInputGet(interaction: Subcommand.ChatInputCommandInteraction) {
 		return interaction.reply('Not implemented yet');
 	}
 

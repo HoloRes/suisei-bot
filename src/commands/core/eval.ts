@@ -1,5 +1,5 @@
 import { Command } from '@sapphire/framework';
-import { Formatters, Message } from 'discord.js';
+import { codeBlock, Message } from 'discord.js';
 import * as util from 'util';
 import { ApplyOptions } from '@sapphire/decorators';
 
@@ -24,7 +24,7 @@ export class EvalCommand extends Command {
 
 			if (typeof evaled !== 'string') { evaled = util.inspect(evaled); }
 
-			message.channel.send(Formatters.codeBlock(clean(evaled)));
+			message.channel.send(codeBlock(clean(evaled)));
 		} catch (err) {
 			message.channel.send(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
 		}

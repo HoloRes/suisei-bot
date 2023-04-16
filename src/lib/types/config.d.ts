@@ -37,6 +37,7 @@ export interface BaseConfig {
 		port: number;
 		baseUrl: string;
 		origin?: string;
+		adminKey: string;
 	};
 	overrides?: {
 		discord?: {

@@ -13,7 +13,7 @@ module.exports = {
 	},
 	api: {
 		port: 80,
-		token: 'admin',
+		adminKey: 'admin',
 		cors: ['http://example.com'],
 	},
 	db: {

@@ -4,13 +4,13 @@ import '@sapphire/plugin-logger/register';
 import '@sapphire/plugin-api/register';
 import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
 
-import { assertEquals } from 'typescript-is';
+import { assert } from 'typia';
 import process from 'process';
 import * as Sentry from '@sentry/node';
 import { RewriteFrames } from '@sentry/integrations';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
-import { Intents } from 'discord.js';
+import { ChannelType, GatewayIntentBits, Partials } from 'discord.js';
 import { ApplicationCommandRegistries, container, LogLevel } from '@sapphire/framework';
 import * as promClient from 'prom-client';
 import express from 'express';
@@ -30,13 +30,13 @@ const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config
 
 // Config validation
 try {
-	assertEquals<BaseConfigCheck>(config);
+	assert<BaseConfigCheck>(config);
 	if (config.mode === 'master') {
-		assertEquals<MasterConfig>(config);
+		assert<MasterConfig>(config);
 	} else if (config.mode === 'slave') {
-		assertEquals<SlaveConfig>(config);
+		assert<SlaveConfig>(config);
 	} else if (config.mode === 'standalone') {
-		assertEquals<StandAloneConfig>(config);
+		assert<StandAloneConfig>(config);
 	}
 } catch (err: any) {
 	if (err) container.logger.error(`${err.name}: ${err.message}`);
@@ -99,11 +99,11 @@ app.listen(5000);
 
 // Client init logic
 const client = new SuiseiClient({
-	partials: ['CHANNEL', 'GUILD_MEMBER', 'MESSAGE', 'REACTION'],
+	partials: [Partials.Channel, Partials.GuildMember, Partials.Message, Partials.Reaction],
 	intents: [
-		Intents.FLAGS.GUILD_MESSAGES,
-		Intents.FLAGS.GUILD_BANS,
-		Intents.FLAGS.GUILDS,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.GuildBans,
+		GatewayIntentBits.Guilds,
 	],
 	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
 	loadMessageCommandListeners: true,
@@ -175,7 +175,8 @@ async function main() {
 				.addChannelOption((optBuilder) => optBuilder
 					.setRequired(true)
 					.setName('channel')
-					.setDescription('Channel to send notifications in'))
+					.setDescription('Channel to send notifications in')
+					.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText))
 				.addStringOption((optBuilder) => optBuilder
 					.setRequired(true)
 					.setName('message')
@@ -190,7 +191,8 @@ async function main() {
 				.addChannelOption((optBuilder) => optBuilder
 					.setRequired(true)
 					.setName('channel')
-					.setDescription('Channel to send notifications in'))
+					.setDescription('Channel to send notifications in')
+					.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText))
 				.addStringOption((optBuilder) => optBuilder
 					.setRequired(true)
 					.setName('message')
@@ -206,14 +208,16 @@ async function main() {
 				.addChannelOption((optBuilder) => optBuilder
 					.setRequired(true)
 					.setName('channel')
-					.setDescription('Channel to send notifications in')))
+					.setDescription('Channel to send notifications in')
+					.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText)))
 			.addSubcommand((command) => command
 				.setName('list')
 				.setDescription('List all subscriptions')
 				.addChannelOption((optBuilder) => optBuilder
 					.setRequired(true)
 					.setName('channel')
-					.setDescription('Channel to send notifications in')));
+					.setDescription('Channel to send notifications in')
+					.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText)));
 	});
 }
 

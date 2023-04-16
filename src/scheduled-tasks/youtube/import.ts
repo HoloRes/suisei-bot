@@ -13,7 +13,7 @@ export class VtuberImportTask extends ScheduledTask {
 		super(context, {
 			...options,
 			name: 'vtuberImport',
-			cron: '0 0 * * 0',
+			pattern: '0 0 * * 0',
 		});
 	}
 

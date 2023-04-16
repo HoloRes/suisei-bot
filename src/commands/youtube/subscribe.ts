@@ -1,7 +1,7 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { ApplyOptions } from '@sapphire/decorators';
 import { PaginatedMessage } from '@sapphire/discord.js-utilities';
-import { MessageEmbed } from 'discord.js';
+import { ChannelType, EmbedBuilder } from 'discord.js';
 import searchQuery from 'search-query-parser';
 
 interface VTuber {
@@ -36,19 +36,11 @@ interface VTuber {
 	preconditions: ['StaffOnly'],
 })
 export class SubscriptionCommand extends Subcommand {
-	public async chatInputAdd(interaction: Subcommand.ChatInputInteraction) {
+	public async chatInputAdd(interaction: Subcommand.ChatInputCommandInteraction) {
 		const channelId = interaction.options.getString('vtuber', true);
-		const notifChannel = interaction.options.getChannel('channel', true);
+		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 		const message = interaction.options.getString('message', true);
 
-		// Check if the notification channel is a text channel
-		if (notifChannel.type !== 'GUILD_NEWS' && notifChannel.type !== 'GUILD_TEXT') {
-			await interaction.reply({
-				content: 'Selected channel is not a text channel.',
-				ephemeral: true,
-			});
-			return;
-		}
 		await interaction.deferReply();
 
 		// Find the VTuber in the db
@@ -86,7 +78,9 @@ export class SubscriptionCommand extends Subcommand {
 			const webhook = await webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
 
 			if (!webhook) {
-				await notifChannel.createWebhook('Stream notification');
+				await notifChannel.createWebhook({
+					name: 'Stream notification',
+				});
 			}
 
 			// eslint-disable-next-line eqeqeq
@@ -121,19 +115,11 @@ export class SubscriptionCommand extends Subcommand {
 		await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${vtuber.englishName || vtuber.name}`);
 	}
 
-	public async chatInputSetQuery(interaction: Subcommand.ChatInputInteraction) {
+	public async chatInputSetQuery(interaction: Subcommand.ChatInputCommandInteraction) {
 		const query = interaction.options.getString('query', true);
-		const notifChannel = interaction.options.getChannel('channel', true);
+		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 		const message = interaction.options.getString('message', true);
 
-		// Check if the notification channel is a text channel
-		if (notifChannel.type !== 'GUILD_NEWS' && notifChannel.type !== 'GUILD_TEXT') {
-			await interaction.reply({
-				content: 'Selected channel is not a text channel.',
-				ephemeral: true,
-			});
-			return;
-		}
 		await interaction.deferReply();
 
 		interface ISearchParserResult extends searchQuery.SearchParserResult {
@@ -238,24 +224,18 @@ export class SubscriptionCommand extends Subcommand {
 		const webhook = await webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
 
 		if (!webhook) {
-			await notifChannel.createWebhook('Stream notification');
+			await notifChannel.createWebhook({
+				name: 'Stream notification',
+			});
 		}
 
 		await interaction.editReply(`Query subscription set for <#${notifChannel.id}>`);
 	}
 
-	public async chatInputRemove(interaction: Subcommand.ChatInputInteraction) {
+	public async chatInputRemove(interaction: Subcommand.ChatInputCommandInteraction) {
 		const channelId = interaction.options.getString('vtuber', true);
-		const notifChannel = interaction.options.getChannel('channel', true);
+		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 
-		// Check if the notification channel is a text channel
-		if (notifChannel.type !== 'GUILD_NEWS' && notifChannel.type !== 'GUILD_TEXT') {
-			await interaction.reply({
-				content: 'Selected channel is not a text channel.',
-				ephemeral: true,
-			});
-			return;
-		}
 		await interaction.deferReply();
 
 		// Find the subscription in the db
@@ -295,8 +275,8 @@ export class SubscriptionCommand extends Subcommand {
 		await interaction.editReply(`<#${notifChannel.id}> is not subscribed to ${channel.englishName || channel.name}`);
 	}
 
-	public async chatInputList(interaction: Subcommand.ChatInputInteraction) {
-		const channel = interaction.options.getChannel('channel', true);
+	public async chatInputList(interaction: Subcommand.ChatInputCommandInteraction) {
+		const channel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 		await interaction.deferReply();
 
 		const subscriptions = await this.container.db.subscription.findMany({
@@ -315,7 +295,7 @@ export class SubscriptionCommand extends Subcommand {
 		}
 
 		const display = new PaginatedMessage({
-			template: new MessageEmbed({
+			template: new EmbedBuilder({
 				description: `Subscriptions for: <#${channel.id}>`,
 				footer: { text: 'Powered by Holodex.net' },
 			}),

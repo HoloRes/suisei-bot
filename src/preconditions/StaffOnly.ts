@@ -1,6 +1,6 @@
 import { Precondition } from '@sapphire/framework';
 import type { CommandInteraction } from 'discord.js';
-import { Message, Permissions } from 'discord.js';
+import { Message, PermissionsBitField } from 'discord.js';
 
 export class StaffOnlyPrecondition extends Precondition {
 	public chatInputRun(interaction: CommandInteraction) {
@@ -10,7 +10,7 @@ export class StaffOnlyPrecondition extends Precondition {
 
 		if (this.container.config.owners?.includes(interaction.user.id)) return this.ok();
 
-		return interaction.memberPermissions.has(Permissions.FLAGS.MANAGE_CHANNELS)
+		return interaction.memberPermissions.has(PermissionsBitField.Flags.ManageChannels)
 			? this.ok()
 			: this.error({ message: 'Only the staff can use this command!' });
 	}
@@ -22,7 +22,7 @@ export class StaffOnlyPrecondition extends Precondition {
 
 		if (this.container.config.owners?.includes(message.author.id)) return this.ok();
 
-		return message.member?.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS)
+		return message.member?.permissions.has(PermissionsBitField.Flags.ManageChannels)
 			? this.ok()
 			: this.error({ message: 'Only the staff can use this command!' });
 	}
