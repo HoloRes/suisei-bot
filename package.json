@@ -4,7 +4,6 @@
   "description": "A custom bot for the Hololive Resort Discord",
   "main": "index.js",
   "dependencies": {
-    "@holores/holoapi": "^1.0.6",
     "@sentry/node": "^6.0.0",
     "@sentry/tracing": "^6.2.2",
     "axios": "^0.21.1",
@@ -22,7 +21,6 @@
     "parse-duration": "^1.0.0",
     "pubsubhubbub": "^1.0.1",
     "socket.io": "^4.0.0",
-    "twitter-lite": "^1.0.0",
     "winston": "^3.3.3",
     "winston-loki": "^6.0.0"
   },

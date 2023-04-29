@@ -7,7 +7,6 @@ const Sentry = require('@sentry/node');
 const winston = require('winston'); // Advanced logging library
 const sequence = require('mongoose-sequence');
 const moment = require('moment');
-const HoloApiClient = require('@holores/holoapi');
 const { Server: SocketIO } = require('socket.io');
 const LokiTransport = require('winston-loki');
 const Tracing = require('@sentry/tracing');
@@ -60,13 +59,7 @@ io.use((socket, next) => {
 });
 exports.socket = io;
 
-// HoloAPI client
-const holoClient = new HoloApiClient();
-exports.holoClient = holoClient;
-
 // Local JS files
-// const youtubeNotifications = require('$/util/youtube');
-const twitterNotifications = require('$/util/twitter');
 const dashboardRouter = require('$/routers/dashboard');
 const moderation = require('$/util/moderation');
 const { previewMessageHandler } = require('$/util/functions');
@@ -98,11 +91,6 @@ mongoose.connect(`mongodb+srv://${config.mongodb.username}:${config.mongodb.pass
 	useUnifiedTopology: true,
 	useFindAndModify: false,
 });
-
-// Notifications preparation
-if (config.environment === 'production') {
-	twitterNotifications.init();
-}
 
 // Routers
 app.use('/dash', dashboardRouter);

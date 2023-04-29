@@ -12,7 +12,7 @@ exports.run = async (client, message, args) => {
 
 	const channel = await client.channels.fetch(args[0])
 		.catch((err) => {
-			if(err) {
+			if (err) {
 				Sentry.captureException(err);
 				logger.error(err, { labels: { module: 'commands', event: ['autopublish', 'discord'] } });
 				return message.channel.send("That channel doesn't exist.");
@@ -30,7 +30,7 @@ exports.run = async (client, message, args) => {
 			// eslint-disable-next-line no-param-reassign
 			doc.autoPublish = !doc.autoPublish;
 			doc.save((err2) => {
-				if(err2) {
+				if (err2) {
 					Sentry.captureException(err2);
 					logger.error(err, { labels: { module: 'commands', event: ['autopublish', 'databaseSave'] } });
 					return message.channel.send('Something went wrong, try again later');
@@ -43,7 +43,7 @@ exports.run = async (client, message, args) => {
 			autoPublish: true,
 		});
 		publishDoc.save((err2) => {
-			if(err2) {
+			if (err2) {
 				Sentry.captureException(err2);
 				logger.error(err, { labels: { module: 'commands', event: ['autopublish', 'databaseSave'] } });
 				return message.channel.send('Something went wrong, try again later');
