@@ -1,57 +1,41 @@
-FROM node:18-bullseye-slim AS base
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
+FROM node:lts-alpine AS builder
 # For Sentry release tracking
 ARG sha
 ENV COMMIT_SHA=$sha
 
-# Set noninteractive env variable and set a placeholder database url so Prisma will generate the client
-ENV DEBIAN_FRONTEND=noninteractive
+# Set a placeholder database url so Prisma will generate the client
 ENV DATABASE_URL="postgres://127.0.0.1:26257"
-
-# Install build essentials, install pnpm, install dependencies and generate database client
-# hadolint ignore=DL3008
-RUN apt-get update \
-    && apt-get install -yq --no-install-recommends libc-dev gcc g++ make python3 git \
-    && rm -rf /var/lib/apt/lists/* \
-	&& npm install --location=global pnpm@8.1.1
-
-FROM base AS builder
 
 # Create a folder to build the source in
 WORKDIR /tmp
-COPY package.json .
-COPY pnpm-lock.yaml .
-COPY prisma ./prisma
-
-RUN npm pkg set scripts.prepare="ts-patch install -s" \
-        && pnpm i --frozen-lockfile \
-        && pnpm db:generate
-
-# Copy remaining files except files in .dockerignore
+# Copy files
 COPY . .
 
-# Compile to TS
-RUN pnpm build
+# Install build essentials, install pnpm, install dependencies and generate database client
+# hadolint ignore=DL3018
+RUN apk add --no-cache --virtual .gyp python3 make g++ \
+	&& npm install --location=global pnpm@8.3.1 \
+    && npm pkg set scripts.prepare="ts-patch install -s" \
+    && pnpm i --frozen-lockfile \
+    && pnpm db:generate \
+    && pnpm build \
+    && npm pkg delete scripts.prepare \
+    && pnpm prune --prod
 
-FROM base AS runner
-
+FROM node:lts-alpine AS runner
+# For Sentry release tracking
+ARG sha
+ENV COMMIT_SHA=$sha
 ENV NODE_ENV=production
 
 # Set dir for files
 WORKDIR /app
 
-# Install dependencies
-COPY package.json pnpm-lock.yaml ./
-COPY --from=builder /tmp/prisma/schema.prisma ./prisma/schema.prisma
-
-RUN npm pkg delete scripts.prepare \
-    && pnpm i --frozen-lockfile \
-    && pnpm prisma generate
+# Copy dependencies
+COPY --from=builder /tmp/node_modules ./node_modules
 
 # Copy transpiled code
 COPY --from=builder /tmp/dist ./dist
 
 # Set start command
-CMD ["pnpm", "start"]
+CMD ["node", "dist/index.js"]
