@@ -19,7 +19,6 @@
     "mongoose-sequence": "^5.3.1",
     "node-schedule": "^2.0.0",
     "parse-duration": "^1.0.0",
-    "pubsubhubbub": "^1.0.1",
     "socket.io": "^4.0.0",
     "winston": "^3.3.3",
     "winston-loki": "^6.0.0"
