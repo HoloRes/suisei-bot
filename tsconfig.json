@@ -1,29 +1,26 @@
 {
-  "compilerOptions": {
-    "outDir": "./dist",
-    "typeRoots": [
-      "./src/lib/types",
-      "./node_modules/@types"
-    ],
-    "resolveJsonModule": true,
-    "plugins": [
-      {
-        "transform": "typia/lib/transform"
-      }
-    ],
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "forceConsistentCasingInFileNames": true,
-    "lib": [
-      "es2020",
-      "esnext.asynciterable"
-    ],
-    "moduleResolution": "node",
-    "strict": true
-  },
-  "include": [
-    "./src/**/*"
-  ],
-  "extends": "@tsconfig/node18/tsconfig.json"
+	"compilerOptions": {
+		"outDir": "./dist",
+		"typeRoots": [
+			"./src/lib/types",
+			"./node_modules/@types"
+		],
+		"resolveJsonModule": true,
+		"plugins": [
+		],
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"importHelpers": true,
+		"forceConsistentCasingInFileNames": true,
+		"lib": [
+			"es2020",
+			"esnext.asynciterable"
+		],
+		"moduleResolution": "node",
+		"strict": true
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"extends": "@tsconfig/node18/tsconfig.json"
 }

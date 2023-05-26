@@ -15,11 +15,12 @@ COPY . .
 # hadolint ignore=DL3018
 RUN apk add --no-cache --virtual .gyp python3 make g++ \
 	&& npm install --location=global pnpm@8.3.1 \
-    && npm pkg set scripts.prepare="ts-patch install -s" \
+    && npm pkg delete scripts.prepare \
+#    && npm pkg set scripts.prepare="ts-patch install -s" \
     && pnpm i --frozen-lockfile \
     && pnpm db:generate \
     && pnpm build \
-    && npm pkg delete scripts.prepare \
+#    && npm pkg delete scripts.prepare \
     && pnpm prune --prod
 
 FROM node:lts-alpine AS runner

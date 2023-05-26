@@ -4,7 +4,7 @@ import '@sapphire/plugin-logger/register';
 import '@sapphire/plugin-api/register';
 import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
 
-import { assert } from 'typia';
+// import { assert } from 'typia';
 import process from 'process';
 import * as Sentry from '@sentry/node';
 import { RewriteFrames } from '@sentry/integrations';
@@ -18,7 +18,7 @@ import { SuiseiClient } from './lib/SuiseiClient';
 
 // Types
 import type {
-	BaseConfigCheck,
+	// BaseConfigCheck,
 	MasterConfig,
 	SlaveConfig,
 	StandAloneConfig,
@@ -29,7 +29,7 @@ import type {
 const config: MasterConfig | SlaveConfig | StandAloneConfig = require('../config.js');
 
 // Config validation
-try {
+/* try {
 	assert<BaseConfigCheck>(config);
 	if (config.mode === 'master') {
 		assert<MasterConfig>(config);
@@ -43,7 +43,7 @@ try {
 	// eslint-disable-next-line no-console
 	console.error('Invalid config, quiting');
 	process.exit(1);
-}
+} */
 
 // eslint-disable-next-line no-console
 console.info('Config validated. Initializing.');

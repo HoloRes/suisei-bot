@@ -30,6 +30,18 @@ spec:
             - mountPath: /app/config.js
               name: suisei-beta-config
               subPath: config.js
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - kube-system.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+          - suisei-mic.svc.cluster.local
+        options:
+          - name: ndots
+            value: "5"
       volumes:
         - name: suisei-beta-config
           configMap:
