@@ -14,7 +14,8 @@ COPY . .
 # Install build essentials, install pnpm, install dependencies and generate database client
 # hadolint ignore=DL3018
 RUN apk add --no-cache --virtual .gyp python3 make g++ \
-	&& npm install --location=global pnpm@8.3.1 \
+    && corepack enable \
+	&& corepack prepare pnpm@latest --activate \
     && npm pkg delete scripts.prepare \
 #    && npm pkg set scripts.prepare="ts-patch install -s" \
     && pnpm i --frozen-lockfile \
@@ -31,6 +32,9 @@ ENV NODE_ENV=production
 
 # Set dir for files
 WORKDIR /app
+
+# Copy npm files
+COPY package.json pnpm-lock.yaml ./
 
 # Copy dependencies
 COPY --from=builder /tmp/node_modules ./node_modules

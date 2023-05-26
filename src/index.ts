@@ -2,7 +2,6 @@
 import 'reflect-metadata';
 import '@sapphire/plugin-logger/register';
 import '@sapphire/plugin-api/register';
-import { ScheduledTaskRedisStrategy } from '@sapphire/plugin-scheduled-tasks/register-redis';
 
 // import { assert } from 'typia';
 import process from 'process';
@@ -116,13 +115,11 @@ const client = new SuiseiClient({
 		},
 	},
 	tasks: {
-		strategy: new ScheduledTaskRedisStrategy({
-			bull: {
-				connection: {
-					host: config.redis?.host,
-				},
+		bull: {
+			connection: {
+				host: config.redis?.host,
 			},
-		}),
+		},
 	},
 });
 
