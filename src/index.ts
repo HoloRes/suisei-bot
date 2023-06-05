@@ -2,6 +2,7 @@
 import 'reflect-metadata';
 import '@sapphire/plugin-logger/register';
 import '@sapphire/plugin-api/register';
+import '@sapphire/plugin-scheduled-tasks/register';
 
 // import { assert } from 'typia';
 import process from 'process';
@@ -107,7 +108,7 @@ const client = new SuiseiClient({
 	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
 	loadMessageCommandListeners: true,
 	logger: {
-		level: process.env.NODE_ENV !== 'production' ? LogLevel.Debug : LogLevel.Info,
+		level: config.logLevel ?? process.env.NODE_ENV !== 'production' ? LogLevel.Debug : LogLevel.Info,
 	},
 	api: {
 		listenOptions: {

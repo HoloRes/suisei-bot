@@ -1,3 +1,5 @@
+import { LogLevel } from '@sapphire/framework';
+
 export interface BaseConfig {
 	mode: 'standalone' | 'master' | 'slave';
 	discord: {
@@ -46,6 +48,7 @@ export interface BaseConfig {
 		};
 		[key: string]: any;
 	};
+	logLevel?: LogLevel;
 	logTransports?: {
 		console?: {
 			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error';

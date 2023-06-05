@@ -219,6 +219,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			maxUpcomingHours: 1,
 		});
 		count += firstStreamsPage.total;
+		this.container.logger.debug(`Found ${count} livestreams`);
 
 		firstStreamsPage.items.forEach((stream) => {
 			tasks.push(this.notify(stream as VideoWithChannel));
@@ -258,6 +259,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			to: new Date(),
 			limit: 50,
 		});
+		this.container.logger.debug(`Found ${firstPastPage.total} finished livestreams`);
 
 		firstPastPage.items.forEach((stream) => {
 			tasks.push(this.removeStream(stream));
