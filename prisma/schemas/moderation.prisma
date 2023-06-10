@@ -1,8 +1,9 @@
 model ModerationUser {
-    id           String              @id
+    id           String                     @id
     lastKnownTag String
     notes        Note[]
     log          ModerationLogItem[]
+    pendingLog   ModerationPendingLogItem[]
 }
 
 model Note {
@@ -29,6 +30,21 @@ model ModerationLogItem {
     reason    String
     date      DateTime       @default(now())
     duration  BigInt?
+    strikes   Int?
+    guildId   String
+
+    user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+}
+
+model ModerationPendingLogItem {
+    id        String         @id @default(cuid())
+    type      ModerationType
+    moderator String
+    reason    String
+    duration  BigInt?
+    silent    Boolean?
+    stikes    Int?
     guildId   String
 
     user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)

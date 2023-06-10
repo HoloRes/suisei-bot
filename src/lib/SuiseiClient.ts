@@ -6,6 +6,7 @@ import { MeiliSearch } from 'meilisearch';
 import type { ClientOptions } from 'discord.js';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
+import { Humanizer, humanizer } from 'humanize-duration';
 import type Config from './types/config';
 import { Counters } from './types/client';
 
@@ -43,6 +44,12 @@ export class SuiseiClient extends SapphireClient {
 			apiKey: container.config.meilisearch!.key,
 		});
 
+		// Create humanizer
+		container.humanizeDuration = humanizer({
+			largest: 2,
+			round: true,
+		});
+
 		// Log into Discord
 		return super.login(token);
 	}
@@ -71,5 +78,6 @@ declare module '@sapphire/pieces' {
 		meiliClient: MeiliSearch;
 		config: Config;
 		counters: Counters;
+		humanizeDuration: Humanizer;
 	}
 }

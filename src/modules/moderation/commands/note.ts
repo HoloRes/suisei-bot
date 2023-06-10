@@ -74,10 +74,12 @@ export class NoteCommand extends Subcommand {
 
 	public async chatInputAdd(interaction: Subcommand.ChatInputCommandInteraction) {
 		return interaction.reply('Not implemented yet');
+		// Use modal
 	}
 
 	public async chatInputEdit(interaction: Subcommand.ChatInputCommandInteraction) {
 		return interaction.reply('Not implemented yet');
+		// Use modal
 	}
 
 	public async chatInputGet(interaction: Subcommand.ChatInputCommandInteraction) {

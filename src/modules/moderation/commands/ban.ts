@@ -1,6 +1,9 @@
 import { Command } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
-import { PermissionFlagsBits } from 'discord.js';
+import {
+	ButtonBuilder, EmbedBuilder, PermissionFlagsBits, ButtonStyle, ActionRowBuilder,
+} from 'discord.js';
+import parseDuration from 'parse-duration';
 
 @ApplyOptions<Command.Options>({
 	name: 'ban',
@@ -39,11 +42,14 @@ export class BanCommand extends Command {
 		}
 
 		const user = interaction.options.getUser('user', true);
-		/* eslint-disable */
 		const reason = interaction.options.getString('reason', true);
 		const silent = interaction.options.getBoolean('silent', true);
-		const duration = interaction.options.getString('duration', false);
-		/* eslint-enable */
+		const durationString = interaction.options.getString('duration', false);
+		let duration: number | undefined;
+
+		if (durationString) {
+			duration = parseDuration(durationString);
+		}
 
 		await interaction.deferReply();
 
@@ -60,6 +66,41 @@ export class BanCommand extends Command {
 			},
 		});
 
-		await interaction.editReply('Not implemented yet.');
+		const logItem = await this.container.db.moderationPendingLogItem.create({
+			data: {
+				type: 'BAN',
+				moderator: interaction.user.id,
+				reason,
+				duration,
+				userId: user.id,
+				guildId: interaction.guildId,
+				silent,
+			},
+		});
+
+		const confirmEmbed = new EmbedBuilder()
+			.setTitle(`Banning **${user.tag}**${silent ? ' silently' : ''}${duration ? ` for ${this.container.humanizeDuration(duration)}` : ''}`)
+			.setDescription(`Reason: ${reason}`)
+			.setTimestamp();
+
+		const confirmButton = new ButtonBuilder()
+			.setCustomId(`moderation:confirm:cancel:${logItem.id}`)
+			.setLabel('Confirm Ban')
+			.setStyle(ButtonStyle.Danger);
+
+		const cancelButton = new ButtonBuilder()
+			.setCustomId(`moderation:ban:cancel:${logItem.id}`)
+			.setLabel('Cancel')
+			.setStyle(ButtonStyle.Secondary);
+
+		const row = new ActionRowBuilder()
+			.addComponents(cancelButton, confirmButton);
+
+		await interaction.editReply({
+			embeds: [confirmEmbed],
+			// TODO
+			// @ts-ignore
+			components: [row],
+		});
 	}
 }
