@@ -26,8 +26,6 @@ export class VtuberImportTask extends ScheduledTask {
 		const documents: VTuber[] = [];
 
 		const fetchNextPage = async () => {
-			this.container.logger.debug(`Fetching page ${page}`);
-
 			const currentPage = await this.container.holodexClient.channels.list({
 				offset: page * 100,
 				limit: 100,
@@ -85,13 +83,13 @@ export class VtuberImportTask extends ScheduledTask {
 			await fetchNextPage();
 		}
 
-		this.container.logger.debug('Create MeiliSearch task');
+		this.container.logger.debug('Tasks[YouTube][import] Create MeiliSearch task');
 		tasks.push(
 			this.container.meiliClient.index('vtubers')
 				.addDocuments(documents),
 		);
 
-		this.container.logger.debug('Waiting on promises');
+		this.container.logger.debug('Tasks[YouTube][import] Waiting on promises');
 		await Promise.all(tasks);
 
 		this.container.logger.info('Successfully imported all VTuber channels from Holodex');

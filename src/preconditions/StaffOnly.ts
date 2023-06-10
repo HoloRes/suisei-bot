@@ -10,7 +10,7 @@ export class StaffOnlyPrecondition extends Precondition {
 
 		if (this.container.config.owners?.includes(interaction.user.id)) return this.ok();
 
-		return interaction.memberPermissions.has(PermissionsBitField.Flags.ManageChannels)
+		return interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild)
 			? this.ok()
 			: this.error({ message: 'Only the staff can use this command!' });
 	}
@@ -22,7 +22,7 @@ export class StaffOnlyPrecondition extends Precondition {
 
 		if (this.container.config.owners?.includes(message.author.id)) return this.ok();
 
-		return message.member?.permissions.has(PermissionsBitField.Flags.ManageChannels)
+		return message.member?.permissions.has(PermissionsBitField.Flags.ManageGuild)
 			? this.ok()
 			: this.error({ message: 'Only the staff can use this command!' });
 	}

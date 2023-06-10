@@ -3,27 +3,31 @@ import { Enumerable } from '@sapphire/decorators';
 import { PrismaClient } from '@prisma/client';
 import HolodexClient from '@holores/holodex';
 import { MeiliSearch } from 'meilisearch';
-import { MasterConfig, SlaveConfig, StandAloneConfig } from './types/config';
+import type { ClientOptions } from 'discord.js';
+import { getRootData } from '@sapphire/pieces';
+import { join } from 'node:path';
+import type Config from './types/config';
 import { Counters } from './types/client';
 
 export class SuiseiClient extends SapphireClient {
+	private rootData = getRootData();
+
 	@Enumerable(false)
 	public dev = process.env.NODE_ENV !== 'production';
 
-	public override async login(token: string) {
-		// Connect to the database
-		let connectionUrl: string;
-		if (container.isSlave()) {
-			// TODO: Init communication system with master node
-			connectionUrl = `protocol://${container.config.network.clientId}:${container.config.network.token}@host/database?query`;
-		} else {
-			connectionUrl = `${container.config.db!.protocol}://${container.config.db!.username}:${container.config.db!.password}@${container.config.db!.host}/${container.config.db!.database}${container.config.db!.query ?? ''}`;
-		}
+	public constructor(options: ClientOptions) {
+		super(options);
 
+		this.stores.registerPath(join(this.rootData.root, 'modules/core'));
+		this.stores.registerPath(join(this.rootData.root, 'modules/youtube'));
+		this.stores.registerPath(join(this.rootData.root, 'modules/moderation'));
+	}
+
+	public override async login(token: string) {
 		container.db = new PrismaClient({
 			datasources: {
 				db: {
-					url: connectionUrl,
+					url: `${container.config.db!.protocol}://${container.config.db!.username}:${container.config.db!.password}@${container.config.db!.host}/${container.config.db!.database}${container.config.db!.query ?? ''}`,
 				},
 			},
 		});
@@ -49,14 +53,12 @@ export class SuiseiClient extends SapphireClient {
 	}
 }
 
-container.isMaster = () => container.config.mode === 'master';
-container.isSlave = () => container.config.mode === 'slave';
-
 /* eslint-disable no-unused-vars, no-use-before-define */
 declare module 'discord.js' {
 	interface Client {
 	}
 
+	// eslint-disable-next-line no-shadow
 	interface ClientOptions extends SapphireClientOptions {
 	}
 }
@@ -67,21 +69,7 @@ declare module '@sapphire/pieces' {
 		// remoteConfig: IFlagsmith;
 		holodexClient: HolodexClient;
 		meiliClient: MeiliSearch;
-		config: MasterConfig | SlaveConfig | StandAloneConfig;
-		isMaster: () => this is MasterContainer;
-		isSlave: () => this is SlaveContainer;
+		config: Config;
 		counters: Counters;
-	}
-
-	interface SlaveContainer extends Container {
-		isMaster: () => false;
-		isSlave: () => true;
-		config: SlaveConfig;
-	}
-
-	interface MasterContainer extends Container {
-		isMaster: () => true;
-		isSlave: () => false;
-		config: MasterConfig;
 	}
 }

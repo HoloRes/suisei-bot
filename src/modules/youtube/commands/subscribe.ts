@@ -1,7 +1,7 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { ApplyOptions } from '@sapphire/decorators';
 import { PaginatedMessage } from '@sapphire/discord.js-utilities';
-import { ChannelType, EmbedBuilder } from 'discord.js';
+import { ChannelType, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import searchQuery from 'search-query-parser';
 
 interface VTuber {
@@ -36,6 +36,69 @@ interface VTuber {
 	preconditions: ['StaffOnly'],
 })
 export class SubscriptionCommand extends Subcommand {
+	public override registerApplicationCommands(registry: Subcommand.Registry) {
+		registry.registerChatInputCommand((builder) => {
+			builder
+				.setName(this.name)
+				.setDescription(this.description)
+				.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+				.addSubcommand((command) => command
+					.setName('add')
+					.setDescription('Add a subscription')
+					.addStringOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('vtuber')
+						.setDescription('VTuber to send notifications for')
+						.setAutocomplete(true))
+					.addChannelOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('channel')
+						.setDescription('Channel to send notifications in')
+						.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText))
+					.addStringOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('message')
+						.setDescription('Message to include in the notification')))
+				.addSubcommand((command) => command
+					.setName('setquery')
+					.setDescription('Set a query for notifications')
+					.addStringOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('query')
+						.setDescription('Query to filter for e.g. "org:hololive -org:nijisanji" (see docs)'))
+					.addChannelOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('channel')
+						.setDescription('Channel to send notifications in')
+						.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText))
+					.addStringOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('message')
+						.setDescription('Message to include in the notification, can use parameters like {name} or {org} (see docs)')))
+				.addSubcommand((command) => command
+					.setName('remove')
+					.setDescription('Remove a subscription')
+					.addStringOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('vtuber')
+						.setDescription('VTuber to send notifications for')
+						.setAutocomplete(true))
+					.addChannelOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('channel')
+						.setDescription('Channel to send notifications in')
+						.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText)))
+				.addSubcommand((command) => command
+					.setName('list')
+					.setDescription('List all subscriptions')
+					.addChannelOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('channel')
+						.setDescription('Channel to send notifications in')
+						.addChannelTypes(ChannelType.GuildAnnouncement, ChannelType.GuildText)));
+		});
+	}
+
 	public async chatInputAdd(interaction: Subcommand.ChatInputCommandInteraction) {
 		const channelId = interaction.options.getString('vtuber', true);
 		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);

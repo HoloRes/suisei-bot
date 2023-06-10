@@ -109,6 +109,8 @@ dist
 # Config files
 /config.json
 /config.js
+/config.*.js
+!/config.example.js
 
 
 # Ignore DevSpace cache and log folder

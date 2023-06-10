@@ -1,16 +1,10 @@
 import { LogLevel } from '@sapphire/framework';
 
-export interface BaseConfig {
-	mode: 'standalone' | 'master' | 'slave';
+export default interface Config {
 	discord: {
 		token: string;
 		id: string;
 		secret: string;
-	};
-	network?: {
-		clientId: string;
-		token: string;
-		url: string;
 	};
 	config: {
 		environmentId: string;
@@ -67,33 +61,5 @@ export interface BaseConfig {
 	sentry?: {
 		dsn: string;
 	};
-}
-
-export interface BaseConfigCheck {
-	[key: string]: any & Required<BaseConfig>
-}
-
-export interface MasterConfig extends BaseConfig {
-	mode: 'master';
-	network?: never;
-	overrides?: never;
-}
-
-export interface SlaveConfig extends BaseConfig {
-	mode: 'slave';
-	network: {
-		clientId: string;
-		token: string;
-		url: string;
-	};
-	owners?: never;
-	db?: never;
-	redis?: never;
-	api?: never;
-	meilisearch?: never;
-}
-
-export interface StandAloneConfig extends BaseConfig {
-	mode: 'standalone';
-	overrides?: never;
+// eslint-disable-next-line
 }

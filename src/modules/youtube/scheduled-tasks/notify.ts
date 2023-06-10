@@ -207,7 +207,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 	}
 
 	public async run() {
-		this.container.logger.debug('Pushing notifications');
+		this.container.logger.debug('Tasks[YouTube][notify] Pushing notifications');
 		let count = 0;
 		const tasks: Promise<void>[] = [];
 
@@ -219,7 +219,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			maxUpcomingHours: 1,
 		});
 		count += firstStreamsPage.total;
-		this.container.logger.debug(`Found ${count} livestreams`);
+		this.container.logger.debug(`Tasks[YouTube][notify] Found ${count} livestreams`);
 
 		firstStreamsPage.items.forEach((stream) => {
 			tasks.push(this.notify(stream as VideoWithChannel));
@@ -259,7 +259,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			to: new Date(),
 			limit: 50,
 		});
-		this.container.logger.debug(`Found ${firstPastPage.total} finished livestreams`);
+		this.container.logger.debug(`Tasks[YouTube][notify] Found ${firstPastPage.total} finished livestreams`);
 
 		firstPastPage.items.forEach((stream) => {
 			tasks.push(this.removeStream(stream));

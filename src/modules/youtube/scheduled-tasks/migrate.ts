@@ -17,7 +17,7 @@ export class VtuberImportTask extends ScheduledTask {
 	}
 
 	public async run() {
-		this.container.logger.info('Started import of all VTuber channels into MeiliSearch');
+		this.container.logger.debug('Tasks[YouTube][migrate] Started import of all VTuber channels into MeiliSearch');
 
 		const docs = await this.container.db.youtubeChannel.findMany({
 			select: {
@@ -28,7 +28,7 @@ export class VtuberImportTask extends ScheduledTask {
 		await this.container.meiliClient.index('vtubers')
 			.addDocuments(docs);
 
-		this.container.logger.info('Successfully imported all VTuber channels to MeiliSearch');
+		this.container.logger.debug('Tasks[YouTube][migrate] Successfully imported all VTuber channels to MeiliSearch');
 	}
 }
 

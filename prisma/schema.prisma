@@ -24,7 +24,6 @@ datasource db {
 //
 
 // This file holds the core database models required to run the bot
-// Define the client, so we can use db specific features
 
 model Server {
   id               String   @id
@@ -33,6 +32,47 @@ model Server {
   updateChannel    String?
   staffRole        String?
   adminRole        String?
+}
+
+//
+// moderation.prisma
+//
+
+model ModerationUser {
+  id           String              @id
+  lastKnownTag String
+  notes        Note[]
+  log          ModerationLogItem[]
+}
+
+model Note {
+  id      String @id @default(cuid())
+  title   String
+  note    String
+  guildId String
+
+  user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+}
+
+enum ModerationType {
+  WARN
+  MUTE
+  KICK
+  BAN
+}
+
+model ModerationLogItem {
+  id        BigInt         @id @default(autoincrement())
+  type      ModerationType
+  moderator String
+  reason    String
+  date      DateTime       @default(now())
+  duration  BigInt?
+  guildId   String
+
+  user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 }
 
 //
