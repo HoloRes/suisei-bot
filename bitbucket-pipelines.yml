@@ -86,7 +86,6 @@ pipelines:
         - step: *lint
         - step: *lintDockerfile
         - step: *build
-
       - step: *publish
 
 #      - step:
@@ -128,24 +127,24 @@ pipelines:
           services:
             - docker
 
-      - step:
-          script:
-            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-            - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
-            - pipe: anchore/anchore-scan:0.2.14
-              variables:
-                IMAGE_NAME: "${IMAGE}:${VERSION}"
+#      - step:
+#          script:
+#            - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
+#            - IMAGE=ghcr.io/${DOCKERHUB_NAMESPACE}/${IMAGE_NAME}
+#            - pipe: anchore/anchore-scan:0.2.14
+#              variables:
+#                IMAGE_NAME: "${IMAGE}:${VERSION}"
 
-      - step:
-          name: Create Sentry release
-          script:
-            - pipe: holores/sentry-new-release:0.4.0
-              variables:
-                SENTRY_AUTH_TOKEN: $SENTRY_TOKEN
-                SENTRY_ORG: $SENTRY_ORG
-                SENTRY_URL: $SENTRY_URL
-                SENTRY_PROJECT: $SENTRY_PROJECT
-                ENVIRONMENT: "production"
+#      - step:
+#          name: Create Sentry release
+#          script:
+#            - pipe: holores/sentry-new-release:0.4.0
+#              variables:
+#                SENTRY_AUTH_TOKEN: $SENTRY_TOKEN
+#                SENTRY_ORG: $SENTRY_ORG
+#                SENTRY_URL: $SENTRY_URL
+#                SENTRY_PROJECT: $SENTRY_PROJECT
+#                ENVIRONMENT: "production"
       - step:
           name: Deploy
           deployment: production
