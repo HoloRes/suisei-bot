@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: suisei-mic
+  name: suisei-mic-staging
 spec: { }
 
 ---
@@ -9,26 +9,26 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    run: suisei-mic-beta
-  name: suisei-mic-beta
-  namespace: suisei-mic
+    run: suisei-mic
+  name: suisei-mic
+  namespace: suisei-mic-staging
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: suisei-mic-beta
+      run: suisei-mic
   template:
     metadata:
       labels:
-        run: suisei-mic-beta
-        app: suisei-mic-beta
+        run: suisei-mic
+        app: suisei-mic
     spec:
       containers:
         - image: ghcr.io/holores/suisei-bot:{{version}}
-          name: suisei-mic-beta
+          name: suisei-mic
           volumeMounts:
             - mountPath: /app/config.js
-              name: suisei-beta-config
+              name: suisei-config
               subPath: config.js
       dnsPolicy: "None"
       dnsConfig:
@@ -38,39 +38,39 @@ spec:
           - kube-system.svc.cluster.local
           - svc.cluster.local
           - cluster.local
-          - suisei-mic.svc.cluster.local
+          - suisei-mic-staging.svc.cluster.local
         options:
           - name: ndots
             value: "5"
       volumes:
-        - name: suisei-beta-config
+        - name: suisei-config
           configMap:
-            name: suisei-beta-config-file
+            name: suisei-config-file
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    name: suisei-mic-beta
-  name: suisei-mic-beta
-  namespace: suisei-mic
+    name: suisei-mic
+  name: suisei-mic
+  namespace: suisei-mic-staging
 spec:
   ports:
     - port: 80
   selector:
-    app: suisei-mic-beta
+    app: suisei-mic-staging
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    name: suisei-mic-beta-metrics
-  name: suisei-mic-beta-metrics
-  namespace: suisei-mic
+    name: suisei-mic-metrics
+  name: suisei-mic-metrics
+  namespace: suisei-mic-staging
 spec:
   ports:
     - port: 5000
   selector:
-    app: suisei-mic-beta
+    app: suisei-mic

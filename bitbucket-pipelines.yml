@@ -80,7 +80,7 @@ pipelines:
     - step: *publish
 
   pull-requests:
-    master:
+    main:
       - parallel:
         - step: *mirror
         - step: *lint
@@ -103,7 +103,7 @@ pipelines:
             - docker
 
   branches:
-    master:
+    main:
       - parallel:
         - step: *mirror
         - step: *lint
@@ -170,9 +170,9 @@ pipelines:
           deployment: staging
           script:
             - VERSION=$(echo $BITBUCKET_COMMIT | cut -c1-7)
-            - sed -i "s|{{version}}|$VERSION|g" k8s/deployment.beta.yml
+            - sed -i "s|{{version}}|$VERSION|g" k8s/deployment.staging.yml
             - pipe: atlassian/kubectl-run:3.2.0
               variables:
                 KUBE_CONFIG: $KUBE_CONFIG
                 KUBECTL_COMMAND: 'apply'
-                RESOURCE_PATH: 'k8s/deployment.beta.yml'
+                RESOURCE_PATH: 'k8s/deployment.staging.yml'
