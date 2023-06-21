@@ -89,18 +89,18 @@ pipelines:
 
       - step: *publish
 
-      - step:
-          name: Create Sentry release
-          script:
-            - pipe: holores/sentry-new-release:0.4.0
-              variables:
-                SENTRY_AUTH_TOKEN: $SENTRY_TOKEN
-                SENTRY_ORG: $SENTRY_ORG
-                SENTRY_URL: $SENTRY_URL
-                SENTRY_PROJECT: $SENTRY_PROJECT
-                ENVIRONMENT: "staging"
-          services:
-            - docker
+#      - step:
+#          name: Create Sentry release
+#          script:
+#            - pipe: holores/sentry-new-release:0.4.0
+#              variables:
+#                SENTRY_AUTH_TOKEN: $SENTRY_TOKEN
+#                SENTRY_ORG: $SENTRY_ORG
+#                SENTRY_URL: $SENTRY_URL
+#                SENTRY_PROJECT: $SENTRY_PROJECT
+#                ENVIRONMENT: "staging"
+#          services:
+#            - docker
 
   branches:
     main:
