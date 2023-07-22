@@ -8,3 +8,12 @@ model Server {
     staffRole        String?
     adminRole        String?
 }
+
+model ConfigValue {
+    guildId String
+    module  String
+    key     String
+    value   String
+
+    @@id([guildId, module, key])
+}

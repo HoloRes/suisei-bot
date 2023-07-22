@@ -29,13 +29,11 @@ export class ConfigCommand extends Subcommand {
 					.addStringOption((optBuilder) => optBuilder
 						.setRequired(true)
 						.setName('module')
-						.setDescription('Module to configure')
-						.setAutocomplete(true))
+						.setDescription('Module to configure'))
 					.addStringOption((optBuilder) => optBuilder
 						.setRequired(true)
 						.setName('key')
-						.setDescription('Config key to set')
-						.setAutocomplete(true))
+						.setDescription('Config key to set'))
 					.addStringOption((optBuilder) => optBuilder
 						.setRequired(true)
 						.setName('value')
@@ -46,25 +44,49 @@ export class ConfigCommand extends Subcommand {
 					.addStringOption((optBuilder) => optBuilder
 						.setRequired(true)
 						.setName('module')
-						.setDescription('Module to configure')
-						.setAutocomplete(true))
+						.setDescription('Module to configure'))
 					.addStringOption((optBuilder) => optBuilder
 						.setRequired(true)
 						.setName('key')
-						.setDescription('Config key to get')
-						.setAutocomplete(true)));
+						.setDescription('Config key to get')));
 		});
 	}
 
 	public async chatInputSet(interaction: Subcommand.ChatInputCommandInteraction) {
-		return interaction.reply('Not implemented yet');
+		if (!interaction.inGuild()) {
+			await interaction.reply('This command cannot run outside a guild');
+			return;
+		}
+
+		const module = interaction.options.getString('module', true);
+		const key = interaction.options.getString('key', true);
+		const value = interaction.options.getString('value', true);
+
+		await interaction.deferReply({ ephemeral: true });
+
+		await this.container.db.configValue.upsert({
+			where: {
+				guildId_module_key: {
+					guildId: interaction.guildId,
+					module,
+					key,
+				},
+			},
+			update: {
+				value,
+			},
+			create: {
+				guildId: interaction.guildId,
+				module,
+				key,
+				value,
+			},
+		});
+
+		await interaction.editReply('Updated!');
 	}
 
 	public async chatInputGet(interaction: Subcommand.ChatInputCommandInteraction) {
 		return interaction.reply('Not implemented yet');
-	}
-
-	public override async autocompleteRun(interaction: Subcommand.AutocompleteInteraction) {
-		return interaction.respond([]);
 	}
 }

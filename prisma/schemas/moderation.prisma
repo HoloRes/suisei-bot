@@ -1,52 +1,54 @@
 model ModerationUser {
-    id           String                     @id
-    lastKnownTag String
-    notes        Note[]
-    log          ModerationLogItem[]
-    pendingLog   ModerationPendingLogItem[]
+	id           String                     @id
+	lastKnownTag String
+	notes        Note[]
+	log          ModerationLogItem[]
+	pendingLog   ModerationPendingLogItem[]
 }
 
 model Note {
-    id      String @id @default(cuid())
-    title   String
-    note    String
-    guildId String
+	id      String @id @default(cuid())
+	title   String
+	note    String
+	guildId String
 
-    user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
+	user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+	userId String
 }
 
 enum ModerationType {
-    WARN
-    MUTE
-    KICK
-    BAN
+	WARN
+	MUTE
+	KICK
+	BAN
 }
 
 model ModerationLogItem {
-    id        BigInt         @id @default(autoincrement())
-    type      ModerationType
-    moderator String
-    reason    String
-    date      DateTime       @default(now())
-    duration  BigInt?
-    strikes   Int?
-    guildId   String
+	id          Int            @id @default(sequence(start: 1))
+	type        ModerationType
+	moderatorId String
+	reason      String
+	date        DateTime       @default(now())
+	duration    Int?
+	strikes     Int?
+	guildId     String
 
-    user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
+	offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
+	offenderId String
 }
 
 model ModerationPendingLogItem {
-    id        String         @id @default(cuid())
-    type      ModerationType
-    moderator String
-    reason    String
-    duration  BigInt?
-    silent    Boolean?
-    stikes    Int?
-    guildId   String
+	id          String         @id @default(cuid())
+	type        ModerationType
+	moderatorId String
+	reason      String
+	duration    Int?
+	silent      Boolean?
+	stikes      Int?
+	guildId     String
+	messageId   String
+	channelId   String
 
-    user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
+	offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
+	offenderId String
 }

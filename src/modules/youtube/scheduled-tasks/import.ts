@@ -99,7 +99,6 @@ export class VtuberImportTask extends ScheduledTask {
 /* eslint-disable no-unused-vars */
 declare module '@sapphire/plugin-scheduled-tasks' {
 	interface ScheduledTasks {
-		cron: never;
-		manual: never;
+		vtuberImport: never;
 	}
 }

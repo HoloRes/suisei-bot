@@ -55,9 +55,15 @@ export default interface Config {
 			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error';
 		};
 	};
-	holodex?: {
+	holodex: {
 		apikey: string;
 	};
+	bansApi: {
+		keyId: string;
+		apiKey: string;
+		endpoint?: string;
+		rabbitmqEndpoint?: string;
+	}
 	sentry?: {
 		dsn: string;
 	};

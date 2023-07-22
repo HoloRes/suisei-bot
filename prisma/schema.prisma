@@ -34,6 +34,15 @@ model Server {
   adminRole        String?
 }
 
+model ConfigValue {
+  guildId String
+  module  String
+  key     String
+  value   String
+
+  @@id([guildId, module, key])
+}
+
 //
 // moderation.prisma
 //
@@ -64,29 +73,33 @@ enum ModerationType {
 }
 
 model ModerationLogItem {
-  id        BigInt         @id @default(autoincrement())
-  type      ModerationType
-  moderator String
-  reason    String
-  date      DateTime       @default(now())
-  duration  BigInt?
-  guildId   String
+  id          Int            @id @default(sequence(start: 1))
+  type        ModerationType
+  moderatorId String
+  reason      String
+  date        DateTime       @default(now())
+  duration    Int?
+  strikes     Int?
+  guildId     String
 
-  user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
+  offenderId String
 }
 
 model ModerationPendingLogItem {
-  id        String         @id @default(cuid())
-  type      ModerationType
-  moderator String
-  reason    String
-  duration  BigInt?
-  guildId   String
-  silent    Boolean?
+  id          String         @id @default(cuid())
+  type        ModerationType
+  moderatorId String
+  reason      String
+  duration    Int?
+  silent      Boolean?
+  stikes      Int?
+  guildId     String
+  messageId   String
+  channelId   String
 
-  user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
+  offenderId String
 }
 
 //

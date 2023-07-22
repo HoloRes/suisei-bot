@@ -7,6 +7,7 @@ import type { ClientOptions } from 'discord.js';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
 import { Humanizer, humanizer } from 'humanize-duration';
+import BansApiClient from '@holores/bansapi.js';
 import type Config from './types/config';
 import { Counters } from './types/client';
 
@@ -35,7 +36,18 @@ export class SuiseiClient extends SapphireClient {
 
 		// Set Holodex API key
 		container.holodexClient = new HolodexClient({
-			apiKey: container.config.holodex?.apikey ?? '',
+			apiKey: container.config.holodex.apikey,
+		});
+
+		// Connect to the Bans API
+		container.bansApi = new BansApiClient({
+			url: container.config.bansApi.endpoint,
+			apiKey: container.config.bansApi.apiKey,
+			amqp: {
+				endpoint: container.config.bansApi.rabbitmqEndpoint,
+				username: container.config.bansApi.keyId,
+				topics: ['user'],
+			},
 		});
 
 		// Connect to MeiliSearch

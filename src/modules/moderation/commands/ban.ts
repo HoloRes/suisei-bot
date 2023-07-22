@@ -66,15 +66,19 @@ export class BanCommand extends Command {
 			},
 		});
 
+		const reply = await interaction.fetchReply();
+
 		const logItem = await this.container.db.moderationPendingLogItem.create({
 			data: {
 				type: 'BAN',
-				moderator: interaction.user.id,
+				moderatorId: interaction.user.id,
 				reason,
 				duration,
-				userId: user.id,
+				offenderId: user.id,
 				guildId: interaction.guildId,
 				silent,
+				messageId: reply.id,
+				channelId: reply.channelId,
 			},
 		});
 
@@ -84,7 +88,7 @@ export class BanCommand extends Command {
 			.setTimestamp();
 
 		const confirmButton = new ButtonBuilder()
-			.setCustomId(`moderation:confirm:cancel:${logItem.id}`)
+			.setCustomId(`moderation:ban:confirm:${logItem.id}`)
 			.setLabel('Confirm Ban')
 			.setStyle(ButtonStyle.Danger);
 
@@ -102,5 +106,7 @@ export class BanCommand extends Command {
 			// @ts-ignore
 			components: [row],
 		});
+
+		this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
 	}
 }

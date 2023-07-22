@@ -1,6 +1,7 @@
 import { SapphireClientOptions } from '@sapphire/framework';
-import { PrismaClient } from '@prisma/client';
-import { Counter } from 'prom-client';
+import type { PrismaClient } from '@prisma/client';
+import type { Counter } from 'prom-client';
+import type BansApiClient from '@holores/bansapi.js';
 import Config from './config';
 
 declare module 'discord.js' {
@@ -21,6 +22,7 @@ export interface Counters {
 declare module '@sapphire/pieces' {
 	interface Container {
 		db: PrismaClient;
+		bansApi: BansApiClient;
 		// remoteConfig: IFlagsmith;
 		config: Config;
 		counters: Counters;
