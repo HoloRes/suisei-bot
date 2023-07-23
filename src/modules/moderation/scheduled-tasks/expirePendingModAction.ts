@@ -14,30 +14,32 @@ export class ExpirePendingModAction extends ScheduledTask {
 	}
 
 	public async run(payload: IPayload) {
-		const item = await this.container.db.moderationPendingLogItem.findUniqueOrThrow({
-			where: {
-				id: payload.id,
-			},
-		});
+		try {
+			const item = await this.container.db.moderationPendingLogItem.delete({
+				where: {
+					id: payload.id,
+				},
+			});
 
-		const channel = await this.container.client.channels.fetch(item.channelId);
-		if (!channel) {
-			this.container.logger.error(`Tasks[Moderation][expirePendingModAction] Couldn't find channel ${item.channelId}`);
-			return;
-		}
+			const channel = await this.container.client.channels.fetch(item.channelId);
+			if (!channel) {
+				this.container.logger.error(`Tasks[Moderation][expirePendingModAction] Couldn't find channel ${item.channelId}`);
+				return;
+			}
 
-		if (channel.type !== ChannelType.GuildText) {
-			this.container.logger.error(`Tasks[Moderation][expirePendingModAction] Channel ${item.channelId} is not text based?`);
-			return;
-		}
+			if (channel.type !== ChannelType.GuildText) {
+				this.container.logger.error(`Tasks[Moderation][expirePendingModAction] Channel ${item.channelId} is not text based?`);
+				return;
+			}
 
-		const msg = await channel.messages.fetch(item.messageId);
+			const msg = await channel.messages.fetch(item.messageId);
 
-		msg.edit({
-			content: msg.content,
-			embeds: msg.embeds,
-			components: [],
-		});
+			msg.edit({
+				content: msg.content,
+				embeds: msg.embeds,
+				components: [],
+			});
+		} catch { /* empty */ }
 	}
 }
 

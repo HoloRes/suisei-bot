@@ -12,9 +12,8 @@ import {
 @ApplyOptions<InteractionHandler.Options>({
 	interactionHandlerType: InteractionHandlerTypes.Button,
 })
-export class BanButtonHandler extends InteractionHandler {
+export class KickButtonHandler extends InteractionHandler {
 	public async run(interaction: ButtonInteraction) {
-		// TODO: Banning a user again should use the longest duration
 		await interaction.deferReply();
 		await interaction.message.edit({ embeds: interaction.message.embeds });
 
@@ -29,17 +28,16 @@ export class BanButtonHandler extends InteractionHandler {
 		});
 
 		if (action === 'cancel') {
-			await interaction.editReply('Ban has been cancelled.');
+			await interaction.editReply('Kick has been cancelled.');
 		} else {
 			// Must be 'confirm'
-			await interaction.editReply('Banning, please wait...');
+			await interaction.editReply('Kicking, please wait...');
 			const logItem = await this.container.db.moderationLogItem.create({
 				data: {
 					type: pendingItem.type,
 					action: pendingItem.action,
 					reason: pendingItem.reason,
 					moderatorId: pendingItem.moderatorId,
-					duration: pendingItem.duration,
 					offenderId: pendingItem.offenderId,
 					guildId: pendingItem.guildId,
 					strikes: pendingItem.strikes,
@@ -54,8 +52,8 @@ export class BanButtonHandler extends InteractionHandler {
 			let notifyFailed = false;
 			if (!pendingItem.silent) {
 				const notificationEmbed = new EmbedBuilder()
-					.setTitle(`You've been banned from: ${interaction.guild!.name}`)
-					.setDescription(`Reason: ${pendingItem.reason}`)
+					.setTitle(`You've been kicked from: ${interaction.guild!.name}`)
+					.setDescription(`Reason:: ${pendingItem.reason}`)
 					.setTimestamp();
 
 				try {
@@ -75,31 +73,16 @@ export class BanButtonHandler extends InteractionHandler {
 			const row = new ActionRowBuilder<ButtonBuilder>()
 				.addComponents(reportButton);
 
-			// Attempt the ban
+			// Attempt the kick
 			try {
-				await interaction.guild!.members.ban(pendingItem.offenderId, {
-					reason: pendingItem.reason,
-				});
+				await interaction.guild!.members.kick(pendingItem.offenderId, pendingItem.reason);
 				await interaction.editReply({
-					content: `Banned ${offender.tag}${notifyFailed ? ', but failed to send DM notification' : ''}`,
-					components: !pendingItem.duration ? [row] : undefined,
+					content: `Kicked ${offender.tag}${notifyFailed ? ', but failed to send DM notification' : ''}`,
+					components: [row],
 				});
 			} catch {
-				await interaction.editReply(`Failed to ban ${offender.tag}`);
+				await interaction.editReply(`Failed to kick ${offender.tag}`);
 				return;
-			}
-
-			// Create unban task if tempban
-			if (pendingItem.duration) {
-				this.container.tasks.create(
-					'unban',
-					{
-						userId: pendingItem.offenderId,
-						guildId: interaction.guildId,
-						id: logItem.id,
-					},
-					pendingItem.duration,
-				);
 			}
 
 			// Log to modlog channel
@@ -112,18 +95,18 @@ export class BanButtonHandler extends InteractionHandler {
 			const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 			if (!logChannel) {
-				this.container.logger.error(`Interaction[Handlers][Moderation][ban] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
+				this.container.logger.error(`Interaction[Handlers][Moderation][kick] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
 				return;
 			}
 
 			if (logChannel.type !== ChannelType.GuildText) {
-				this.container.logger.error(`Interaction[Handlers][Moderation][ban] Channel ${guildConfig.logChannel} is not text based?`);
+				this.container.logger.error(`Interaction[Handlers][Moderation][kick] Channel ${guildConfig.logChannel} is not text based?`);
 				return;
 			}
 
 			const logEmbed = new EmbedBuilder()
-				.setTitle(`ban${pendingItem.silent ? ' (silent)' : ''} | case ${logItem.id}`)
-				.setDescription(`**Offender:** ${offender.tag} (<@${offender.id}>)\n**Reason:** ${pendingItem.reason}\n**Moderator:** ${moderator.tag}\n**Duration:** ${pendingItem.duration ? this.container.humanizeDuration(pendingItem.duration) : 'Permanent'}`)
+				.setTitle(`kick${pendingItem.silent ? ' (silent)' : ''} | case ${logItem.id}`)
+				.setDescription(`**Offender:** ${offender.tag} (<@${offender.id}>)\n**Reason:** ${pendingItem.reason}\n**Moderator:** ${moderator.tag}`)
 				.setFooter({ text: `ID: ${pendingItem.offenderId}` })
 				.setTimestamp()
 				.setColor('#f54242');
@@ -140,7 +123,7 @@ export class BanButtonHandler extends InteractionHandler {
 	}
 
 	public override parse(interaction: ButtonInteraction) {
-		if (!interaction.customId.startsWith('moderation:ban')) return this.none();
+		if (!interaction.customId.startsWith('moderation:kick')) return this.none();
 		if (!interaction.inGuild()) return this.none();
 
 		return this.some();

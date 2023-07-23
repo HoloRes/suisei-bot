@@ -11,6 +11,7 @@ export class StrikeCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addUserOption((optBuilder) => optBuilder
 				.setName('user')
 				.setDescription('User to strike')
@@ -23,8 +24,7 @@ export class StrikeCommand extends Command {
 			.addBooleanOption((optBuilder) => optBuilder
 				.setName('tosviolation')
 				.setDescription('A ToS violation will apply two strikes instead of one')
-				.setRequired(true))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+				.setRequired(true)));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

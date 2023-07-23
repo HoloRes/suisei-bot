@@ -1,54 +1,91 @@
 model ModerationUser {
-	id           String                     @id
-	lastKnownTag String
-	notes        Note[]
-	log          ModerationLogItem[]
-	pendingLog   ModerationPendingLogItem[]
+    id           String                     @id
+    lastKnownTag String
+    notes        Note[]
+    log          ModerationLogItem[]
+    pendingLog   ModerationPendingLogItem[]
 }
 
 model Note {
-	id      String @id @default(cuid())
-	title   String
-	note    String
-	guildId String
+    id      String @id @default(cuid())
+    title   String
+    note    String
+    guildId String
 
-	user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-	userId String
+    user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
 }
 
 enum ModerationType {
-	WARN
-	MUTE
-	KICK
-	BAN
+    CROSSREPORT
+    AUTOMOD
+    STRIKE
+    MANUAL
+}
+
+enum ModerationAction {
+    WARN
+    MUTE
+    KICK
+    BAN
 }
 
 model ModerationLogItem {
-	id          Int            @id @default(sequence(start: 1))
-	type        ModerationType
-	moderatorId String
-	reason      String
-	date        DateTime       @default(now())
-	duration    Int?
-	strikes     Int?
-	guildId     String
+    id          Int              @id @default(sequence(start: 1))
+    type        ModerationType
+    action      ModerationAction
+    moderatorId String
+    reason      String
+    date        DateTime         @default(now())
+    duration    Int?
+    strikes     Int?
+    guildId     String
 
-	offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
-	offenderId String
+    offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
+    offenderId String
+
+    hardMute HardMute?
 }
 
 model ModerationPendingLogItem {
-	id          String         @id @default(cuid())
-	type        ModerationType
-	moderatorId String
-	reason      String
-	duration    Int?
-	silent      Boolean?
-	stikes      Int?
-	guildId     String
-	messageId   String
-	channelId   String
+    id          String           @id @default(cuid())
+    type        ModerationType
+    action      ModerationAction
+    moderatorId String
+    reason      String
+    duration    Int?
+    silent      Boolean?
+    hardMute    Boolean?
+    strikes     Int?
+    guildId     String
+    messageId   String
+    channelId   String
 
-	offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
-	offenderId String
+    offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
+    offenderId String
+}
+
+model StrikeAction {
+    id       String           @id @default(cuid())
+    action   ModerationAction
+    duration Int?
+
+    config   ModerationGuildConfig @relation(fields: [configId], references: [guildId], onDelete: Cascade)
+    configId String
+}
+
+model ModerationGuildConfig {
+    guildId            String         @id
+    strikes            StrikeAction[]
+    muteRole           String
+    logChannel         String
+    publicLogChannel   String?
+    strikeExpiresAfter Int
+}
+
+model HardMute {
+    id               String            @id @default(cuid())
+    knownRoles       String[]
+    relatedLogItem   ModerationLogItem @relation(fields: [relatedLogItemId], references: [id], onDelete: Cascade)
+    relatedLogItemId Int               @unique
 }

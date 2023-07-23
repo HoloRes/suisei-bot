@@ -18,7 +18,7 @@ export class UnbanTask extends ScheduledTask {
 	public async run(payload: IPayload) {
 		const guild = await this.container.client.guilds.fetch(payload.guildId);
 
-		await guild.members.unban(payload.userId, `Planned unban for temp ban ${payload.id}`);
+		await guild.members.unban(payload.userId, `Planned unban for case ${payload.id}`);
 
 		const item = await this.container.db.moderationLogItem.findUniqueOrThrow({
 			where: {
@@ -29,33 +29,30 @@ export class UnbanTask extends ScheduledTask {
 			},
 		});
 
-		const moderationChannelConfig = await this.container.db.configValue.findUniqueOrThrow({
+		const guildConfig = await this.container.db.moderationGuildConfig.findUniqueOrThrow({
 			where: {
-				guildId_module_key: {
-					guildId: payload.guildId,
-					module: 'moderation',
-					key: 'logChannel',
-				},
+				guildId: payload.guildId,
 			},
 		});
 
-		const logChannel = await this.container.client.channels.fetch(moderationChannelConfig.value);
+		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
-			this.container.logger.error(`Interaction[Handlers][Moderation][ban] Cannot find log channel (${moderationChannelConfig.value}) in ${payload.guildId!}`);
+			this.container.logger.error(`Interaction[Tasks][Moderation][unban] Cannot find log channel (${guildConfig.logChannel}) in ${payload.guildId!}`);
 			return;
 		}
 
 		if (logChannel.type !== ChannelType.GuildText) {
-			this.container.logger.error(`Interaction[Handlers][Moderation][ban] Channel ${moderationChannelConfig.value} is not text based?`);
+			this.container.logger.error(`Interaction[Tasks][Moderation][unban] Channel ${guildConfig.logChannel} is not text based?`);
 			return;
 		}
 
 		const logEmbed = new EmbedBuilder()
-			.setTitle(`#${item.id.toString()} - unban`)
-			.setDescription(`**Offender:** ${item.offender.lastKnownTag} (<@${item.offenderId}>)\n**Reason:** Scheduled unban, for temp ban`)
+			.setTitle(`unban | case ${item.id}`)
+			.setDescription(`**Offender:** ${item.offender.lastKnownTag} (<@${item.offenderId}>)\n**Reason:** Scheduled unban`)
 			.setFooter({ text: `ID: ${item.offenderId}` })
-			.setTimestamp();
+			.setTimestamp()
+			.setColor('#2bad63');
 
 		logChannel.send({ embeds: [logEmbed] });
 	}

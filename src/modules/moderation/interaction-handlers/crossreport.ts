@@ -34,13 +34,10 @@ export class CrossReportButtonHandler extends InteractionHandler {
 					.setDescription('A compromised account'),
 			);
 
-		const row = new ActionRowBuilder()
+		const row = new ActionRowBuilder<StringSelectMenuBuilder>()
 			.addComponents(typeSelect);
 
 		const followUp = await interaction.followUp({
-			content: 'Cross reporting, select the report type:',
-			// TODO
-			// @ts-expect-error
 			components: [row],
 		});
 
@@ -51,7 +48,7 @@ export class CrossReportButtonHandler extends InteractionHandler {
 				time: 900_000,
 			});
 		} catch {
-			await followUp.edit({ content: 'Confirmation not received within 15 minute,s cancelling', components: [] });
+			await followUp.edit({ content: 'Confirmation not received within 15 minutes, cancelling', components: [] });
 			return;
 		}
 

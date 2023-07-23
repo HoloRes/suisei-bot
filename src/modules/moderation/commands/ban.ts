@@ -14,6 +14,7 @@ export class BanCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addUserOption((optBuilder) => optBuilder
 				.setName('user')
 				.setDescription('User to ban')
@@ -27,12 +28,14 @@ export class BanCommand extends Command {
 				.setName('silent')
 				.setDescription("The bot won't notify the user if the ban is silent")
 				.setRequired(true))
+			.addBooleanOption((optBuilder) => optBuilder
+				.setName('strike')
+				.setDescription('Wil be recorded as a strike if true'))
 			.addStringOption((optBuilder) => optBuilder
 				.setName('duration')
 				.setDescription('Duration of the ban, for example 3d 2h')
 				.setMinLength(2)
-				.setMaxLength(32))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+				.setMaxLength(32)));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
@@ -44,11 +47,20 @@ export class BanCommand extends Command {
 		const user = interaction.options.getUser('user', true);
 		const reason = interaction.options.getString('reason', true);
 		const silent = interaction.options.getBoolean('silent', true);
+		const strike = interaction.options.getBoolean('strike', false) ?? false;
 		const durationString = interaction.options.getString('duration', false);
 		let duration: number | undefined;
 
 		if (durationString) {
 			duration = parseDuration(durationString);
+		}
+
+		if (!duration && durationString) {
+			await interaction.reply({
+				content: 'Given duration was invalid',
+				ephemeral: true,
+			});
+			return;
 		}
 
 		await interaction.deferReply();
@@ -70,13 +82,15 @@ export class BanCommand extends Command {
 
 		const logItem = await this.container.db.moderationPendingLogItem.create({
 			data: {
-				type: 'BAN',
+				type: 'MANUAL',
+				action: 'BAN',
 				moderatorId: interaction.user.id,
 				reason,
 				duration,
 				offenderId: user.id,
 				guildId: interaction.guildId,
 				silent,
+				strikes: strike ? 1 : undefined,
 				messageId: reply.id,
 				channelId: reply.channelId,
 			},
@@ -97,13 +111,11 @@ export class BanCommand extends Command {
 			.setLabel('Cancel')
 			.setStyle(ButtonStyle.Secondary);
 
-		const row = new ActionRowBuilder()
+		const row = new ActionRowBuilder<ButtonBuilder>()
 			.addComponents(cancelButton, confirmButton);
 
 		await interaction.editReply({
 			embeds: [confirmEmbed],
-			// TODO
-			// @ts-ignore
 			components: [row],
 		});
 

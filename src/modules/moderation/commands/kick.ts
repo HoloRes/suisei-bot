@@ -1,6 +1,12 @@
 import { Command } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
-import { PermissionFlagsBits } from 'discord.js';
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	EmbedBuilder,
+	PermissionFlagsBits,
+} from 'discord.js';
 
 @ApplyOptions<Command.Options>({
 	name: 'kick',
@@ -11,6 +17,7 @@ export class KickCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addUserOption((optBuilder) => optBuilder
 				.setName('user')
 				.setDescription('User to kick')
@@ -24,7 +31,9 @@ export class KickCommand extends Command {
 				.setName('silent')
 				.setDescription("The bot won't notify the user if the kick is silent")
 				.setRequired(true))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+			.addBooleanOption((optBuilder) => optBuilder
+				.setName('strike')
+				.setDescription('Wil be recorded as a strike if true')));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
@@ -34,10 +43,9 @@ export class KickCommand extends Command {
 		}
 
 		const user = interaction.options.getUser('user', true);
-		/* eslint-disable */
 		const reason = interaction.options.getString('reason', true);
 		const silent = interaction.options.getBoolean('silent', true);
-		/* eslint-enable */
+		const strike = interaction.options.getBoolean('strike', false) ?? false;
 
 		await interaction.deferReply();
 
@@ -54,6 +62,46 @@ export class KickCommand extends Command {
 			},
 		});
 
-		await interaction.editReply('Not implemented yet.');
+		const reply = await interaction.fetchReply();
+
+		const logItem = await this.container.db.moderationPendingLogItem.create({
+			data: {
+				type: 'MANUAL',
+				action: 'KICK',
+				moderatorId: interaction.user.id,
+				reason,
+				offenderId: user.id,
+				guildId: interaction.guildId,
+				silent,
+				strikes: strike ? 1 : undefined,
+				messageId: reply.id,
+				channelId: reply.channelId,
+			},
+		});
+
+		const confirmEmbed = new EmbedBuilder()
+			.setTitle(`Kicking **${user.tag}**${silent ? ' silently' : ''}`)
+			.setDescription(`Reason: ${reason}`)
+			.setTimestamp();
+
+		const confirmButton = new ButtonBuilder()
+			.setCustomId(`moderation:kick:confirm:${logItem.id}`)
+			.setLabel('Confirm Kick')
+			.setStyle(ButtonStyle.Danger);
+
+		const cancelButton = new ButtonBuilder()
+			.setCustomId(`moderation:kick:cancel:${logItem.id}`)
+			.setLabel('Cancel')
+			.setStyle(ButtonStyle.Secondary);
+
+		const row = new ActionRowBuilder<ButtonBuilder>()
+			.addComponents(cancelButton, confirmButton);
+
+		await interaction.editReply({
+			embeds: [confirmEmbed],
+			components: [row],
+		});
+
+		this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
 	}
 }

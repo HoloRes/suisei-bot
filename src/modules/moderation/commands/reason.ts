@@ -11,6 +11,7 @@ export class ReasonCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addIntegerOption((optBuilder) => optBuilder
 				.setName('caseid')
 				.setDescription('Case id to update')
@@ -19,8 +20,7 @@ export class ReasonCommand extends Command {
 				.setName('reason')
 				.setDescription('Updated reason')
 				.setRequired(true)
-				.setMaxLength(1000))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+				.setMaxLength(1000)));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

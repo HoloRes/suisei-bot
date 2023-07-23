@@ -11,6 +11,7 @@ export class UnmuteCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addUserOption((optBuilder) => optBuilder
 				.setName('user')
 				.setDescription('User to unmute')
@@ -19,8 +20,7 @@ export class UnmuteCommand extends Command {
 				.setName('reason')
 				.setDescription('Reason for the unmute')
 				.setRequired(true)
-				.setMaxLength(1000))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+				.setMaxLength(1000)));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

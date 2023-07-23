@@ -17,3 +17,12 @@ model ConfigValue {
 
     @@id([guildId, module, key])
 }
+
+model ScheduledTask {
+    module String
+    task   String
+    query  String
+    jobId  String
+
+    @@id([module, task, query])
+}

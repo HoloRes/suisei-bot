@@ -11,6 +11,7 @@ export class MassbanCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addStringOption((optBuilder) => optBuilder
 				.setName('reason')
 				.setDescription('Reason for the massban')
@@ -21,8 +22,7 @@ export class MassbanCommand extends Command {
 				.setDescription('List of all the users to ban'))
 			.addAttachmentOption((optBuilder) => optBuilder
 				.setName('file')
-				.setDescription('File with a list of all the users (only accepts .txt)'))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+				.setDescription('File with a list of all the users (only accepts .txt)')));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

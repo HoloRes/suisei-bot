@@ -11,6 +11,7 @@ export class ModLogCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addUserOption((optBuilder) => optBuilder
 				.setName('user')
 				.setDescription('User to check')
@@ -18,8 +19,7 @@ export class ModLogCommand extends Command {
 			.addBooleanOption((optBuilder) => optBuilder
 				.setName('crosscheck')
 				.setDescription('Also show stats of this user from other servers')
-				.setRequired(true))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+				.setRequired(true)));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {

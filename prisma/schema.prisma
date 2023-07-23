@@ -43,6 +43,15 @@ model ConfigValue {
   @@id([guildId, module, key])
 }
 
+model ScheduledTask {
+  module String
+  task   String
+  query  String
+  jobId  String
+
+  @@id([module, task, query])
+}
+
 //
 // moderation.prisma
 //
@@ -66,6 +75,13 @@ model Note {
 }
 
 enum ModerationType {
+  CROSSREPORT
+  AUTOMOD
+  STRIKE
+  MANUAL
+}
+
+enum ModerationAction {
   WARN
   MUTE
   KICK
@@ -73,33 +89,63 @@ enum ModerationType {
 }
 
 model ModerationLogItem {
-  id          Int            @id @default(sequence(start: 1))
+  id          Int              @id @default(sequence(start: 1))
   type        ModerationType
+  action      ModerationAction
   moderatorId String
   reason      String
-  date        DateTime       @default(now())
+  date        DateTime         @default(now())
   duration    Int?
   strikes     Int?
   guildId     String
 
   offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
   offenderId String
+
+  hardMute HardMute?
 }
 
 model ModerationPendingLogItem {
-  id          String         @id @default(cuid())
+  id          String           @id @default(cuid())
   type        ModerationType
+  action      ModerationAction
   moderatorId String
   reason      String
   duration    Int?
   silent      Boolean?
-  stikes      Int?
+  hardMute    Boolean?
+  strikes     Int?
   guildId     String
   messageId   String
   channelId   String
 
   offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
   offenderId String
+}
+
+model StrikeAction {
+  id       String           @id @default(cuid())
+  action   ModerationAction
+  duration Int?
+
+  config   ModerationGuildConfig @relation(fields: [configId], references: [guildId], onDelete: Cascade)
+  configId String
+}
+
+model ModerationGuildConfig {
+  guildId            String         @id
+  strikes            StrikeAction[]
+  muteRole           String
+  logChannel         String
+  publicLogChannel   String?
+  strikeExpiresAfter Int
+}
+
+model HardMute {
+  id               String            @id @default(cuid())
+  knownRoles       String[]
+  relatedLogItem   ModerationLogItem @relation(fields: [relatedLogItemId], references: [id], onDelete: Cascade)
+  relatedLogItemId Int               @unique
 }
 
 //

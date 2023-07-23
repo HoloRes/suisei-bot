@@ -1,6 +1,13 @@
 import { Command } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
-import { PermissionFlagsBits } from 'discord.js';
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	EmbedBuilder,
+	PermissionFlagsBits,
+} from 'discord.js';
+import parseDuration from 'parse-duration';
 
 @ApplyOptions<Command.Options>({
 	name: 'mute',
@@ -11,6 +18,7 @@ export class MuteCommand extends Command {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
 			.setDescription(this.description)
+			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
 			.addUserOption((optBuilder) => optBuilder
 				.setName('user')
 				.setDescription('User to mute')
@@ -30,10 +38,94 @@ export class MuteCommand extends Command {
 				.setName('force')
 				.setDescription('This will remove all other roles from the user until the mute expires')
 				.setRequired(true))
-			.setDefaultMemberPermissions(PermissionFlagsBits.BanMembers));
+			.addBooleanOption((optBuilder) => optBuilder
+				.setName('silent')
+				.setDescription("The bot won't notify the user if the mute is silent"))
+			.addBooleanOption((optBuilder) => optBuilder
+				.setName('strike')
+				.setDescription('Wil be recorded as a strike if true')));
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-		await interaction.reply('Not implemented yet.');
+		if (!interaction.inGuild()) {
+			await interaction.reply('This command cannot run outside a guild');
+			return;
+		}
+
+		const user = interaction.options.getUser('user', true);
+		const reason = interaction.options.getString('reason', true);
+		const durationString = interaction.options.getString('duration', true);
+		const silent = interaction.options.getBoolean('silent', false) ?? false;
+		const hardMute = interaction.options.getBoolean('force', true);
+		const strike = interaction.options.getBoolean('strike', false) ?? false;
+
+		const duration = parseDuration(durationString);
+
+		if (!duration) {
+			await interaction.reply({
+				content: 'Given duration was invalid',
+				ephemeral: true,
+			});
+			return;
+		}
+
+		await interaction.deferReply();
+
+		await this.container.db.moderationUser.upsert({
+			where: {
+				id: user.id,
+			},
+			create: {
+				id: user.id,
+				lastKnownTag: user.tag,
+			},
+			update: {
+				lastKnownTag: user.tag,
+			},
+		});
+
+		const reply = await interaction.fetchReply();
+
+		const logItem = await this.container.db.moderationPendingLogItem.create({
+			data: {
+				type: 'MANUAL',
+				action: 'MUTE',
+				moderatorId: interaction.user.id,
+				reason,
+				duration,
+				offenderId: user.id,
+				guildId: interaction.guildId,
+				silent,
+				hardMute,
+				strikes: strike ? 1 : undefined,
+				messageId: reply.id,
+				channelId: reply.channelId,
+			},
+		});
+
+		const confirmEmbed = new EmbedBuilder()
+			.setTitle(`Muting **${user.tag}**${silent ? ' silently' : ''} for ${this.container.humanizeDuration(duration)}`)
+			.setDescription(`Reason: ${reason}`)
+			.setTimestamp();
+
+		const confirmButton = new ButtonBuilder()
+			.setCustomId(`moderation:mute:confirm:${logItem.id}`)
+			.setLabel('Confirm Mute')
+			.setStyle(ButtonStyle.Danger);
+
+		const cancelButton = new ButtonBuilder()
+			.setCustomId(`moderation:mute:cancel:${logItem.id}`)
+			.setLabel('Cancel')
+			.setStyle(ButtonStyle.Secondary);
+
+		const row = new ActionRowBuilder<ButtonBuilder>()
+			.addComponents(cancelButton, confirmButton);
+
+		await interaction.editReply({
+			embeds: [confirmEmbed],
+			components: [row],
+		});
+
+		this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
 	}
 }
