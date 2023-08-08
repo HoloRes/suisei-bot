@@ -38,7 +38,6 @@
 		"@sentry/integrations": "^7.60.0",
 		"@sentry/node": "^7.60.0",
 		"@sentry/tracing": "^7.60.0",
-		"@suiseis-mic/sapphire-modules": "1.0.5",
 		"bufferutil": "^4.0.7",
 		"bullmq": "^4.6.0",
 		"discord.js": "^14.11.0",
