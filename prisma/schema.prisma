@@ -102,7 +102,7 @@ model ModerationLogItem {
   offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
   offenderId String
 
-  hardMute HardMute?
+  ActiveMute ActiveMute?
 }
 
 model ModerationPendingLogItem {
@@ -141,11 +141,21 @@ model ModerationGuildConfig {
   strikeExpiresAfter Int
 }
 
+model ActiveMute {
+  userId     String
+  guildId    String
+  logItem    ModerationLogItem @relation(fields: [logItemId], references: [id])
+  logItemId  Int               @unique
+  hardMute   HardMute?         @relation(fields: [hardMuteId], references: [id])
+  hardMuteId String?           @unique
+
+  @@id([userId, guildId])
+}
+
 model HardMute {
-  id               String            @id @default(cuid())
-  knownRoles       String[]
-  relatedLogItem   ModerationLogItem @relation(fields: [relatedLogItemId], references: [id], onDelete: Cascade)
-  relatedLogItemId Int               @unique
+  id         String      @id @default(cuid())
+  knownRoles String[]
+  ActiveMute ActiveMute?
 }
 
 //

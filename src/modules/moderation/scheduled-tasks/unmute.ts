@@ -5,7 +5,6 @@ interface IPayload {
 	userId: string;
 	guildId: string;
 	id: number;
-	hardMute: boolean;
 }
 
 export class UnmuteTask extends ScheduledTask {
@@ -17,24 +16,56 @@ export class UnmuteTask extends ScheduledTask {
 	}
 
 	public async run(payload: IPayload) {
-		const guild = await this.container.client.guilds.fetch(payload.guildId);
-		const member = await guild.members.fetch(payload.userId);
-
 		const guildConfig = await this.container.db.moderationGuildConfig.findUniqueOrThrow({
 			where: {
 				guildId: payload.guildId,
 			},
 		});
 
-		if (payload.hardMute) {
-			// TODO: Make this a find, delete only after success
-			const hardMute = await this.container.db.hardMute.delete({
+		const activeMute = await this.container.db.activeMute.findUnique({
+			where: {
+				userId_guildId: {
+					userId: payload.userId,
+					guildId: payload.guildId,
+				},
+			},
+			include: {
+				hardMute: true,
+			},
+		});
+		if (!activeMute) {
+			this.container.logger.error(`Interaction[Tasks][Moderation][unmute] Unable to find active mute for log item id ${payload.id}, possibly failed to remove this task during manual unmute .`);
+			return;
+		}
+
+		// Fetch the member
+		const guild = await this.container.client.guilds.fetch(payload.guildId);
+		let member;
+		try {
+			member = await guild.members.fetch(payload.userId);
+		} catch {
+			// Cannot find the member, likely left the server. Delete the active mute.
+			this.container.db.activeMute.delete({
 				where: {
-					relatedLogItemId: payload.id,
+					userId_guildId: {
+						userId: payload.userId,
+						guildId: payload.guildId,
+					},
 				},
 			});
 
-			await member.roles.set(hardMute.knownRoles, `Planned unmute for case ${payload.id}`);
+			if (activeMute.hardMuteId) {
+				this.container.db.hardMute.delete({
+					where: {
+						id: activeMute.hardMuteId,
+					},
+				});
+			}
+			return;
+		}
+
+		if (activeMute.hardMute) {
+			await member.roles.set(activeMute.hardMute.knownRoles, `Planned unmute for case ${payload.id}`);
 		} else {
 			await member.roles.remove(guildConfig.muteRole, `Planned unmute for case ${payload.id}`);
 		}
@@ -59,6 +90,23 @@ export class UnmuteTask extends ScheduledTask {
 			.setColor('#2bad63');
 
 		logChannel.send({ embeds: [logEmbed] });
+
+		this.container.db.activeMute.delete({
+			where: {
+				userId_guildId: {
+					userId: payload.userId,
+					guildId: payload.guildId,
+				},
+			},
+		});
+
+		if (activeMute.hardMuteId) {
+			this.container.db.hardMute.delete({
+				where: {
+					id: activeMute.hardMuteId,
+				},
+			});
+		}
 	}
 }
 

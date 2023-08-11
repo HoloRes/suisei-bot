@@ -71,6 +71,28 @@ export class MuteCommand extends Command {
 
 		await interaction.deferReply();
 
+		// Try to find existing mute
+		const existingMute = await this.container.db.activeMute.findUnique({
+			where: {
+				userId_guildId: {
+					userId: user.id,
+					guildId: interaction.guildId,
+				},
+			},
+			include: {
+				logItem: true,
+			},
+		});
+		if (existingMute) {
+			const oldMuteEndDate = existingMute.logItem.date.getDate() + existingMute.logItem.duration!;
+			const newMuteEndDate = Date.now() + duration;
+
+			if (oldMuteEndDate > newMuteEndDate) {
+				await interaction.editReply('Cannot mute, new mute ends before existing mute.');
+				return;
+			}
+		}
+
 		await this.container.db.moderationUser.upsert({
 			where: {
 				id: user.id,

@@ -8,7 +8,6 @@ import { ChannelType, EmbedBuilder } from 'discord.js';
 })
 export class MuteButtonHandler extends InteractionHandler {
 	public async run(interaction: ButtonInteraction) {
-		// TODO: Muting a user again should use the longest duration
 		await interaction.deferReply();
 		await interaction.message.edit({ embeds: interaction.message.embeds });
 
@@ -25,11 +24,36 @@ export class MuteButtonHandler extends InteractionHandler {
 		if (action === 'cancel') {
 			await interaction.editReply('Mute has been cancelled.');
 		} else {
-			const guildConfig = await this.container.db.moderationGuildConfig.findUniqueOrThrow({
+			const existingMute = await this.container.db.activeMute.findUnique({
+				where: {
+					userId_guildId: {
+						userId: pendingItem.offenderId,
+						guildId: pendingItem.guildId,
+					},
+				},
+				include: {
+					logItem: true,
+				},
+			});
+			if (existingMute) {
+				const oldMuteEndDate = existingMute.logItem.date.getDate() + existingMute.logItem.duration!;
+				const newMuteEndDate = Date.now() + pendingItem.duration!;
+
+				if (oldMuteEndDate > newMuteEndDate) {
+					await interaction.editReply('Cannot mute, new mute ends before existing mute.');
+					return;
+				}
+			}
+
+			const guildConfig = await this.container.db.moderationGuildConfig.findUnique({
 				where: {
 					guildId: interaction.guildId!,
 				},
 			});
+			if (!guildConfig) {
+				await interaction.editReply('Something went wrong, please try again.');
+				return;
+			}
 
 			// Fetch users
 			const moderator = await this.container.client.users.fetch(pendingItem.moderatorId);
@@ -47,6 +71,32 @@ export class MuteButtonHandler extends InteractionHandler {
 					offenderId: pendingItem.offenderId,
 					guildId: pendingItem.guildId,
 					strikes: pendingItem.strikes,
+				},
+			});
+
+			// Create unmute task
+			const unmuteTask = await this.container.tasks.create(
+				'unmute',
+				{
+					userId: pendingItem.offenderId,
+					guildId: pendingItem.guildId,
+					id: logItem.id,
+				},
+				pendingItem.duration!,
+			);
+
+			if (!unmuteTask?.id) {
+				this.container.logger.error(`Interaction[Handlers][Moderation][mute] Could not create a scheduled unmute task for ${logItem.id}`);
+				await interaction.editReply('Something went wrong, try again.');
+				return;
+			}
+
+			await this.container.db.scheduledTask.create({
+				data: {
+					module: 'moderation',
+					task: 'unmute',
+					query: logItem.id.toString(),
+					jobId: unmuteTask.id,
 				},
 			});
 
@@ -69,40 +119,65 @@ export class MuteButtonHandler extends InteractionHandler {
 			// Attempt the mute
 			try {
 				// Add mute role
-				if (pendingItem.hardMute) {
-					await this.container.db.hardMute.create({
+				if (pendingItem.hardMute && !existingMute?.hardMuteId) {
+					// Only create a new hardmute when there's not an existing hardmute.
+					const hardMute = await this.container.db.hardMute.create({
 						data: {
 							knownRoles: offender.roles.cache.map((role) => role.id),
-							relatedLogItemId: logItem.id,
+						},
+					});
+
+					await this.container.db.activeMute.upsert({
+						where: {
+							userId_guildId: {
+								guildId: pendingItem.guildId,
+								userId: pendingItem.offenderId,
+							},
+						},
+						create: {
+							guildId: pendingItem.guildId,
+							userId: pendingItem.offenderId,
+							hardMuteId: hardMute?.id,
+							logItemId: logItem.id,
+						},
+						update: {
+							hardMuteId: hardMute.id,
+							logItemId: logItem.id,
 						},
 					});
 
 					await offender.roles.set([guildConfig.muteRole], `Hard mute ${logItem.id}, reason: ${logItem.reason}`);
 				} else {
+					await this.container.db.activeMute.upsert({
+						where: {
+							userId_guildId: {
+								guildId: pendingItem.guildId,
+								userId: pendingItem.offenderId,
+							},
+						},
+						create: {
+							guildId: pendingItem.guildId,
+							userId: pendingItem.offenderId,
+							hardMuteId: existingMute?.hardMuteId ?? null,
+							logItemId: logItem.id,
+						},
+						update: {
+							hardMuteId: existingMute?.hardMuteId ?? null,
+							logItemId: logItem.id,
+						},
+					});
+
 					await offender.roles.add(guildConfig.muteRole, `Mute ${logItem.id}, reason: ${logItem.reason}`);
 				}
 
 				await interaction.editReply({
 					content: `Muted ${offender.user.tag}${notifyFailed ? ', but failed to send DM notification' : ''}`,
 				});
-			} catch {
+			} catch (e) {
+				this.container.logger.error('');
 				await interaction.editReply(`Failed to mute ${offender.user.tag}`);
 				return;
 			}
-
-			// Create unmute task
-			// TODO: Actually store this
-			// eslint-disable-next-line no-unused-vars
-			const unmuteTask = await this.container.tasks.create(
-				'unmute',
-				{
-					userId: pendingItem.offenderId,
-					guildId: interaction.guildId,
-					id: logItem.id,
-					hardMute: pendingItem.hardMute,
-				},
-				pendingItem.duration!,
-			);
 
 			// Log to modlog channel
 			const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
