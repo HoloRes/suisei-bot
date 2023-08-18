@@ -1,6 +1,6 @@
+import * as util from 'util';
 import { Command } from '@sapphire/framework';
 import { codeBlock, Message } from 'discord.js';
-import * as util from 'util';
 import { ApplyOptions } from '@sapphire/decorators';
 
 @ApplyOptions<Command.Options>({

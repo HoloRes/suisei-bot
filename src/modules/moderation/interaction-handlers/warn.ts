@@ -2,9 +2,6 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
 import type { ButtonInteraction } from 'discord.js';
 import {
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
 	ChannelType,
 	EmbedBuilder,
 } from 'discord.js';
@@ -12,7 +9,7 @@ import {
 @ApplyOptions<InteractionHandler.Options>({
 	interactionHandlerType: InteractionHandlerTypes.Button,
 })
-export class KickButtonHandler extends InteractionHandler {
+export class WarnButtonHandler extends InteractionHandler {
 	public async run(interaction: ButtonInteraction) {
 		await interaction.deferReply();
 		await interaction.message.edit({ embeds: interaction.message.embeds });
@@ -28,10 +25,10 @@ export class KickButtonHandler extends InteractionHandler {
 		});
 
 		if (action === 'cancel') {
-			await interaction.editReply('Kick has been cancelled.');
+			await interaction.editReply('Warn has been cancelled.');
 		} else {
 			// Must be 'confirm'
-			await interaction.editReply('Kicking, please wait...');
+			await interaction.editReply('Warning, please wait...');
 			const logItem = await this.container.db.moderationLogItem.create({
 				data: {
 					type: pendingItem.type,
@@ -40,7 +37,6 @@ export class KickButtonHandler extends InteractionHandler {
 					moderatorId: pendingItem.moderatorId,
 					offenderId: pendingItem.offenderId,
 					guildId: pendingItem.guildId,
-					strikes: pendingItem.strikes,
 				},
 			});
 
@@ -50,40 +46,20 @@ export class KickButtonHandler extends InteractionHandler {
 
 			// Notify the user
 			let notifyFailed = false;
-			if (!pendingItem.silent) {
-				const notificationEmbed = new EmbedBuilder()
-					.setTitle(`You've been kicked from: ${interaction.guild!.name}`)
-					.setDescription(`Reason: ${pendingItem.reason}`)
-					.setTimestamp();
+			const notificationEmbed = new EmbedBuilder()
+				.setTitle(`You've been warned in: ${interaction.guild!.name}`)
+				.setDescription(`Reason: ${pendingItem.reason}`)
+				.setTimestamp();
 
-				try {
-					// TODO: add button with link to appeal site
-					await offender.send({ embeds: [notificationEmbed] });
-				} catch {
-					notifyFailed = true;
-				}
-			}
-
-			// Create cross report button
-			const reportButton = new ButtonBuilder()
-				.setCustomId(`moderation:report:${logItem.id}`)
-				.setLabel('Cross report')
-				.setStyle(ButtonStyle.Danger);
-
-			const row = new ActionRowBuilder<ButtonBuilder>()
-				.addComponents(reportButton);
-
-			// Attempt the kick
 			try {
-				await interaction.guild!.members.kick(pendingItem.offenderId, pendingItem.reason);
-				await interaction.editReply({
-					content: `Kicked ${offender.tag}${notifyFailed ? ', but failed to send DM notification' : ''}`,
-					components: [row],
-				});
+				await offender.send({ embeds: [notificationEmbed] });
 			} catch {
-				await interaction.editReply(`Failed to kick ${offender.tag}`);
-				return;
+				notifyFailed = true;
 			}
+
+			await interaction.editReply({
+				content: `Warned ${offender.tag}${notifyFailed ? ', but failed to send DM notification' : ''}`,
+			});
 
 			// Log to modlog channel
 			const guildConfig = await this.container.db.moderationGuildConfig.findUniqueOrThrow({
@@ -95,21 +71,21 @@ export class KickButtonHandler extends InteractionHandler {
 			const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 			if (!logChannel) {
-				this.container.logger.error(`Interaction[Handlers][Moderation][kick] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
+				this.container.logger.error(`Interaction[Handlers][Moderation][warn] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
 				return;
 			}
 
 			if (logChannel.type !== ChannelType.GuildText) {
-				this.container.logger.error(`Interaction[Handlers][Moderation][kick] Channel ${guildConfig.logChannel} is not text based?`);
+				this.container.logger.error(`Interaction[Handlers][Moderation][warn] ${guildConfig.logChannel} is not text based?`);
 				return;
 			}
 
 			const logEmbed = new EmbedBuilder()
-				.setTitle(`kick${pendingItem.silent ? ' (silent)' : ''} | case ${logItem.id}`)
+				.setTitle(`warn | case ${logItem.id}`)
 				.setDescription(`**Offender:** ${offender.tag} (<@${offender.id}>)\n**Reason:** ${pendingItem.reason}\n**Moderator:** ${moderator.tag}`)
 				.setFooter({ text: `ID: ${pendingItem.offenderId}` })
 				.setTimestamp()
-				.setColor('#f54242');
+				.setColor('#fcdc63');
 
 			logChannel.send({ embeds: [logEmbed] });
 
@@ -123,7 +99,7 @@ export class KickButtonHandler extends InteractionHandler {
 	}
 
 	public override parse(interaction: ButtonInteraction) {
-		if (!interaction.customId.startsWith('moderation:kick')) return this.none();
+		if (!interaction.customId.startsWith('moderation:warn')) return this.none();
 		if (!interaction.inGuild()) return this.none();
 
 		return this.some();

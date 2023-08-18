@@ -33,7 +33,6 @@ interface VTuber {
 			chatInputRun: 'chatInputList',
 		},
 	],
-	preconditions: ['StaffOnly'],
 })
 export class SubscriptionCommand extends Subcommand {
 	public override registerApplicationCommands(registry: Subcommand.Registry) {
