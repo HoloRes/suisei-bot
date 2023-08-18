@@ -105,6 +105,15 @@ model ModerationLogItem {
   ActiveMute ActiveMute?
 }
 
+model Massban {
+  id          Int      @id @default(sequence(start: 1))
+  guildId     String
+  moderatorId String
+  reason      String
+  date        DateTime @default(now())
+  offenders   String[]
+}
+
 model ModerationPendingLogItem {
   id          String           @id @default(cuid())
   type        ModerationType

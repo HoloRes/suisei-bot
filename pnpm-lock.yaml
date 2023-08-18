@@ -50,6 +50,9 @@ dependencies:
   '@sentry/tracing':
     specifier: ^7.64.0
     version: 7.64.0
+  axios:
+    specifier: ^1.4.0
+    version: 1.4.0
   bufferutil:
     specifier: ^4.0.7
     version: 4.0.7

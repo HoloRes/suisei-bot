@@ -38,6 +38,7 @@
 		"@sentry/integrations": "^7.64.0",
 		"@sentry/node": "^7.64.0",
 		"@sentry/tracing": "^7.64.0",
+		"axios": "^1.4.0",
 		"bufferutil": "^4.0.7",
 		"bullmq": "^4.7.2",
 		"discord.js": "^14.12.1",
