@@ -19,6 +19,10 @@ const TWEET_LINK_REGEX = /^\/(\w|\d)+\/status\/(?<id>\d{18,})(\/.+)?/;
 interface VxTwitterResponse {
 	date_epoch: number;
 	user_screen_name: string;
+	media_extended: {
+		type: 'image' | 'video';
+		url: string;
+	}[];
 }
 
 export default async function handleMessage(this: Listener, message: Message) {
@@ -130,6 +134,15 @@ export default async function handleMessage(this: Listener, message: Message) {
 			},
 		});
 
+		let baseUrl = 'twitter.com';
+
+		const hasGifOrVideo = res.data.media_extended.map((media) => media.type === 'video' || new URL(media.url).pathname.endsWith('.gif')).includes(true);
+		if (hasGifOrVideo) {
+			baseUrl = 'fxtwitter.com';
+		} else if (res.data.media_extended.length > 1) {
+			baseUrl = 'c.fxtwitter.com';
+		}
+
 		const notifyTasks = subscribers.map(async (sub) => {
 			const notifChannel = await this.container.client.channels.fetch(sub.channelId)
 				.catch((err) => {
@@ -142,7 +155,7 @@ export default async function handleMessage(this: Listener, message: Message) {
 			if (notifChannel.type !== ChannelType.GuildAnnouncement
 				&& notifChannel.type !== ChannelType.GuildText) return;
 
-			await notifChannel.send(`${sub.message ? `${sub.message}\n\n` : ''}https://fxtwitter.com/${sub.handle}/status/${id}`);
+			await notifChannel.send(`${sub.message ? `${sub.message}\n\n` : ''}https://${baseUrl}/${sub.handle}/status/${id}`);
 		});
 
 		await Promise.all(notifyTasks);
