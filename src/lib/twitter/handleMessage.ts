@@ -134,12 +134,10 @@ export default async function handleMessage(this: Listener, message: Message) {
 			},
 		});
 
-		let baseUrl = 'twitter.com';
+		let baseUrl = 'fxtwitter.com';
 
 		const hasGifOrVideo = res.data.media_extended.map((media) => media.type === 'video' || new URL(media.url).pathname.endsWith('.gif')).includes(true);
-		if (hasGifOrVideo) {
-			baseUrl = 'fxtwitter.com';
-		} else if (res.data.media_extended.length > 1) {
+		if (!hasGifOrVideo && res.data.media_extended.length > 1) {
 			baseUrl = 'c.fxtwitter.com';
 		}
 
@@ -155,7 +153,7 @@ export default async function handleMessage(this: Listener, message: Message) {
 			if (notifChannel.type !== ChannelType.GuildAnnouncement
 				&& notifChannel.type !== ChannelType.GuildText) return;
 
-			await notifChannel.send(`${sub.message ? `${sub.message}\n\n` : ''}https://${baseUrl}/${sub.handle}/status/${id}`);
+			await notifChannel.send(`${sub.message ? `${sub.message}\n\n` : ''}<https://twitter.com/${sub.handle}/status/${id}> ([fx](https://${baseUrl}/${sub.handle}/status/${id}))`);
 		});
 
 		await Promise.all(notifyTasks);
