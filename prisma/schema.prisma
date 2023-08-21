@@ -79,6 +79,7 @@ enum ModerationType {
   AUTOMOD
   STRIKE
   MANUAL
+  APPEAL
 }
 
 enum ModerationAction {
@@ -86,23 +87,30 @@ enum ModerationAction {
   MUTE
   KICK
   BAN
+  UNMUTE
+  UNBAN
+  REVOKE
 }
 
 model ModerationLogItem {
-  id          Int              @id @default(sequence(start: 1))
-  type        ModerationType
-  action      ModerationAction
-  moderatorId String
-  reason      String
-  date        DateTime         @default(now())
-  duration    Int?
-  strikes     Int?
-  guildId     String
+  id             Int                @id @default(sequence(start: 1))
+  type           ModerationType
+  action         ModerationAction
+  moderatorId    String
+  reason         String
+  date           DateTime           @default(now())
+  duration       Int?
+  strikes        Int?
+  strikeDate     DateTime           @default(now())
+  affectedCaseId Int?
+  affectedCase   ModerationLogItem? @relation("affects", fields: [affectedCaseId], references: [id], onDelete: Cascade)
+  guildId        String
 
   offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
   offenderId String
 
   ActiveMute ActiveMute?
+  affectedBy ModerationLogItem[] @relation("affects")
 }
 
 model Massban {
@@ -165,6 +173,35 @@ model HardMute {
   id         String      @id @default(cuid())
   knownRoles String[]
   ActiveMute ActiveMute?
+}
+
+//
+// twitter.prisma
+//
+
+model TwitterShare {
+  id             String   @id
+  date           DateTime
+  sharedByUserId String
+}
+
+model TwitterLeaderboardUser {
+  id              String @id
+  totalShares     Int    @default(0)
+  sharesThisMonth Int    @default(0)
+}
+
+model TwitterSubscription {
+  handle    String
+  channelId String
+
+  message String?
+
+  @@id([handle, channelId])
+}
+
+model TwitterBlacklist {
+  id String @id
 }
 
 //

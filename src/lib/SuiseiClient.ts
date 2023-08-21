@@ -21,8 +21,11 @@ export class SuiseiClient extends SapphireClient {
 		super(options);
 
 		this.stores.registerPath(join(this.rootData.root, 'modules/core'));
-		this.stores.registerPath(join(this.rootData.root, 'modules/youtube'));
-		this.stores.registerPath(join(this.rootData.root, 'modules/moderation'));
+		this.stores.registerPath(join(this.rootData.root, 'modules/social'));
+		// TODO: Remove this for production
+		if (this.dev) {
+			this.stores.registerPath(join(this.rootData.root, 'modules/moderation'));
+		}
 	}
 
 	public override async login(token: string) {

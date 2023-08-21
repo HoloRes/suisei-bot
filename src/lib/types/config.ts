@@ -63,6 +63,9 @@ export default interface Config {
 		apiKey: string;
 		endpoint?: string;
 		rabbitmqEndpoint?: string;
+	};
+	twitter: {
+		managementGuilds: string[];
 	}
 	sentry?: {
 		dsn: string;

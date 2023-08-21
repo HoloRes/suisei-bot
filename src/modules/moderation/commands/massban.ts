@@ -50,7 +50,7 @@ export class MassbanCommand extends Command {
 
 		let ids: string[] = [];
 		if (list) {
-			ids = list.replace(/\r/g, '').split(/\n+|\s+/g);
+			ids = list.split(/\s/g);
 			await interaction.deferReply();
 		}
 		if (file) {
@@ -61,7 +61,7 @@ export class MassbanCommand extends Command {
 
 			await interaction.deferReply();
 			const res = await axios.get(file.url);
-			ids = res.data.replace(/\r/g, '').split(/\n+|\s+/g);
+			ids = res.data.replace(/\r/g, '').split(/\n+|\s+|,/g);
 		}
 
 		if (ids.length <= 1) {

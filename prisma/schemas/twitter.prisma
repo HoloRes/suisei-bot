@@ -1,0 +1,24 @@
+model TwitterShare {
+    id             String   @id
+    date           DateTime
+    sharedByUserId String
+}
+
+model TwitterLeaderboardUser {
+    id              String @id
+    totalShares     Int    @default(0)
+    sharesThisMonth Int    @default(0)
+}
+
+model TwitterSubscription {
+    handle    String
+    channelId String
+
+    message String?
+
+    @@id([handle, channelId])
+}
+
+model TwitterBlacklist {
+    id String @id
+}

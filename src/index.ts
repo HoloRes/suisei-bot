@@ -99,6 +99,7 @@ const client = new SuiseiClient({
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.GuildBans,
 		GatewayIntentBits.Guilds,
+		GatewayIntentBits.MessageContent,
 	],
 	defaultPrefix: config.overrides?.discord?.defaultPrefix ?? '!',
 	loadMessageCommandListeners: true,
