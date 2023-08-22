@@ -82,7 +82,7 @@ export class TwitterManageCommand extends Subcommand {
 	}
 
 	public async chatInputAddHandle(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true);
+		const handle = interaction.options.getString('handle', true).toLowerCase();
 
 		await interaction.deferReply();
 
@@ -103,7 +103,7 @@ export class TwitterManageCommand extends Subcommand {
 	}
 
 	public async chatInputRemoveHandle(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true);
+		const handle = interaction.options.getString('handle', true).toLowerCase();
 
 		await interaction.deferReply();
 

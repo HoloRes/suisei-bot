@@ -31,6 +31,9 @@ interface VxTwitterResponse {
 
 export default async function handleMessage(this: Listener, message: Message) {
 	if (message.author.id === this.container.client.id) return;
+
+	if (!message.content || !message.id) return;
+
 	// Check if blacklisted
 	const blacklist = await this.container.db.twitterBlacklist.findUnique({
 		where: {
@@ -90,7 +93,7 @@ export default async function handleMessage(this: Listener, message: Message) {
 		if (Date.now() - postDate > Time.Hour * 6) return;
 
 		try {
-			await this.container.meiliClient.index('twitter-users').getDocument(res.data.user_screen_name);
+			await this.container.meiliClient.index('twitter-users').getDocument(res.data.user_screen_name.toLowerCase());
 		} catch {
 			// Not on the whitelist
 			return;
@@ -135,7 +138,7 @@ export default async function handleMessage(this: Listener, message: Message) {
 
 		const subscribers = await this.container.db.twitterSubscription.findMany({
 			where: {
-				handle: res.data.user_screen_name,
+				handle: res.data.user_screen_name.toLowerCase(),
 			},
 		});
 

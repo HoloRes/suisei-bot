@@ -483,7 +483,7 @@ export class SubscriptionCommand extends Subcommand {
 	}
 
 	public async chatInputTwitterUpsert(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true);
+		const handle = interaction.options.getString('handle', true).toLowerCase();
 		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 		const message = interaction.options.getString('message');
 
@@ -517,7 +517,7 @@ export class SubscriptionCommand extends Subcommand {
 	}
 
 	public async chatInputTwitterRemove(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true);
+		const handle = interaction.options.getString('handle', true).toLowerCase();
 		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 
 		await interaction.deferReply();
