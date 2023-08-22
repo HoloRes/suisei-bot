@@ -1,6 +1,5 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { ApplyOptions } from '@sapphire/decorators';
-import { PermissionFlagsBits } from 'discord.js';
 
 @ApplyOptions<Subcommand.Options>({
 	name: 'twitter',
@@ -42,7 +41,6 @@ export class TwitterManageCommand extends Subcommand {
 			builder
 				.setName(this.name)
 				.setDescription(this.description)
-				.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
 				.addSubcommandGroup((subcommandGroup) => subcommandGroup
 					.setName('handle')
 					.setDescription('Manage allowed handles')
