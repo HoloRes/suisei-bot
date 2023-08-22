@@ -1,19 +1,23 @@
 import { Listener } from '@sapphire/framework';
 import { ChannelType, Message } from 'discord.js';
-import { HttpUrlRegex } from '@sapphire/discord.js-utilities';
 import axios from 'axios';
 import { Time } from '@sapphire/time-utilities';
+import RE2 from 're2';
 
 const ACCEPTED_HOSTS = [
 	'twitter.com',
 	'fxtwitter.com',
+	'c.fxtwitter.com',
 	'twittpr.com',
 	'x.com',
 	'fixupx.com',
+	'c.fixupx.com',
 	'vxtwitter.com',
+	'c.vxtwitter.com',
 ];
 
-const TWEET_LINK_REGEX = /^\/(\w|\d)+\/status\/(?<id>\d{18,})(\/.+)?/;
+const LINK_REGEX = '(?<url>https?:\\/\\/[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*.com\\/(?:\\w|\\d)+\\/status\\/(?:\\d{18,}))';
+const TWEET_PATH_REGEX = '^\\/(?:\\w|\\d)+\\/status\\/(?<id>\\d{18,})';
 
 // This only contains the important properties
 interface VxTwitterResponse {
@@ -41,7 +45,10 @@ export default async function handleMessage(this: Listener, message: Message) {
 	const potentialUrls: string[] = [];
 
 	split.forEach((str) => {
-		if (HttpUrlRegex.test(str)) potentialUrls.push(str);
+		const res = new RE2(LINK_REGEX, 'gi').exec(str);
+		if (res && res.groups) {
+			potentialUrls.push(res.groups.url);
+		}
 	});
 
 	const tasks = potentialUrls.map(async (linkStr) => {
@@ -55,12 +62,10 @@ export default async function handleMessage(this: Listener, message: Message) {
 
 		if (!ACCEPTED_HOSTS.includes(url.hostname)) return;
 
-		// Valid Twitter URl! Check if it looks like a Tweet link
-		if (!TWEET_LINK_REGEX.test(url.pathname)) return;
-
-		// Seems like a valid Tweet link, grab the id
-		const exec = TWEET_LINK_REGEX.exec(url.pathname)!;
-		const { id } = exec.groups!;
+		// Valid Twitter URl! Check if it looks like a Tweet link and grab the id
+		const exec = new RE2(TWEET_PATH_REGEX).exec(url.pathname);
+		if (!exec?.groups) return;
+		const { id } = exec.groups;
 
 		// Check if not already in database
 		const share = await this.container.db.twitterShare.findUnique({

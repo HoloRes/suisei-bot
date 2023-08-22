@@ -51,6 +51,7 @@
 		"prisma": "^5.1.1",
 		"prisma-import": "^1.0.4",
 		"prom-client": "^14.2.0",
+		"re2": "^1.20.1",
 		"reflect-metadata": "^0.1.13",
 		"search-query-parser": "^1.6.0",
 		"string-template": "^1.0.0",
