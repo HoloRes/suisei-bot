@@ -1,14 +1,14 @@
 version: '3'
 
 services:
-#  database:
-#    image: cockroachdb/cockroach
-#    command: start-single-node --insecure
-#    ports:
-#      - "26257:26257"
-#      - "28080:8080"
-#    volumes:
-#      - db:/cockroach/cockroach-data
+  database:
+    image: cockroachdb/cockroach
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"
+      - "28080:8080"
+    volumes:
+      - db:/cockroach/cockroach-data
 
   redis:
     image: redis
