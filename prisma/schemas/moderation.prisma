@@ -7,10 +7,10 @@ model ModerationUser {
 }
 
 model Note {
-    id      String @id @default(cuid())
-    title   String
+    id      Int      @id @default(sequence(start: 1))
     note    String
     guildId String
+    date    DateTime @default(now())
 
     user   ModerationUser @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String
@@ -51,8 +51,9 @@ model ModerationLogItem {
     offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
     offenderId String
 
-    ActiveMute ActiveMute?
-    affectedBy ModerationLogItem[] @relation("affects")
+    ActiveMute        ActiveMute?
+    affectedBy        ModerationLogItem[]        @relation("affects")
+    affectedByPending ModerationPendingLogItem[]
 }
 
 model Massban {
@@ -65,18 +66,20 @@ model Massban {
 }
 
 model ModerationPendingLogItem {
-    id          String           @id @default(cuid())
-    type        ModerationType
-    action      ModerationAction
-    moderatorId String
-    reason      String
-    duration    Int?
-    silent      Boolean?
-    hardMute    Boolean?
-    strikes     Int?
-    guildId     String
-    messageId   String
-    channelId   String
+    id             String             @id @default(cuid())
+    type           ModerationType
+    action         ModerationAction
+    moderatorId    String
+    reason         String
+    duration       Int?
+    silent         Boolean?
+    hardMute       Boolean?
+    strikes        Int?
+    guildId        String
+    messageId      String
+    channelId      String
+    affectedCaseId Int?
+    affectedCase   ModerationLogItem? @relation(fields: [affectedCaseId], references: [id], onDelete: Cascade)
 
     offender   ModerationUser @relation(fields: [offenderId], references: [id], onDelete: Cascade)
     offenderId String

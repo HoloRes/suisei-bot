@@ -26,3 +26,15 @@ model ScheduledTask {
 
     @@id([module, task, query])
 }
+
+model AuditLogItem {
+    id      String  @id @default(cuid())
+    module  String
+    action  String
+    affects String
+    reason  String?
+    author  String
+    log     String
+    guildId String
+    data    String?
+}

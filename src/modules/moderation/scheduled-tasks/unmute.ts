@@ -85,7 +85,7 @@ export class UnmuteTask extends ScheduledTask {
 		const logEmbed = new EmbedBuilder()
 			.setTitle(`unmute | case ${payload.id}`)
 			.setDescription(`**Offender:** ${member.user.tag} (<@${member.id}>)\n**Reason:** Scheduled unmute`)
-			.setFooter({ text: `ID: ${payload.id}` })
+			.setFooter({ text: `ID: ${member.id}` })
 			.setTimestamp()
 			.setColor('#2bad63');
 

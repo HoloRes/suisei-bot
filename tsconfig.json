@@ -11,12 +11,6 @@
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
-		"forceConsistentCasingInFileNames": true,
-		"lib": [
-			"es2020",
-			"esnext.asynciterable"
-		],
-		"moduleResolution": "node",
 		"strict": true
 	},
 	"include": [
