@@ -38,7 +38,7 @@ export class UnbanTask extends ScheduledTask {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
-			this.container.logger.error(`Interaction[Tasks][Moderation][unban] Cannot find log channel (${guildConfig.logChannel}) in ${payload.guildId!}`);
+			this.container.logger.error(`Interaction[Tasks][Moderation][unban] Cannot find log channel (${guildConfig.logChannel}) in ${payload.guildId}`);
 			return;
 		}
 
@@ -54,7 +54,7 @@ export class UnbanTask extends ScheduledTask {
 			.setTimestamp()
 			.setColor('#2bad63');
 
-		logChannel.send({ embeds: [logEmbed] });
+		await logChannel.send({ embeds: [logEmbed] });
 	}
 }
 

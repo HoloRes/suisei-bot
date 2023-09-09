@@ -7,11 +7,15 @@
 		],
 		"resolveJsonModule": true,
 		"plugins": [
+			{
+				"transform": "typia/lib/transform"
+			}
 		],
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
-		"strict": true
+		"strict": true,
+		"strictNullChecks": true,
 	},
 	"include": [
 		"./src/**/*"

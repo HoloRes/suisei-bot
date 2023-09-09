@@ -87,7 +87,7 @@ export class WarnButtonHandler extends InteractionHandler {
 				.setTimestamp()
 				.setColor('#fcdc63');
 
-			logChannel.send({ embeds: [logEmbed] });
+			await logChannel.send({ embeds: [logEmbed] });
 
 			// Disable buttons
 			await interaction.message.edit({

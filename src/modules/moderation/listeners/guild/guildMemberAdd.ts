@@ -3,7 +3,7 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { GuildMember } from 'discord.js';
 
 @ApplyOptions<ListenerOptions>({ event: Events.GuildMemberAdd })
-export class guildMemberAddListener extends Listener<typeof Events.GuildMemberAdd> {
+export class GuildMemberAddListener extends Listener<typeof Events.GuildMemberAdd> {
 	public override async run(member: GuildMember) {
 		const activeMute = await this.container.db.activeMute.findUnique({
 			where: {

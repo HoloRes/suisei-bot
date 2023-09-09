@@ -49,7 +49,7 @@ export default async function handleMessage(this: Listener, message: Message) {
 
 	split.forEach((str) => {
 		const res = new RE2(LINK_REGEX, 'gi').exec(str);
-		if (res && res.groups) {
+		if (res?.groups) {
 			potentialUrls.push(res.groups.url);
 		}
 	});

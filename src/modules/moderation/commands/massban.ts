@@ -60,7 +60,7 @@ export class MassbanCommand extends Command {
 			}
 
 			await interaction.deferReply();
-			const res = await axios.get(file.url);
+			const res = await axios.get<string>(file.url);
 			ids = res.data.replace(/\r/g, '').split(/\n+|\s+|,/g);
 		}
 
@@ -100,14 +100,14 @@ export class MassbanCommand extends Command {
 
 		const guildConfig = await this.container.db.moderationGuildConfig.findUniqueOrThrow({
 			where: {
-				guildId: interaction.guildId!,
+				guildId: interaction.guildId,
 			},
 		});
 
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
-			this.container.logger.error(`Interaction[Handlers][Moderation][ban] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
+			this.container.logger.error(`Interaction[Handlers][Moderation][ban] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId}`);
 			return;
 		}
 
@@ -122,6 +122,6 @@ export class MassbanCommand extends Command {
 			.setTimestamp()
 			.setColor('#f54242');
 
-		logChannel.send({ embeds: [logEmbed] });
+		await logChannel.send({ embeds: [logEmbed] });
 	}
 }

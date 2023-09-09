@@ -72,7 +72,7 @@ export class RevokeButtonHandler extends InteractionHandler {
 				.setTimestamp()
 				.setColor('#2bad63');
 
-			logChannel.send({ embeds: [logEmbed] });
+			await logChannel.send({ embeds: [logEmbed] });
 
 			await interaction.editReply(`Revoked case ${logItem.id}`);
 		}

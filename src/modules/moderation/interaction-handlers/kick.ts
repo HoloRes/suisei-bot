@@ -111,7 +111,7 @@ export class KickButtonHandler extends InteractionHandler {
 				.setTimestamp()
 				.setColor('#f54242');
 
-			logChannel.send({ embeds: [logEmbed] });
+			await logChannel.send({ embeds: [logEmbed] });
 
 			// Disable buttons
 			await interaction.message.edit({

@@ -1,4 +1,4 @@
-# Suisei
+# Suisei's Mic
 [![DeepScan grade](https://deepscan.io/api/teams/10262/projects/15756/branches/320567/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=10262&pid=15756&bid=320567)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FHoloRes%2Fsuisei.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FHoloRes%2Fsuisei?ref=badge_shield)
 

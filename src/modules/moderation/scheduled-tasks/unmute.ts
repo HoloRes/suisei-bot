@@ -45,7 +45,7 @@ export class UnmuteTask extends ScheduledTask {
 			member = await guild.members.fetch(payload.userId);
 		} catch {
 			// Cannot find the member, likely left the server. Delete the active mute.
-			this.container.db.activeMute.delete({
+			await this.container.db.activeMute.delete({
 				where: {
 					userId_guildId: {
 						userId: payload.userId,
@@ -55,7 +55,7 @@ export class UnmuteTask extends ScheduledTask {
 			});
 
 			if (activeMute.hardMuteId) {
-				this.container.db.hardMute.delete({
+				await this.container.db.hardMute.delete({
 					where: {
 						id: activeMute.hardMuteId,
 					},
@@ -73,7 +73,7 @@ export class UnmuteTask extends ScheduledTask {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
-			this.container.logger.error(`Interaction[Tasks][Moderation][unmute] Cannot find log channel (${guildConfig.logChannel}) in ${payload.guildId!}`);
+			this.container.logger.error(`Interaction[Tasks][Moderation][unmute] Cannot find log channel (${guildConfig.logChannel}) in ${payload.guildId}`);
 			return;
 		}
 
@@ -89,9 +89,9 @@ export class UnmuteTask extends ScheduledTask {
 			.setTimestamp()
 			.setColor('#2bad63');
 
-		logChannel.send({ embeds: [logEmbed] });
+		await logChannel.send({ embeds: [logEmbed] });
 
-		this.container.db.activeMute.delete({
+		await this.container.db.activeMute.delete({
 			where: {
 				userId_guildId: {
 					userId: payload.userId,
@@ -101,7 +101,7 @@ export class UnmuteTask extends ScheduledTask {
 		});
 
 		if (activeMute.hardMuteId) {
-			this.container.db.hardMute.delete({
+			await this.container.db.hardMute.delete({
 				where: {
 					id: activeMute.hardMuteId,
 				},

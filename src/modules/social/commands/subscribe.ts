@@ -214,11 +214,13 @@ export class SubscriptionCommand extends Subcommand {
 		});
 		if (!channel) {
 			// The channel didn't exist, so search in the Holodex API
-			const vtuber = await this.container.holodexClient.channels.getInfo(channelId)
-				.catch(() => {
-					interaction.editReply('Failed to fetch VTuber');
-				});
-			if (!vtuber) return;
+			let vtuber;
+			try {
+				vtuber = await this.container.holodexClient.channels.getInfo(channelId);
+			} catch {
+				await interaction.editReply('Failed to fetch VTuber');
+				return;
+			}
 
 			if (vtuber.type !== 'vtuber') {
 				await interaction.editReply('Channel is not a VTuber!');
@@ -257,7 +259,7 @@ export class SubscriptionCommand extends Subcommand {
 
 		const webhooks = await notifChannel.fetchWebhooks();
 
-		const webhook = await webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
+		const webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
 
 		if (!webhook) {
 			await notifChannel.createWebhook({
@@ -266,7 +268,7 @@ export class SubscriptionCommand extends Subcommand {
 		}
 
 		// eslint-disable-next-line eqeqeq
-		await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${channel.englishName || channel.name}`);
+		await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${channel.englishName ?? channel.name}`);
 	}
 
 	public async chatInputYTSetQuery(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -375,7 +377,7 @@ export class SubscriptionCommand extends Subcommand {
 
 		const webhooks = await notifChannel.fetchWebhooks();
 
-		const webhook = await webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
+		const webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
 
 		if (!webhook) {
 			await notifChannel.createWebhook({
@@ -422,11 +424,11 @@ export class SubscriptionCommand extends Subcommand {
 				},
 			});
 
-			await interaction.editReply(`<#${notifChannel.id}> has unsubscribed from ${channel.englishName || channel.name}`);
+			await interaction.editReply(`<#${notifChannel.id}> has unsubscribed from ${channel.englishName ?? channel.name}`);
 			return;
 		}
 
-		await interaction.editReply(`<#${notifChannel.id}> is not subscribed to ${channel.englishName || channel.name}`);
+		await interaction.editReply(`<#${notifChannel.id}> is not subscribed to ${channel.englishName ?? channel.name}`);
 	}
 
 	public async chatInputYTList(interaction: Subcommand.ChatInputCommandInteraction) {
@@ -464,7 +466,7 @@ export class SubscriptionCommand extends Subcommand {
 
 				return embed
 					// eslint-disable-next-line max-len
-					.setTitle(subscription.channel.englishName || subscription.channel.name)
+					.setTitle(subscription.channel.englishName ?? subscription.channel.name)
 					.setURL(`https://www.youtube.com/channel/${subscription.channel.id}`)
 					.addFields([
 						{
@@ -545,7 +547,7 @@ export class SubscriptionCommand extends Subcommand {
 				limit: 25,
 			});
 			await interaction.respond(searchResult.hits.map((result) => ({
-				name: `${result.englishName || result.name} (${result.org})`,
+				name: `${result.englishName ?? result.name} (${result.org})`,
 				value: result.id,
 			})));
 		} else if (focusedOption.name === 'handle') {

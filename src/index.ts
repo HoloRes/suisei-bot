@@ -4,7 +4,6 @@ import '@sapphire/plugin-logger/register';
 import '@sapphire/plugin-api/register';
 import '@sapphire/plugin-scheduled-tasks/register';
 
-// import { assert } from 'typia';
 import process from 'process';
 import * as Sentry from '@sentry/node';
 import { RewriteFrames } from '@sentry/integrations';
@@ -15,33 +14,21 @@ import { container, LogLevel } from '@sapphire/framework';
 import * as promClient from 'prom-client';
 import express from 'express';
 import { SuiseiClient } from './lib/SuiseiClient';
+import { checkConfig } from './lib/types/config';
 
 // Types
 import type Config from './lib/types/config';
 
 // Local files
-// eslint-disable-next-line import/extensions,global-require
-const config: Config = require('../config.js');
+// eslint-disable-next-line import/extensions,global-require,@typescript-eslint/no-var-requires
+const config: unknown = require('../config.js');
 
 // Config validation
-/* try {
-	assert<BaseConfigCheck>(config);
-	if (config.mode === 'master') {
-		assert<MasterConfig>(config);
-	} else if (config.mode === 'slave') {
-		assert<SlaveConfig>(config);
-	} else if (config.mode === 'standalone') {
-		assert<StandAloneConfig>(config);
-	}
-} catch (err: any) {
-	if (err) container.logger.error(`${err.name}: ${err.message}`);
-	// eslint-disable-next-line no-console
+if (!checkConfig(config)) {
 	console.error('Invalid config, quiting');
 	process.exit(1);
-} */
-
-// eslint-disable-next-line no-console
-console.info('Config validated. Initializing.');
+}
+console.log('Config validated. Initializing...');
 // Set config in the Saphire container
 container.config = config;
 
@@ -81,6 +68,7 @@ container.counters = {
 	},
 };
 
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 app.get('/metrics', async (req, res) => {
 	try {
 		res.set('Content-Type', promClient.register.contentType);
@@ -124,7 +112,7 @@ const client = new SuiseiClient({
 });
 
 async function main() {
-	await client.login(config.discord.token);
+	await client.login((config as Config).discord.token);
 }
 
 main().catch(container.logger.error.bind(container.logger));

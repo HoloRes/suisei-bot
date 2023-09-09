@@ -91,7 +91,7 @@ export class BanButtonHandler extends InteractionHandler {
 
 			// Create unban task if tempban
 			if (pendingItem.duration) {
-				this.container.tasks.create(
+				await this.container.tasks.create(
 					'unban',
 					{
 						userId: pendingItem.offenderId,
@@ -128,7 +128,7 @@ export class BanButtonHandler extends InteractionHandler {
 				.setTimestamp()
 				.setColor('#f54242');
 
-			logChannel.send({ embeds: [logEmbed] });
+			await logChannel.send({ embeds: [logEmbed] });
 
 			// Disable buttons
 			await interaction.message.edit({

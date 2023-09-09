@@ -117,7 +117,7 @@ export class UnmuteCommand extends Command {
 			.setTimestamp()
 			.setColor('#2bad63');
 
-		this.container.db.activeMute.delete({
+		await this.container.db.activeMute.delete({
 			where: {
 				userId_guildId: {
 					guildId: activeMute.guildId,
@@ -127,14 +127,14 @@ export class UnmuteCommand extends Command {
 		});
 
 		if (activeMute.hardMuteId) {
-			this.container.db.hardMute.delete({
+			await this.container.db.hardMute.delete({
 				where: {
 					id: activeMute.hardMuteId,
 				},
 			});
 		}
 
-		logChannel.send({ embeds: [logEmbed] });
+		await logChannel.send({ embeds: [logEmbed] });
 
 		// Attempt to remove the unmute task
 		const unmuteTask = await this.container.db.scheduledTask.findUnique({
@@ -149,7 +149,7 @@ export class UnmuteCommand extends Command {
 		if (!unmuteTask) {
 			this.container.logger.warn('Interaction[Commands][Moderation][unmute] Unable to find unmute task in the database.');
 		} else {
-			this.container.tasks.delete(unmuteTask.jobId);
+			await this.container.tasks.delete(unmuteTask.jobId);
 		}
 	}
 }

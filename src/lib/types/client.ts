@@ -5,9 +5,11 @@ import type BansApiClient from '@holores/bansapi.js';
 import Config from './config';
 
 declare module 'discord.js' {
+	// eslint-disable-next-line @typescript-eslint/no-empty-interface
 	interface Client {
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-empty-interface
 	interface ClientOptions extends SapphireClientOptions {
 	}
 }

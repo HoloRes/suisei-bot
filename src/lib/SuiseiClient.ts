@@ -32,7 +32,7 @@ export class SuiseiClient extends SapphireClient {
 		container.db = new PrismaClient({
 			datasources: {
 				db: {
-					url: `${container.config.db!.protocol}://${container.config.db!.username}:${container.config.db!.password}@${container.config.db!.host}/${container.config.db!.database}${container.config.db!.query ?? ''}`,
+					url: `${container.config.db.protocol}://${container.config.db.username}:${container.config.db.password}@${container.config.db.host}/${container.config.db.database}${container.config.db.query ?? ''}`,
 				},
 			},
 		});
@@ -55,8 +55,8 @@ export class SuiseiClient extends SapphireClient {
 
 		// Connect to MeiliSearch
 		container.meiliClient = new MeiliSearch({
-			host: container.config.meilisearch!.host,
-			apiKey: container.config.meilisearch!.key,
+			host: container.config.meilisearch.host,
+			apiKey: container.config.meilisearch.key,
 		});
 
 		// Create humanizer
@@ -77,10 +77,11 @@ export class SuiseiClient extends SapphireClient {
 
 /* eslint-disable no-unused-vars, no-use-before-define */
 declare module 'discord.js' {
+	// eslint-disable-next-line @typescript-eslint/no-empty-interface
 	interface Client {
 	}
 
-	// eslint-disable-next-line no-shadow
+	// eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-shadow
 	interface ClientOptions extends SapphireClientOptions {
 	}
 }

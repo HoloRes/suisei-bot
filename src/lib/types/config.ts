@@ -1,4 +1,20 @@
-import { LogLevel } from '@sapphire/framework';
+import type { LogLevel } from '@sapphire/framework';
+import * as typia from 'typia';
+import type { TypeGuardError } from 'typia';
+
+const assertConfig = typia.createAssert<Config>();
+
+export function checkConfig(config: unknown): config is Config {
+	try {
+		assertConfig(config);
+		return true;
+	} catch (err: unknown) {
+		if (err) {
+			console.error(`${(err as TypeGuardError).name}: ${(err as TypeGuardError).message}`);
+		}
+		return false;
+	}
+}
 
 export default interface Config {
 	discord: {

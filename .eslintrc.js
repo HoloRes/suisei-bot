@@ -1,18 +1,18 @@
 module.exports = {
-	env: {
-		es2021: true,
-		node: true,
-	},
 	extends: [
+		'plugin:import/recommended',
+		'plugin:import/typescript',
 		'airbnb-base',
+		'airbnb-typescript/base',
+		'plugin:@typescript-eslint/recommended-type-checked',
+		'plugin:@typescript-eslint/stylistic-type-checked',
 	],
-	parser: '@typescript-eslint/parser',
 	parserOptions: {
-		ecmaVersion: 12,
-		sourceType: 'module',
+		project: './tsconfig.eslint.json',
 	},
 	plugins: [
 		'@typescript-eslint',
+		'import',
 	],
 	settings: {
 		'import/parsers': {
@@ -25,8 +25,10 @@ module.exports = {
 		},
 	},
 	rules: {
-		indent: ['error', 'tab'],
+		indent: 'off',
 		'no-tabs': 'off',
+		'no-restricted-syntax': 'off',
+		'@typescript-eslint/indent': ['error', 'tab'],
 		'no-plusplus': ['error', {
 			allowForLoopAfterthoughts: true,
 		}],
@@ -41,5 +43,7 @@ module.exports = {
 		'import/no-extraneous-dependencies': 'off',
 		'import/prefer-default-export': 'off',
 		'class-methods-use-this': 'off',
+		'no-console': 'off',
+		'@typescript-eslint/no-explicit-any': 'off',
 	},
 };

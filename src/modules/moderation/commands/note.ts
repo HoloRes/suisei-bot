@@ -106,7 +106,7 @@ export class NoteCommand extends Subcommand {
 		const note = await this.container.db.note.findFirst({
 			where: {
 				id,
-				guildId: interaction.guildId!,
+				guildId: interaction.guildId,
 			},
 		});
 

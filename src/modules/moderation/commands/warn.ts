@@ -87,6 +87,6 @@ export class WarnCommand extends Command {
 			components: [row],
 		});
 
-		this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
+		await this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
 	}
 }

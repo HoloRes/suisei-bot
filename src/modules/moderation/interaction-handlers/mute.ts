@@ -199,7 +199,7 @@ export class MuteButtonHandler extends InteractionHandler {
 				.setTimestamp()
 				.setColor('#ff9d24');
 
-			logChannel.send({ embeds: [logEmbed] });
+			await logChannel.send({ embeds: [logEmbed] });
 
 			// Disable buttons
 			await interaction.message.edit({

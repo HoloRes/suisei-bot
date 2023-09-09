@@ -7,6 +7,7 @@ import {
 	StringSelectMenuOptionBuilder,
 	ComponentType,
 } from 'discord.js';
+import type { UserReportType } from '@holores/bansapi.js/dist/types';
 
 @ApplyOptions<InteractionHandler.Options>({
 	interactionHandlerType: InteractionHandlerTypes.Button,
@@ -62,7 +63,7 @@ export class CrossReportButtonHandler extends InteractionHandler {
 			userId: item.offenderId,
 			moderatorId: item.moderatorId,
 			reason: item.reason,
-			type: type.values[0] as any,
+			type: type.values[0] as UserReportType,
 		});
 
 		await interaction.editReply({

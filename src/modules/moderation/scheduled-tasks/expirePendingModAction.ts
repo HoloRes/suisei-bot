@@ -34,7 +34,7 @@ export class ExpirePendingModAction extends ScheduledTask {
 
 			const msg = await channel.messages.fetch(item.messageId);
 
-			msg.edit({
+			await msg.edit({
 				content: msg.content,
 				embeds: msg.embeds,
 				components: [],
