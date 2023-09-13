@@ -53,17 +53,38 @@ export class CrossReportButtonHandler extends InteractionHandler {
 			return;
 		}
 
-		const item = await this.container.db.moderationLogItem.findUniqueOrThrow({
+		const logItem = await this.container.db.moderationLogItem.findUniqueOrThrow({
 			where: {
 				id: Number.parseInt(id, 10),
 			},
 		});
 
 		const report = await this.container.bansApi.users.create({
-			userId: item.offenderId,
-			moderatorId: item.moderatorId,
-			reason: item.reason,
+			userId: logItem.offenderId,
+			moderatorId: logItem.moderatorId,
+			reason: logItem.reason,
 			type: type.values[0] as UserReportType,
+		});
+
+		await this.container.retracedClient.reportEvent({
+			action: 'moderation.crossreport.user',
+			group: {
+				id: interaction.guildId!,
+				name: interaction.guild!.name,
+			},
+			crud: 'c',
+			actor: {
+				id: interaction.user.id,
+				name: interaction.user.tag,
+			},
+			target: {
+				id: logItem.offenderId,
+				type: 'User',
+			},
+			fields: {
+				logItemId: logItem.id.toString(),
+				reportId: report.id.toString(),
+			},
 		});
 
 		await interaction.editReply({

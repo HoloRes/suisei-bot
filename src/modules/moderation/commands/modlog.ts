@@ -1,6 +1,7 @@
 import { Command } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
-import { PermissionFlagsBits } from 'discord.js';
+import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 
 @ApplyOptions<Command.Options>({
 	name: 'modlog',
@@ -23,6 +24,52 @@ export class ModLogCommand extends Command {
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-		await interaction.reply('Not implemented yet.');
+		if (!interaction.inGuild()) {
+			await interaction.reply('This command cannot run outside a guild');
+			return;
+		}
+
+		const user = interaction.options.getUser('user', true);
+		const crosscheck = interaction.options.getBoolean('crosscheck', true);
+
+		await interaction.deferReply();
+
+		const logs = await this.container.db.moderationLogItem.findMany({
+			where: {
+				offenderId: user.id,
+				guildId: crosscheck ? undefined : interaction.guildId,
+			},
+		});
+
+		if (logs.length === 0) {
+			await interaction.editReply('No logs found for that user.');
+			return;
+		}
+
+		await interaction.editReply({
+			embeds: [
+				new EmbedBuilder({
+					title: `Modlog for ${user.tag}`,
+					timestamp: Date.now(),
+					color: 0x61cdff,
+				}),
+			],
+		});
+		const msg = await interaction.fetchReply();
+
+		await new PaginatedMessageEmbedFields()
+			.setTemplate({
+				title: `Modlog for ${user.tag}`,
+				timestamp: Date.now(),
+				color: 0x61cdff,
+			})
+			.setItems(logs.map((logItem) => ({
+				name: `#${logItem.id} (${logItem.action.toLowerCase()})${logItem.guildId !== interaction.guildId ? ` - in ${logItem.guildId}` : ''}`,
+				value: logItem.reason,
+				inline: true,
+			})))
+			.setItemsPerPage(8)
+			.make()
+			.run(msg);
 	}
 }

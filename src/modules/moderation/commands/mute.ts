@@ -84,7 +84,7 @@ export class MuteCommand extends Command {
 			},
 		});
 		if (existingMute) {
-			const oldMuteEndDate = existingMute.logItem.date.getDate() + existingMute.logItem.duration!;
+			const oldMuteEndDate = existingMute.logItem.date.getTime() + existingMute.logItem.duration!;
 			const newMuteEndDate = Date.now() + duration;
 
 			if (oldMuteEndDate > newMuteEndDate) {

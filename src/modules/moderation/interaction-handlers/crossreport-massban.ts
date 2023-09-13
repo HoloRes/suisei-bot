@@ -12,16 +12,33 @@ export class CrossReportMassbanButtonHandler extends InteractionHandler {
 		const data = interaction.customId.split(':');
 		const id = data[2];
 
-		const item = await this.container.db.massban.findUniqueOrThrow({
+		const logItem = await this.container.db.massban.findUniqueOrThrow({
 			where: {
 				id: Number.parseInt(id, 10),
 			},
 		});
 
 		const report = await this.container.bansApi.userBanLists.create({
-			users: item.offenders,
-			moderatorId: item.moderatorId,
-			reason: item.reason,
+			users: logItem.offenders,
+			moderatorId: logItem.moderatorId,
+			reason: logItem.reason,
+		});
+
+		await this.container.retracedClient.reportEvent({
+			action: 'moderation.crossreport.mass',
+			group: {
+				id: interaction.guildId!,
+				name: interaction.guild!.name,
+			},
+			crud: 'c',
+			actor: {
+				id: interaction.user.id,
+				name: interaction.user.tag,
+			},
+			fields: {
+				logItemId: logItem.id.toString(),
+				reportId: report.id,
+			},
 		});
 
 		await interaction.editReply({

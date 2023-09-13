@@ -3,6 +3,7 @@ import { Enumerable } from '@sapphire/decorators';
 import { PrismaClient } from '@prisma/client';
 import HolodexClient from '@holores/holodex';
 import { MeiliSearch } from 'meilisearch';
+import * as Retraced from '@retracedhq/retraced';
 import type { ClientOptions } from 'discord.js';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
@@ -40,6 +41,13 @@ export class SuiseiClient extends SapphireClient {
 		// Set Holodex API key
 		container.holodexClient = new HolodexClient({
 			apiKey: container.config.holodex.apikey,
+		});
+
+		// Connect to Retraced
+		container.retracedClient = new Retraced.Client({
+			endpoint: container.config.retraced.endpoint,
+			projectId: container.config.retraced.projectId,
+			apiKey: container.config.retraced.apiKey,
 		});
 
 		// Connect to the Bans API
@@ -90,7 +98,9 @@ declare module '@sapphire/pieces' {
 	interface Container {
 		db: PrismaClient;
 		// remoteConfig: IFlagsmith;
+		bansApi: BansApiClient;
 		holodexClient: HolodexClient;
+		retracedClient: Retraced.Client;
 		meiliClient: MeiliSearch;
 		config: Config;
 		counters: Counters;

@@ -27,6 +27,7 @@
     "@holores/bansapi.js": "^1.0.1",
     "@holores/holodex": "^1.2.4",
     "@prisma/client": "^5.2.0",
+    "@retracedhq/retraced": "^0.7.0",
     "@sapphire/decorators": "^6.0.2",
     "@sapphire/discord.js-utilities": "^7.0.2",
     "@sapphire/framework": "4.6.0",

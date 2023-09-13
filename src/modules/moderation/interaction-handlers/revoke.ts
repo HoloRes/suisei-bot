@@ -65,6 +65,27 @@ export class RevokeButtonHandler extends InteractionHandler {
 				},
 			});
 
+			await this.container.retracedClient.reportEvent({
+				action: 'moderation.revoke',
+				group: {
+					id: interaction.guildId!,
+					name: interaction.guild!.name,
+				},
+				crud: 'c',
+				actor: {
+					id: moderator.id,
+					name: moderator.tag,
+				},
+				target: {
+					id: pendingItem.affectedCaseId!.toString(),
+					type: 'Case',
+				},
+				created: logItem.date,
+				fields: {
+					logItemId: logItem.id.toString(),
+				},
+			});
+
 			const logEmbed = new EmbedBuilder()
 				.setTitle(`revoke | case ${logItem.id}`)
 				.setDescription(`**Affects case:** ${pendingItem.affectedCaseId}\n**Reason:** ${pendingItem.reason}\n**Moderator:** ${moderator.tag}`)
@@ -74,7 +95,7 @@ export class RevokeButtonHandler extends InteractionHandler {
 
 			await logChannel.send({ embeds: [logEmbed] });
 
-			await interaction.editReply(`Revoked case ${logItem.id}`);
+			await interaction.editReply(`Revoked case ${logItem.affectedCaseId}`);
 		}
 
 		// Disable buttons

@@ -44,6 +44,28 @@ export class WarnButtonHandler extends InteractionHandler {
 			const offender = await this.container.client.users.fetch(pendingItem.offenderId);
 			const moderator = await this.container.client.users.fetch(pendingItem.moderatorId);
 
+			await this.container.retracedClient.reportEvent({
+				action: 'moderation.warn',
+				group: {
+					id: interaction.guildId!,
+					name: interaction.guild!.name,
+				},
+				crud: 'c',
+				actor: {
+					id: moderator.id,
+					name: moderator.tag,
+				},
+				target: {
+					id: offender.id,
+					name: offender.tag,
+					type: 'User',
+				},
+				created: logItem.date,
+				fields: {
+					logItemId: logItem.id.toString(),
+				},
+			});
+
 			// Notify the user
 			let notifyFailed = false;
 			const notificationEmbed = new EmbedBuilder()

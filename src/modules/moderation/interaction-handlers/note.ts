@@ -13,20 +13,40 @@ export class NoteModalHandler extends InteractionHandler {
 		const data = interaction.customId.split(':');
 		const action = data[2];
 		const noteIdOrUserId = data[3];
-		// const moderatorId = data[4];
+		const moderatorId = data[4];
 
-		const note = interaction.fields.getField('note', ComponentType.TextInput);
+		const moderator = await this.container.client.users.fetch(moderatorId);
+
+		const noteField = interaction.fields.getField('note', ComponentType.TextInput);
 
 		if (action === 'create') {
-			await this.container.db.note.create({
+			const note = await this.container.db.note.create({
 				data: {
-					note: note.value,
+					note: noteField.value,
 					userId: noteIdOrUserId,
 					guildId: interaction.guildId!,
 				},
 			});
 
-			// TODO: Add audit log item
+			await this.container.retracedClient.reportEvent({
+				action: 'moderation.note.create',
+				group: {
+					id: interaction.guildId!,
+					name: interaction.guild!.name,
+				},
+				crud: 'c',
+				actor: {
+					id: moderator.id,
+					name: moderator.tag,
+				},
+				target: {
+					id: noteIdOrUserId,
+					type: 'User',
+				},
+				fields: {
+					noteId: note.id.toString(),
+				},
+			});
 
 			await interaction.reply({
 				content: 'Note successfully created.',
@@ -39,11 +59,29 @@ export class NoteModalHandler extends InteractionHandler {
 					id: Number.parseInt(noteIdOrUserId, 10),
 				},
 				data: {
-					note: note.value,
+					note: noteField.value,
 				},
 			});
 
-			// TODO: Add audit log item
+			await this.container.retracedClient.reportEvent({
+				action: 'moderation.note.update',
+				group: {
+					id: interaction.guildId!,
+					name: interaction.guild!.name,
+				},
+				crud: 'u',
+				actor: {
+					id: moderator.id,
+					name: moderator.tag,
+				},
+				target: {
+					id: noteIdOrUserId,
+					type: 'Note',
+				},
+				fields: {
+					noteId: noteIdOrUserId,
+				},
+			});
 
 			await interaction.reply({
 				content: 'Note successfully updated.',

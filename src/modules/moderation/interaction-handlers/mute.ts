@@ -36,7 +36,7 @@ export class MuteButtonHandler extends InteractionHandler {
 				},
 			});
 			if (existingMute) {
-				const oldMuteEndDate = existingMute.logItem.date.getDate() + existingMute.logItem.duration!;
+				const oldMuteEndDate = existingMute.logItem.date.getTime() + existingMute.logItem.duration!;
 				const newMuteEndDate = Date.now() + pendingItem.duration!;
 
 				if (oldMuteEndDate > newMuteEndDate) {
@@ -97,6 +97,28 @@ export class MuteButtonHandler extends InteractionHandler {
 					task: 'unmute',
 					query: logItem.id.toString(),
 					jobId: unmuteTask.id,
+				},
+			});
+
+			await this.container.retracedClient.reportEvent({
+				action: 'moderation.mute',
+				group: {
+					id: interaction.guildId!,
+					name: interaction.guild!.name,
+				},
+				crud: 'c',
+				actor: {
+					id: moderator.id,
+					name: moderator.tag,
+				},
+				target: {
+					id: offender.id,
+					name: offender.user.tag,
+					type: 'User',
+				},
+				created: logItem.date,
+				fields: {
+					logItemId: logItem.id.toString(),
 				},
 			});
 

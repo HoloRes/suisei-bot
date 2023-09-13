@@ -102,6 +102,28 @@ export class BanButtonHandler extends InteractionHandler {
 				);
 			}
 
+			await this.container.retracedClient.reportEvent({
+				action: 'moderation.ban',
+				group: {
+					id: interaction.guildId!,
+					name: interaction.guild!.name,
+				},
+				crud: 'c',
+				actor: {
+					id: moderator.id,
+					name: moderator.tag,
+				},
+				target: {
+					id: offender.id,
+					name: offender.tag,
+					type: 'User',
+				},
+				created: logItem.date,
+				fields: {
+					logItemId: logItem.id.toString(),
+				},
+			});
+
 			// Log to modlog channel
 			const guildConfig = await this.container.db.moderationGuildConfig.findUniqueOrThrow({
 				where: {

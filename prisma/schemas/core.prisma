@@ -1,40 +1,28 @@
 // This file holds the core database models required to run the bot
 
 model Server {
-    id               String   @id
-    prefix           String?
-    disabledCommands String[]
-    updateChannel    String?
-    staffRole        String?
-    adminRole        String?
+  id               String   @id
+  prefix           String?
+  disabledCommands String[]
+  updateChannel    String?
+  staffRole        String?
+  adminRole        String?
 }
 
 model ConfigValue {
-    guildId String
-    module  String
-    key     String
-    value   String
+  guildId String
+  module  String
+  key     String
+  value   String
 
-    @@id([guildId, module, key])
+  @@id([guildId, module, key])
 }
 
 model ScheduledTask {
-    module String
-    task   String
-    query  String
-    jobId  String
+  module String
+  task   String
+  query  String
+  jobId  String
 
-    @@id([module, task, query])
-}
-
-model AuditLogItem {
-    id      String  @id @default(cuid())
-    module  String
-    action  String
-    affects String
-    reason  String?
-    author  String
-    log     String
-    guildId String
-    data    String?
+  @@id([module, task, query])
 }

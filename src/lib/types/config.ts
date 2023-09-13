@@ -44,6 +44,11 @@ export default interface Config {
 		host: string;
 		key: string;
 	};
+	retraced: {
+		endpoint: string;
+		projectId: string;
+		apiKey: string;
+	};
 	owners: string[];
 	api: {
 		port: number;

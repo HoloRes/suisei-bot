@@ -85,6 +85,28 @@ export class KickButtonHandler extends InteractionHandler {
 				return;
 			}
 
+			await this.container.retracedClient.reportEvent({
+				action: 'moderation.kick',
+				group: {
+					id: interaction.guildId!,
+					name: interaction.guild!.name,
+				},
+				crud: 'c',
+				actor: {
+					id: moderator.id,
+					name: moderator.tag,
+				},
+				target: {
+					id: offender.id,
+					name: offender.tag,
+					type: 'User',
+				},
+				created: logItem.date,
+				fields: {
+					logItemId: logItem.id.toString(),
+				},
+			});
+
 			// Log to modlog channel
 			const guildConfig = await this.container.db.moderationGuildConfig.findUniqueOrThrow({
 				where: {

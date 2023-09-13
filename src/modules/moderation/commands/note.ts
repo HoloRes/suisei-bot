@@ -200,7 +200,13 @@ export class NoteCommand extends Subcommand {
 		}
 
 		await interaction.editReply({
-			content: `Notes for ${user.tag}`,
+			embeds: [
+				new EmbedBuilder({
+					title: `Notes for ${user.tag}`,
+					color: 0x61cdff,
+					timestamp: Date.now(),
+				}),
+			],
 		});
 		const msg = await interaction.fetchReply();
 
