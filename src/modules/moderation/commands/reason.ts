@@ -24,6 +24,58 @@ export class ReasonCommand extends Command {
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-		await interaction.reply('Not implemented yet.');
+		if (!interaction.inGuild()) {
+			await interaction.reply('This command cannot run outside a guild');
+			return;
+		}
+
+		const caseId = interaction.options.getInteger('caseid', true);
+		const reason = interaction.options.getString('reason', true);
+
+		await interaction.deferReply();
+
+		const logItem = await this.container.db.moderationLogItem.findFirst({
+			where: {
+				id: caseId,
+				guildId: interaction.guildId,
+			},
+		});
+
+		if (!logItem) {
+			await interaction.editReply('No case found with that id.');
+			return;
+		}
+
+		await this.container.retracedClient.reportEvent({
+			action: 'moderation.reason',
+			group: {
+				id: interaction.guildId,
+				name: interaction.guild!.name,
+			},
+			crud: 'u',
+			actor: {
+				id: interaction.user.id,
+				name: interaction.user.tag,
+			},
+			target: {
+				id: logItem.id.toString(),
+				type: 'Case',
+			},
+			fields: {
+				oldReason: logItem.reason,
+				newReason: reason,
+			},
+		});
+
+		await this.container.db.moderationLogItem.update({
+			where: {
+				id: caseId,
+			},
+			data: {
+				reason,
+			},
+		});
+
+		await interaction.editReply(`Updated reason for case ${caseId} to: ${reason}`);
 	}
 }
