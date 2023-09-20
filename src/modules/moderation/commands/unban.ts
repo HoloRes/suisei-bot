@@ -1,6 +1,6 @@
 import { Command } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
-import { PermissionFlagsBits } from 'discord.js';
+import { PermissionFlagsBits, ChannelType, EmbedBuilder } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
 	name: 'warn',
@@ -24,10 +24,6 @@ export class WarnCommand extends Command {
 	}
 
 	public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
-		await interaction.reply('Not implemented yet.');
-
-		/* eslint-disable */
-		/*
 		if (!interaction.inGuild()) {
 			await interaction.reply('This command cannot run outside a guild');
 			return;
@@ -37,6 +33,10 @@ export class WarnCommand extends Command {
 		const reason = interaction.options.getString('reason', true);
 
 		await interaction.deferReply();
+
+		await interaction.guild!.members.unban(user.id, reason);
+
+		await interaction.editReply(`Successfully unbanned ${user.tag}`);
 
 		await this.container.db.moderationUser.upsert({
 			where: {
@@ -66,12 +66,12 @@ export class WarnCommand extends Command {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
-			this.container.logger.error(`Interaction[Commands][Moderation][unmute] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId}`);
+			this.container.logger.error(`Interaction[Commands][Moderation][unban] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId}`);
 			return;
 		}
 
 		if (logChannel.type !== ChannelType.GuildText) {
-			this.container.logger.error(`Interaction[Commands][Moderation][unmute] Channel ${guildConfig.logChannel} is not text based?`);
+			this.container.logger.error(`Interaction[Commands][Moderation][unban] Channel ${guildConfig.logChannel} is not text based?`);
 			return;
 		}
 
@@ -84,20 +84,15 @@ export class WarnCommand extends Command {
 				reason,
 				offenderId: user.id,
 				guildId: interaction.guildId,
-				affectedCaseId: activeMute.logItem.id,
-				...(revokeStrike ? ({
-					strikes: -1,
-					strikeDate: activeMute.logItem.strikeDate,
-				}) : {}),
 			},
 		});
 
 		const logEmbed = new EmbedBuilder()
-			.setTitle(`unmute | case ${logItem.id}`)
-			.setDescription(`**Offender:** ${offenderUser.tag} (<@${offenderUser.id}>)\n**Reason:** ${reason}`)
-			.setFooter({ text: `Affects: ${activeMute.logItem.id}` })
+			.setTitle(`unban | case ${logItem.id}`)
+			.setDescription(`**Offender:** ${user.tag} (<@${user.id}>)\n**Reason:** ${reason}`)
 			.setTimestamp()
 			.setColor('#2bad63');
-		*/
+
+		await logChannel.send({ embeds: [logEmbed] });
 	}
 }
