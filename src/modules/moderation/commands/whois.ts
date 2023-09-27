@@ -138,12 +138,18 @@ export class ModLogCommand extends Command {
 		}
 
 		const userReports = await this.container.bansApi.users.findByUserId(user.id);
-		// TODO: Search through ban lists as well
+		const banLists = await this.container.bansApi.userBanLists.findUser(user.id);
 		if (userReports.length > 0) {
 			infoEmbed
 				.setColor('#f54242')
 				.setTitle(`Found ${userReports.length} reports!`);
 		}
+		if (banLists.length > 0) {
+			infoEmbed
+				.setColor('#f54242')
+				.setTitle(`${userReports.length > 0 ? `Found ${userReports.length} reports!\n` : ''}Found user in ${banLists.length} ban lists!`);
+		}
+
 		await interaction.editReply({
 			embeds: [infoEmbed],
 		});
