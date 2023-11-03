@@ -3,19 +3,12 @@ import {
 	ApiRequest, ApiResponse, methods, Route, RouteOptions,
 } from '@sapphire/plugin-api';
 import util from 'util';
+import { authenticated } from '@/lib/api/authenticated';
 
 @ApplyOptions<RouteOptions>({ route: '/eval' })
 export class EvalRoute extends Route {
+	@authenticated()
 	public [methods.POST](request: ApiRequest, response: ApiResponse) {
-		if (!this.container.config.api?.adminKey) {
-			response.status(403).end();
-			return;
-		}
-		if (request.headers.authorization !== this.container.config.api.adminKey) {
-			response.status(401).end();
-			return;
-		}
-
 		// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 		function clean(text: string | any) {
 			if (typeof (text) === 'string') return text.replace(/'/g, `\`${String.fromCharCode(8203)}`).replace(/@/g, `@${String.fromCharCode(8203)}`);

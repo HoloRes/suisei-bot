@@ -5,6 +5,7 @@ import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 @ApplyOptions<Command.Options>({
 	name: 'whois',
 	description: 'Get info about an user',
+	preconditions: ['ValidModerationConfigPrecondition'],
 })
 export class ModLogCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

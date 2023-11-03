@@ -6,6 +6,7 @@ import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 @ApplyOptions<Command.Options>({
 	name: 'modlog',
 	description: 'Fetch the mod log of an user',
+	preconditions: ['ValidModerationConfigPrecondition'],
 })
 export class ModLogCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

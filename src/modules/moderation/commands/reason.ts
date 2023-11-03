@@ -5,6 +5,7 @@ import { PermissionFlagsBits } from 'discord.js';
 @ApplyOptions<Command.Options>({
 	name: 'reason',
 	description: 'Update the reason for a case',
+	preconditions: ['ValidModerationConfigPrecondition'],
 })
 export class ReasonCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

@@ -11,6 +11,7 @@ import {
 @ApplyOptions<Command.Options>({
 	name: 'kick',
 	description: 'Kick an member',
+	preconditions: ['ValidModerationConfigPrecondition'],
 })
 export class KickCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

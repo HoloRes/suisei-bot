@@ -7,6 +7,7 @@ import {
 @ApplyOptions<Command.Options>({
 	name: 'warn',
 	description: 'Warn an user',
+	preconditions: ['ValidModerationConfigPrecondition'],
 })
 export class WarnCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
