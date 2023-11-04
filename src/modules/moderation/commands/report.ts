@@ -12,7 +12,7 @@ import { UserReportType } from '@holores/bansapi.js/dist/types';
 @ApplyOptions<Command.Options>({
 	name: 'report',
 	description: 'Report an user for crossbanning',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class ReportCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

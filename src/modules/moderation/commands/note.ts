@@ -31,7 +31,7 @@ import { PaginatedMessageEmbedFields } from '@sapphire/discord.js-utilities';
 			chatInputRun: 'chatInputList',
 		},
 	],
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class NoteCommand extends Subcommand {
 	public override registerApplicationCommands(registry: Subcommand.Registry) {

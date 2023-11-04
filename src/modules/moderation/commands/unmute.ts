@@ -5,7 +5,7 @@ import { ChannelType, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 @ApplyOptions<Command.Options>({
 	name: 'unmute',
 	description: 'Unmute an user',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class UnmuteCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

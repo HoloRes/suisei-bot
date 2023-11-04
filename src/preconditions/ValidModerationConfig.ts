@@ -3,7 +3,7 @@ import type { CommandInteraction } from 'discord.js';
 import { Message } from 'discord.js';
 
 export class ValidModerationConfigPrecondition extends Precondition {
-	public async chatInputRun(interaction: CommandInteraction) {
+	public override async chatInputRun(interaction: CommandInteraction) {
 		if (!interaction.inGuild()) {
 			return this.error({ message: 'This command can only be run inside a guild.' });
 		}
@@ -20,7 +20,7 @@ export class ValidModerationConfigPrecondition extends Precondition {
 		return config ? this.ok() : this.error({ message: 'Please set up moderation using the dashboard.' });
 	}
 
-	public async messageRun(message: Message) {
+	public override async messageRun(message: Message) {
 		if (!message.inGuild()) {
 			return this.error({ message: 'This command can only be run inside a guild.' });
 		}
@@ -41,6 +41,6 @@ export class ValidModerationConfigPrecondition extends Precondition {
 /* eslint-disable no-unused-vars */
 declare module '@sapphire/framework' {
 	interface Preconditions {
-		ValidModerationConfigPrecondition: never;
+		ValidModerationConfig: never;
 	}
 }

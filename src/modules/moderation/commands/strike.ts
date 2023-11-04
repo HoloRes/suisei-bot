@@ -5,7 +5,7 @@ import { PermissionFlagsBits } from 'discord.js';
 @ApplyOptions<Command.Options>({
 	name: 'strike',
 	description: 'Strike an user',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class StrikeCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

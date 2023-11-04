@@ -1,14 +1,18 @@
-import { Listener } from '@sapphire/framework';
-import type { ChatInputCommandDeniedPayload, UserError } from '@sapphire/framework';
+import {
+	Events, Listener, type ChatInputCommandDeniedPayload, type UserError,
+} from '@sapphire/framework';
 
-export class CommandDeniedListener extends Listener {
-	public async run(error: UserError, { interaction }: ChatInputCommandDeniedPayload) {
-		if (Reflect.get(Object(error.context), 'silent')) return;
-
-		if (interaction.replied) {
-			await interaction.reply(error.message);
-		} else {
-			await interaction.followUp(error.message);
+export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputCommandDenied> {
+	public run(error: UserError, { interaction }: ChatInputCommandDeniedPayload) {
+		if (interaction.deferred || interaction.replied) {
+			return interaction.editReply({
+				content: error.message,
+			});
 		}
+
+		return interaction.reply({
+			content: error.message,
+			ephemeral: true,
+		});
 	}
 }

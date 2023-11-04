@@ -8,7 +8,7 @@ import parseDuration from 'parse-duration';
 @ApplyOptions<Command.Options>({
 	name: 'ban',
 	description: 'Ban an member',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class BanCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

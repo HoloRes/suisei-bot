@@ -8,7 +8,7 @@ import axios from 'axios';
 @ApplyOptions<Command.Options>({
 	name: 'massban',
 	description: 'Massban users',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class MassbanCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

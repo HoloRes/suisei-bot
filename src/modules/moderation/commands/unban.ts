@@ -5,7 +5,7 @@ import { PermissionFlagsBits, ChannelType, EmbedBuilder } from 'discord.js';
 @ApplyOptions<Command.Options>({
 	name: 'warn',
 	description: 'Warn an user',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class WarnCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

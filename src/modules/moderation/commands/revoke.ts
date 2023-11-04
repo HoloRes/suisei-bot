@@ -7,7 +7,7 @@ import {
 @ApplyOptions<Command.Options>({
 	name: 'revoke',
 	description: 'Revoke a strike',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class RevokeCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {

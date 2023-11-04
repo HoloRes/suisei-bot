@@ -12,7 +12,7 @@ import parseDuration from 'parse-duration';
 @ApplyOptions<Command.Options>({
 	name: 'mute',
 	description: 'Mute an user',
-	preconditions: ['ValidModerationConfigPrecondition'],
+	preconditions: ['ValidModerationConfig'],
 })
 export class MuteCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
