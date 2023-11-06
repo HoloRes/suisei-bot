@@ -1,7 +1,7 @@
 .github
 /logs
 .git
-config.example.js
+config*.js
 node_modules
 .env
 Dockerfile
@@ -10,7 +10,6 @@ Dockerfile
 dist
 k8s
 .commitlintrc.js
-config.js
 renovate.json
 README.md
 LICENSE
