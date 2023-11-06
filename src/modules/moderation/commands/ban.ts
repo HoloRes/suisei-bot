@@ -5,6 +5,7 @@ import {
 } from 'discord.js';
 import parseDuration from 'parse-duration';
 
+// TODO: Add message purge
 @ApplyOptions<Command.Options>({
 	name: 'ban',
 	description: 'Ban an member',
@@ -33,6 +34,9 @@ export class BanCommand extends Command {
 				.setName('strike')
 				.setDescription('Wil be recorded as a strike if true'))
 			.addStringOption((optBuilder) => optBuilder
+				.setName('purge')
+				.setDescription('Duration of messages to purge, for example 2d (max 7d)'))
+			.addStringOption((optBuilder) => optBuilder
 				.setName('duration')
 				.setDescription('Duration of the ban, for example 3d 2h')
 				.setMinLength(2)
@@ -50,10 +54,25 @@ export class BanCommand extends Command {
 		const silent = interaction.options.getBoolean('silent', true);
 		const strike = interaction.options.getBoolean('strike', false) ?? false;
 		const durationString = interaction.options.getString('duration', false);
+		const purgeString = interaction.options.getString('purge', false);
 		let duration: number | undefined;
+		let purgeDuration: number | undefined;
 
 		if (durationString) {
 			duration = parseDuration(durationString);
+			if (!duration) {
+				await interaction.reply('Invalid duration');
+				return;
+			}
+		}
+		if (purgeString) {
+			purgeDuration = parseDuration(purgeString);
+			if (!purgeDuration) {
+				await interaction.reply('Invalid purge duration');
+				return;
+			}
+			// Limit between 0 and 7 days
+			purgeDuration = Math.min(Math.max(purgeDuration, 0), 7 * 24 * 60 * 60);
 		}
 
 		if (!duration && durationString) {
@@ -88,6 +107,7 @@ export class BanCommand extends Command {
 				moderatorId: interaction.user.id,
 				reason,
 				duration,
+				purgeDuration,
 				offenderId: user.id,
 				guildId: interaction.guildId,
 				silent,

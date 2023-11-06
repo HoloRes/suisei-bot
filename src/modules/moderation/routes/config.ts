@@ -12,11 +12,26 @@ export class ModerationConfigRoute extends Route {
 			where: {
 				guildId: request.params.guildId,
 			},
-			include: {
-				strikes: true,
-			},
 		});
 
 		response.status(200).json(config);
+	}
+
+	@authenticated()
+	public async [methods.PUT](request: ApiRequest, response: ApiResponse) {
+		await this.container.db.moderationGuildConfig.upsert({
+			where: {
+				guildId: request.params.guildId,
+			},
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			update: request.body as any,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			create: {
+				guildId: request.params.guildId,
+				...request.body as any,
+			},
+		});
+
+		response.status(204).end();
 	}
 }

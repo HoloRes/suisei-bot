@@ -130,6 +130,7 @@ model ModerationPendingLogItem {
   moderatorId    String
   reason         String
   duration       Int?
+  purgeDuration  Int?
   silent         Boolean?
   hardMute       Boolean?
   strikes        Int?
@@ -143,18 +144,9 @@ model ModerationPendingLogItem {
   offenderId String
 }
 
-model StrikeAction {
-  id       String           @id @default(cuid())
-  action   ModerationAction
-  duration Int?
-
-  config   ModerationGuildConfig @relation(fields: [configId], references: [guildId], onDelete: Cascade)
-  configId String
-}
-
 model ModerationGuildConfig {
-  guildId            String         @id
-  strikes            StrikeAction[]
+  guildId            String  @id
+  strikes            Json    @default("[]")
   muteRole           String
   logChannel         String
   publicLogChannel   String?

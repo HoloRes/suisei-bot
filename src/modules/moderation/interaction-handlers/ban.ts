@@ -79,6 +79,7 @@ export class BanButtonHandler extends InteractionHandler {
 			try {
 				await interaction.guild!.members.ban(pendingItem.offenderId, {
 					reason: pendingItem.reason,
+					deleteMessageSeconds: pendingItem.purgeDuration ?? undefined,
 				});
 				await interaction.editReply({
 					content: `Banned ${offender.tag}${notifyFailed ? ', but failed to send DM notification' : ''}`,

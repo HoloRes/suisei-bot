@@ -89,7 +89,7 @@ export class RevokeCommand extends Command {
 
 		const confirmButton = new ButtonBuilder()
 			.setCustomId(`moderation:revoke:confirm:${tempItem.id}`)
-			.setLabel('Confirm Ban')
+			.setLabel('Confirm Revocation')
 			.setStyle(ButtonStyle.Danger);
 
 		const cancelButton = new ButtonBuilder()
