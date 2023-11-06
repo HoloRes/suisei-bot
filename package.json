@@ -20,7 +20,7 @@
     "postinstall": "ts-patch install -s"
   },
   "engines": {
-    "node": "^18",
+    "node": "^18 || ^20",
     "pnpm": ">=8"
   },
   "dependencies": {

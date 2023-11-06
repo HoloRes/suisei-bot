@@ -72,7 +72,7 @@ export class StrikeCommand extends Command {
 					not: 0,
 				},
 				strikeDate: {
-					gte: new Date(Date.now() - guildConfig.strikeExpiresAfter),
+					gte: new Date(Date.now() - guildConfig.strikeExpiresAfter * 1000),
 				},
 			},
 			select: {

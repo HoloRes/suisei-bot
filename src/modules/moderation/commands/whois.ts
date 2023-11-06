@@ -61,7 +61,8 @@ export class ModLogCommand extends Command {
 		const strikesInGuildTotal = strikesInGuild
 			.reduce((accumulator, logItem) => accumulator + logItem.strikes!, 0);
 		const strikesInGuildActive = strikesInGuild
-			.filter((logItem) => Date.now() - logItem.date.getTime() > guildConfig.strikeExpiresAfter)
+			// eslint-disable-next-line max-len
+			.filter((logItem) => Date.now() - logItem.date.getTime() > guildConfig.strikeExpiresAfter * 1000)
 			.reduce((accumulator, logItem) => accumulator + logItem.strikes!, 0);
 
 		let member;
@@ -116,7 +117,8 @@ export class ModLogCommand extends Command {
 			const strikesTotal = strikes
 				.reduce((accumulator, logItem) => accumulator + logItem.strikes!, 0);
 			const strikesActive = strikes
-				.filter((logItem) => Date.now() - logItem.date.getTime() > guildConfig.strikeExpiresAfter)
+				// eslint-disable-next-line max-len
+				.filter((logItem) => Date.now() - logItem.date.getTime() > guildConfig.strikeExpiresAfter * 1000)
 				.reduce((accumulator, logItem) => accumulator + logItem.strikes!, 0);
 
 			infoEmbed.addFields(
