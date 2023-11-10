@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@holores/bansapi.js':
-    specifier: ^1.1.0
-    version: 1.1.0
+    specifier: ^1.1.1
+    version: 1.1.1
   '@holores/holodex':
     specifier: ^1.2.4
     version: 1.2.4
@@ -531,8 +531,8 @@ packages:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: false
 
-  /@holores/bansapi.js@1.1.0:
-    resolution: {integrity: sha512-AzsgLJ/BGFR4qmab27w8LKE+oTifDKdaeOMijwDUj9tbvoi+f1rQR/s3oiDHR0yYQXFkmlCWlpUtA6abC9tR4Q==}
+  /@holores/bansapi.js@1.1.1:
+    resolution: {integrity: sha512-nqu95a7N3s6stUmCewVuSujM2UMi+JcwwKMaZYSIsZGK6iuMUBEJJvtI9kDP61dcTSs/mWTrxcw3c5u4dCtJOw==}
     dependencies:
       amqplib: 0.10.3
       axios: 1.6.1

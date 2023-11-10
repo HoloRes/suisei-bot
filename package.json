@@ -24,7 +24,7 @@
     "pnpm": ">=8"
   },
   "dependencies": {
-    "@holores/bansapi.js": "^1.1.0",
+    "@holores/bansapi.js": "^1.1.1",
     "@holores/holodex": "^1.2.4",
     "@prisma/client": "^5.5.2",
     "@retracedhq/retraced": "^0.7.0",
