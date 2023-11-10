@@ -36,7 +36,8 @@ export class MuteButtonHandler extends InteractionHandler {
 				},
 			});
 			if (existingMute) {
-				const oldMuteEndDate = existingMute.logItem.date.getTime() + existingMute.logItem.duration!;
+				// eslint-disable-next-line max-len
+				const oldMuteEndDate = BigInt(existingMute.logItem.date.getTime()) + existingMute.logItem.duration!;
 				const newMuteEndDate = Date.now() + pendingItem.duration!;
 
 				if (oldMuteEndDate > newMuteEndDate) {

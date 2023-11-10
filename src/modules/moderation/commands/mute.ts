@@ -85,7 +85,8 @@ export class MuteCommand extends Command {
 			},
 		});
 		if (existingMute) {
-			const oldMuteEndDate = existingMute.logItem.date.getTime() + existingMute.logItem.duration!;
+			// eslint-disable-next-line max-len
+			const oldMuteEndDate = BigInt(existingMute.logItem.date.getTime()) + existingMute.logItem.duration!;
 			const newMuteEndDate = Date.now() + duration;
 
 			if (oldMuteEndDate > newMuteEndDate) {
