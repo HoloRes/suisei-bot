@@ -41,7 +41,7 @@ model ModerationLogItem {
     moderatorId    String
     reason         String
     date           DateTime           @default(now())
-    duration       Int?
+    duration       BigInt?
     strikes        Int?
     strikeDate     DateTime           @default(now())
     affectedCaseId Int?

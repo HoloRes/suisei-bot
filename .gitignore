@@ -112,6 +112,9 @@ dist
 /config.*.js
 !/config.example.js
 
+# Migrations
+migrations/data/*
+!migrations/data/.gitkeep
 
 # Ignore DevSpace cache and log folder
 .devspace/
