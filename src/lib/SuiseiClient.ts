@@ -41,11 +41,7 @@ export class SuiseiClient extends SapphireClient {
 		});
 
 		// Connect to Retraced
-		container.retracedClient = new Retraced.Client({
-			endpoint: container.config.retraced.endpoint,
-			projectId: container.config.retraced.projectId,
-			apiKey: container.config.retraced.apiKey,
-		});
+		container.retracedClient = { reportEvent: () => {} } as any;
 
 		// Connect to the Bans API
 		container.bansApi = new BansApiClient({

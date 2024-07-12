@@ -87,12 +87,13 @@ model ModerationPendingLogItem {
 }
 
 model ModerationGuildConfig {
-    guildId            String  @id
-    strikes            Json    @default("[]")
-    muteRole           String
-    logChannel         String
-    publicLogChannel   String?
-    strikeExpiresAfter Int
+    guildId                 String  @id
+    strikes                 Json    @default("[]")
+    muteRole                String
+    logChannel              String
+    crossreportLogChannel   String?
+    publicLogChannel        String?
+    strikeExpiresAfter      Int
 }
 
 model ActiveMute {

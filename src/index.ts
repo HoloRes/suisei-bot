@@ -21,14 +21,14 @@ import type Config from './lib/types/config';
 
 // Local files
 // eslint-disable-next-line import/extensions,global-require,@typescript-eslint/no-var-requires
-const config: unknown = require('../config.js');
-
+import config from '../config.js';
 // Config validation
 if (!checkConfig(config)) {
 	console.error('Invalid config, quiting');
 	process.exit(1);
 }
 console.log('Config validated. Initializing...');
+console.log(process.env.DATABASE_URL);
 // Set config in the Saphire container
 container.config = config;
 
@@ -78,6 +78,8 @@ app.get('/metrics', async (req, res) => {
 	}
 });
 
+console.log('Listening on port 5000');
+
 app.listen(5000);
 
 // Client init logic
@@ -111,8 +113,12 @@ const client = new SuiseiClient({
 	},
 });
 
+console.log('suisei client set up.');
+
 async function main() {
+	console.log('Logging in to discord.');
 	await client.login((config as Config).discord.token);
+	console.log('Logged in to discord.');
 }
 
 main().catch(container.logger.error.bind(container.logger));

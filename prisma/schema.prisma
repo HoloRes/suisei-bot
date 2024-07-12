@@ -150,6 +150,7 @@ model ModerationGuildConfig {
   muteRole           String
   logChannel         String
   publicLogChannel   String?
+  crossreportLogChannel String?
   strikeExpiresAfter Int
 }
 

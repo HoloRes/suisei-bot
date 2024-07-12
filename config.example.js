@@ -1,35 +1,53 @@
-// * For more info configuring the bot, see the documentation: https://docs.suisei.app
-
 module.exports = {
 	mode: 'standalone',
-	developer: {
-		type: 'user',
-		userId: '000000000000000000',
-	},
 	discord: {
 		token: '',
 		id: '',
 		secret: '',
 	},
+	config: {
+		environmentId: '',
+	},
+	owners: [
+		'YOUR USER ID HERE',
+	],
 	api: {
-		port: 80,
-		adminKey: 'admin',
-		cors: ['http://example.com'],
+		port: 3001,
+		baseUrl: 'http://localhost:3001',
+		origin: 'http://localhost:3000',
+		adminKey: 'TEST',
+	},
+	meilisearch: {
+		host: 'http://localhost:7700',
+		key: 'MASTER_KEY',
+	},
+	redis: {
+		host: 'localhost',
+		port: 6380,
 	},
 	db: {
-		username: '',
+		username: 'root',
 		password: '',
-		database: '',
+		database: 'develop',
 		host: '',
 		protocol: '',
 		query: '',
 	},
-	logTransports: {
-		file: {
-			level: 'verbose',
-		},
+	holodex: {
+		apikey: '',
 	},
-	sentry: {
-		dsn: '',
+	bansApi: {
+		endpoint: 'http://localhost:3102',
+		rabbitmqEndpoint: 'localhost:5672',
+		keyId: 'test',
+		apiKey: 'Fgf8d3UpXzwM',
+	},
+	twitter: {
+		managementGuilds: ['TEST SERVER ID HERE'],
+	},
+	logTransports: {
+		console: {
+			level: 'debug',
+		},
 	},
 };
