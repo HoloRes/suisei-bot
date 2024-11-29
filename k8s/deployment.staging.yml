@@ -57,7 +57,7 @@ metadata:
   namespace: suisei-mic-staging
 spec:
   ports:
-    - port: 80
+    - port: 3001
   selector:
     app: suisei-mic-staging
 

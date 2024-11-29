@@ -56,7 +56,7 @@ export class TwitterCommand extends Command {
 		const lines: string[] = [];
 		const tasks = leaders
 			.map(async (user, index) => {
-				const discordUser = await this.container.client.users.fetch(user.id);
+				const discordUser = await this.container.client.users.fetch(user.id).catch(() => ({ tag: 'Unknown user' }));
 
 				lines[index] = `${index + 1}. ${discordUser.tag}: ${duration === 'alltime' ? user.totalShares : user.sharesThisMonth} shares`;
 			});
