@@ -211,12 +211,13 @@ export class NoteCommand extends Subcommand {
 		});
 		const msg = await interaction.fetchReply();
 
+		const notesEmbedTemplate = new EmbedBuilder()
+			.setTitle(`Notes for ${user.tag}`)
+			.setColor(0x61cdff)
+			.setTimestamp();
+
 		await new PaginatedMessageEmbedFields()
-			.setTemplate({
-				title: `Notes for ${user.tag}`,
-				timestamp: Date.now(),
-				color: 0x61cdff,
-			})
+			.setTemplate(notesEmbedTemplate)
 			.setItems(notes.map((note) => ({
 				name: `#${note.id}`,
 				value: note.note.length > 100

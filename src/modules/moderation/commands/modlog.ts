@@ -58,12 +58,13 @@ export class ModLogCommand extends Command {
 		});
 		const msg = await interaction.fetchReply();
 
+		const modlogEmbedTemplate = new EmbedBuilder()
+			.setTitle(`Modlog for ${user.tag}`)
+			.setColor(0x61cdff)
+			.setTimestamp();
+
 		await new PaginatedMessageEmbedFields()
-			.setTemplate({
-				title: `Modlog for ${user.tag}`,
-				timestamp: Date.now(),
-				color: 0x61cdff,
-			})
+			.setTemplate(modlogEmbedTemplate)
 			.setItems(logs.map((logItem) => ({
 				name: `#${logItem.id} (${logItem.action.toLowerCase()})${logItem.guildId !== interaction.guildId ? ` - in ${logItem.guildId}` : ''}`,
 				value: logItem.reason,
