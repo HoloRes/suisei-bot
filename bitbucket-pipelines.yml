@@ -1,4 +1,4 @@
-image: node:lts-buster
+image: node:lts
 
 definitions:
   steps:
@@ -23,8 +23,6 @@ definitions:
     - step: &lint
         name: Code linting
         script:
-          - apt-get update
-          - apt-get install python3 -y
           - npm i -g pnpm
           - pnpm install
           - echo "module.exports = {}" > config.js
