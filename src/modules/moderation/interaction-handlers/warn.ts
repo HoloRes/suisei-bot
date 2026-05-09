@@ -93,6 +93,7 @@ export class WarnButtonHandler extends InteractionHandler {
 			const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 			if (!logChannel) {
+				// eslint-disable-next-line @stylistic/max-len
 				this.container.logger.error(`Interaction[Handlers][Moderation][warn] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
 				return;
 			}
@@ -104,6 +105,7 @@ export class WarnButtonHandler extends InteractionHandler {
 
 			const logEmbed = new EmbedBuilder()
 				.setTitle(`warn | case ${logItem.id}`)
+				// eslint-disable-next-line @stylistic/max-len
 				.setDescription(`**Offender:** ${offender.tag} (<@${offender.id}>)\n**Reason:** ${pendingItem.reason}\n**Moderator:** ${moderator.tag}`)
 				.setFooter({ text: `ID: ${pendingItem.offenderId}` })
 				.setTimestamp()

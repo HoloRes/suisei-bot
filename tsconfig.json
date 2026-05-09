@@ -1,26 +1,19 @@
 {
 	"compilerOptions": {
+		"rootDir": "./src",
 		"outDir": "./dist",
 		"typeRoots": [
 			"./src/lib/types",
 			"./node_modules/@types"
 		],
 		"resolveJsonModule": true,
-		"plugins": [
-			{ "transform": "typia/lib/transform" },
-			{ "transform": "typescript-transform-paths" }
-		],
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
 		"strict": true,
-		"strictNullChecks": true,
-		"paths": {
-			"@/*": ["./src/*"]
-		}
+		"strictNullChecks": true
 	},
-	"include": [
-		"./src/**/*"
-	],
-	"extends": "@tsconfig/node18/tsconfig.json"
+	"include": ["./src/**/*"],
+	"exclude": ["prisma.config.ts"],
+	"extends": "@tsconfig/node24/tsconfig.json"
 }

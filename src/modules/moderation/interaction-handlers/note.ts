@@ -1,8 +1,8 @@
-import { InteractionHandler, InteractionHandlerTypes, PieceContext } from '@sapphire/framework';
+import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
 import { ComponentType, ModalSubmitInteraction } from 'discord.js';
 
 export class NoteModalHandler extends InteractionHandler {
-	public constructor(ctx: PieceContext, options: InteractionHandler.Options) {
+	public constructor(ctx: InteractionHandler.LoaderContext, options: InteractionHandler.Options) {
 		super(ctx, {
 			...options,
 			interactionHandlerType: InteractionHandlerTypes.ModalSubmit,
@@ -50,7 +50,7 @@ export class NoteModalHandler extends InteractionHandler {
 
 			await interaction.reply({
 				content: 'Note successfully created.',
-				ephemeral: true,
+				flags: 'Ephemeral',
 			});
 		} else {
 			// Must be edit
@@ -85,7 +85,7 @@ export class NoteModalHandler extends InteractionHandler {
 
 			await interaction.reply({
 				content: 'Note successfully updated.',
-				ephemeral: true,
+				flags: 'Ephemeral',
 			});
 		}
 	}

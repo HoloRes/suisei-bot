@@ -3,11 +3,11 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { PermissionFlagsBits, ChannelType, EmbedBuilder } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
-	name: 'warn',
-	description: 'Warn an user',
+	name: 'unban',
+	description: 'Unban an user',
 	preconditions: ['ValidModerationConfig'],
 })
-export class WarnCommand extends Command {
+export class UnbanCommand extends Command {
 	public override registerApplicationCommands(registry: Command.Registry) {
 		registry.registerChatInputCommand((builder) => builder
 			.setName(this.name)
@@ -67,6 +67,7 @@ export class WarnCommand extends Command {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
+			// eslint-disable-next-line @stylistic/max-len
 			this.container.logger.error(`Interaction[Commands][Moderation][unban] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId}`);
 			return;
 		}

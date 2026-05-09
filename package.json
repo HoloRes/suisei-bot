@@ -1,114 +1,112 @@
 {
-  "name": "suisei-bot",
-  "version": "3.0.0",
-  "description": "A custom bot for the Hololive Resort Discord",
-  "main": "dist/index.js",
-  "scripts": {
-    "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint \"./src/**\"",
-    "lint:ci": "eslint \"./src/**\" ;exit 0",
-    "lint:fix": "eslint --fix \"./src/**\"",
-    "build": "tsc -p tsconfig.production.json",
-    "dev:run": "node-dev --notify=false dist/index.js",
-    "watch": "tsc --watch",
-    "dev": "run-p watch dev:run",
-    "prepare": "husky install",
-    "db:push": "prisma-import -f && prisma db push",
-    "db:migrate": "prisma-import -f && prisma migrate dev",
-    "db:generate": "prisma-import -f && prisma generate",
-    "postinstall": "ts-patch install -s"
-  },
-  "engines": {
-    "node": "^18 || ^20 || ^22",
-    "pnpm": ">=8"
-  },
-  "dependencies": {
-    "@holores/bansapi.js": "^1.1.1",
-    "@holores/holodex": "^1.2.4",
-    "@prisma/client": "^5.22.0",
-    "@retracedhq/retraced": "^0.7.17",
-    "@sapphire/decorators": "^6.1.1",
-    "@sapphire/discord.js-utilities": "^7.3.1",
-    "@sapphire/framework": "4.7.2",
-    "@sapphire/pieces": "^3.10.0",
-    "@sapphire/plugin-api": "^5.2.0",
-    "@sapphire/plugin-logger": "^3.0.7",
-    "@sapphire/plugin-scheduled-tasks": "^7.1.2",
-    "@sapphire/plugin-subcommands": "^4.3.0",
-    "@sapphire/stopwatch": "^1.5.4",
-    "@sapphire/time-utilities": "^1.7.14",
-    "@sentry/integrations": "^7.114.0",
-    "@sentry/node": "^7.120.0",
-    "@sentry/tracing": "^7.114.0",
-    "axios": "^1.7.8",
-    "bufferutil": "^4.0.8",
-    "bullmq": "^4.18.2",
-    "discord.js": "^14.16.3",
-    "express": "^4.21.1",
-    "flagsmith-nodejs": "^3.3.3",
-    "humanize-duration": "^3.32.1",
-    "meilisearch": "^0.33.0",
-    "parse-duration": "^1.1.0",
-    "prisma": "^5.22.0",
-    "prisma-import": "^1.0.5",
-    "prom-client": "^14.2.0",
-    "re2": "^1.21.4",
-    "reflect-metadata": "^0.1.14",
-    "search-query-parser": "^1.6.0",
-    "string-template": "^1.0.0",
-    "tslib": "^2.8.1",
-    "typia": "^5.5.10",
-    "utf-8-validate": "^6.0.5",
-    "winston": "^3.17.0",
-    "winston-loki": "^6.1.3",
-    "zlib-sync": "^0.1.9"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^17.8.1",
-    "@commitlint/config-conventional": "^17.8.1",
-    "@sentry/types": "^7.120.0",
-    "@tsconfig/node18": "^18.2.4",
-    "@types/express": "^4.17.21",
-    "@types/humanize-duration": "^3.27.4",
-    "@types/node": "^20.17.9",
-    "@types/string-template": "^1.0.6",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "eslint": "^8.57.1",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-airbnb-typescript": "^17.1.0",
-    "eslint-import-resolver-typescript": "^3.6.3",
-    "eslint-plugin-import": "^2.31.0",
-    "husky": "^8.0.3",
-    "lint-staged": "^14.0.1",
-    "node-dev": "^8.0.0",
-    "npm-run-all": "^4.1.5",
-    "ts-node": "^10.9.2",
-    "ts-patch": "3.0.2",
-    "ttypescript": "1.5.15",
-    "typescript": "5.4.5",
-    "typescript-transform-paths": "^3.5.2"
-  },
-  "prisma": {
-    "import": {
-      "schemas": "prisma/schemas/*.prisma",
-      "output": "prisma/schema.prisma"
-    }
-  },
-  "lint-staged": {
-    "*.{js,ts,jsx,tsx}": [
-      "eslint --fix"
-    ]
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://bitbucket.org/holores/suisei-bot.git"
-  },
-  "author": "Hololive Resort",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://bitbucket.org/holores/suisei-bot/issues"
-  },
-  "homepage": "https://bitbucket.org/holores/suisei-bot"
+	"name": "suisei-bot",
+	"version": "3.1.0",
+	"description": "A custom bot for the Hololive Resort Discord",
+	"main": "dist/index.js",
+	"scripts": {
+		"start": "node dist/index.js",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "eslint \"src/**/*.ts\"",
+		"lint:ci": "eslint \"src/**/*.ts\" ;exit 0",
+		"lint:fix": "eslint --fix \"src/**/*.ts\"",
+		"build": "tsc -p tsconfig.production.json",
+		"dev:run": "node-dev --notify=false dist/index.js",
+		"watch": "tsc --watch",
+		"dev": "run-p watch dev:run",
+		"prepare": "husky",
+		"db:push": "prisma db push",
+		"db:migrate": "prisma migrate dev",
+		"db:generate": "prisma generate"
+	},
+	"engines": {
+		"node": "^24 || ^26",
+		"pnpm": "^10 || ^11"
+	},
+	"dependencies": {
+		"@eslint/config-helpers": "^0.6.0",
+		"@holores/bansapi.js": "^1.1.1",
+		"@holores/holodex": "^1.2.4",
+		"@prisma/adapter-pg": "^7.8.0",
+		"@prisma/client": "^7.8.0",
+		"@retracedhq/retraced": "^0.7.23",
+		"@sapphire/decorators": "^6.2.0",
+		"@sapphire/discord.js-utilities": "^7.3.3",
+		"@sapphire/framework": "^5.5.0",
+		"@sapphire/pieces": "^4.4.1",
+		"@sapphire/plugin-api": "^8.3.1",
+		"@sapphire/plugin-logger": "^4.1.0",
+		"@sapphire/plugin-scheduled-tasks": "^10.0.4",
+		"@sapphire/plugin-subcommands": "^7.0.1",
+		"@sapphire/stopwatch": "^1.5.4",
+		"@sapphire/time-utilities": "^1.7.14",
+		"@sentry/node": "^10.52.0",
+		"bufferutil": "^4.1.0",
+		"bullmq": "^5.76.6",
+		"discord.js": "^14.26.4",
+		"dotenv": "^17.4.2",
+		"express": "^5.2.1",
+		"humanize-duration": "^3.33.2",
+		"meilisearch": "^0.57.0",
+		"parse-duration": "^2.1.6",
+		"pg": "^8.20.0",
+		"prisma": "^7.8.0",
+		"prom-client": "^15.1.3",
+		"re2": "^1.24.0",
+		"reflect-metadata": "^0.2.2",
+		"search-query-parser": "^1.6.0",
+		"string-template": "^1.0.0",
+		"tslib": "^2.8.1",
+		"utf-8-validate": "^6.0.6",
+		"winston": "^3.19.0",
+		"winston-loki": "^6.1.4",
+		"zlib-sync": "^0.1.10",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^20.5.3",
+		"@commitlint/config-conventional": "^20.5.3",
+		"@eslint/js": "^9.39.4",
+		"@stylistic/eslint-plugin": "^5.10.0",
+		"@tsconfig/node24": "^24.0.4",
+		"@types/express": "^5.0.6",
+		"@types/humanize-duration": "^3.27.4",
+		"@types/node": "^25.6.2",
+		"@types/string-template": "^1.0.7",
+		"@typescript-eslint/eslint-plugin": "^8.59.2",
+		"@typescript-eslint/parser": "^8.59.2",
+		"eslint": "^9.39.4",
+		"eslint-config-airbnb-extended": "^3.1.0",
+		"eslint-import-resolver-typescript": "^4.4.4",
+		"eslint-plugin-import": "^2.32.0",
+		"eslint-plugin-import-x": "^4.16.2",
+		"eslint-plugin-n": "^17.24.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.4.0",
+		"node-dev": "^8.0.0",
+		"npm-run-all": "^4.1.5",
+		"ts-node": "^10.9.2",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.59.2"
+	},
+	"imports": {
+		"#src/*": {
+			"types": "./src/*.ts",
+			"default": "./dist/*.js"
+		}
+	},
+	"lint-staged": {
+		"*.{js,ts,jsx,tsx}": [
+			"eslint --fix"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://bitbucket.org/holores/suisei-bot.git"
+	},
+	"author": "Hololive Resort",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://bitbucket.org/holores/suisei-bot/issues"
+	},
+	"homepage": "https://bitbucket.org/holores/suisei-bot"
 }

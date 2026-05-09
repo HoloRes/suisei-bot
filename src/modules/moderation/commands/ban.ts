@@ -55,8 +55,8 @@ export class BanCommand extends Command {
 		const strike = interaction.options.getBoolean('strike', false) ?? false;
 		const durationString = interaction.options.getString('duration', false);
 		const purgeString = interaction.options.getString('purge', false);
-		let duration: number | undefined;
-		let purgeDuration: number | undefined;
+		let duration: number | null | undefined;
+		let purgeDuration: number | null | undefined;
 
 		if (durationString) {
 			duration = parseDuration(durationString);
@@ -78,7 +78,7 @@ export class BanCommand extends Command {
 		if (!duration && durationString) {
 			await interaction.reply({
 				content: 'Given duration was invalid',
-				ephemeral: true,
+				flags: 'Ephemeral',
 			});
 			return;
 		}
@@ -140,6 +140,6 @@ export class BanCommand extends Command {
 			components: [row],
 		});
 
-		await this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
+		await this.container.tasks.create({ name: 'expirePendingModAction', payload: { id: logItem.id } }, 900_000);
 	}
 }

@@ -1,6 +1,5 @@
 import { Listener } from '@sapphire/framework';
 import { ChannelType, Message } from 'discord.js';
-import axios from 'axios';
 import { Time } from '@sapphire/time-utilities';
 import RE2 from 're2';
 
@@ -79,21 +78,22 @@ export default async function handleMessage(this: Listener, message: Message) {
 		if (share) return;
 
 		// Attempt to fetch the tweet
-		let res;
+		let body;
 		// Username doesn't matter at all, so hard code it
 		try {
-			res = await axios.get<VxTwitterResponse>(`https://api.vxtwitter.com/goldelysium/status/${id}`);
+			const res = await fetch(`https://api.vxtwitter.com/goldelysium/status/${id}`);
+			body = await res.json() as VxTwitterResponse;
 		} catch {
 			// Likely invalid tweet
 			return;
 		}
 
-		const postDate = new Date(0).setUTCSeconds(res.data.date_epoch);
+		const postDate = new Date(0).setUTCSeconds(body.date_epoch);
 		// Check if the post wasn't more than 6 hours ago
 		if (Date.now() - postDate > Time.Hour * 6) return;
 
 		try {
-			await this.container.meiliClient.index('twitter-users').getDocument(res.data.user_screen_name.toLowerCase());
+			await this.container.meiliClient.index('twitter-users').getDocument(body.user_screen_name.toLowerCase());
 		} catch {
 			// Not on the whitelist
 			return;
@@ -138,14 +138,14 @@ export default async function handleMessage(this: Listener, message: Message) {
 
 		const subscribers = await this.container.db.twitterSubscription.findMany({
 			where: {
-				handle: res.data.user_screen_name.toLowerCase(),
+				handle: body.user_screen_name.toLowerCase(),
 			},
 		});
 
 		let baseUrl = 'fxtwitter.com';
 
-		const hasGifOrVideo = res.data.media_extended.map((media) => media.type === 'video' || new URL(media.url).pathname.endsWith('.gif')).includes(true);
-		if (!hasGifOrVideo && res.data.media_extended.length > 1) {
+		const hasGifOrVideo = body.media_extended.map((media) => media.type === 'video' || new URL(media.url).pathname.endsWith('.gif')).includes(true);
+		if (!hasGifOrVideo && body.media_extended.length > 1) {
 			baseUrl = 'c.fxtwitter.com';
 		}
 

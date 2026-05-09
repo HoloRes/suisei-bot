@@ -1,13 +1,13 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import {
-	ApiRequest, ApiResponse, methods, Route, RouteOptions,
+	ApiRequest, ApiResponse, Route, RouteOptions,
 } from '@sapphire/plugin-api';
-import { authenticated } from '@/lib/api/authenticated';
+import { authenticated } from '#src/lib/api/authenticated';
 
-@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/auditLogToken' })
+@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/auditLogToken', methods: ['GET'] })
 export class AuditLogTokenRoute extends Route {
 	@authenticated()
-	public async [methods.GET](request: ApiRequest, response: ApiResponse) {
+	public async run(request: ApiRequest, response: ApiResponse) {
 		response.status(200).text(await this.container.retracedClient.getViewerToken(request.params.guildId, ''));
 	}
 }

@@ -8,7 +8,7 @@ interface IPayload {
 }
 
 export class UnbanTask extends ScheduledTask {
-	public constructor(context: ScheduledTask.Context, options: ScheduledTask.Options) {
+	public constructor(context: ScheduledTask.LoaderContext, options: ScheduledTask.Options) {
 		super(context, {
 			...options,
 			name: 'unban',
@@ -38,6 +38,7 @@ export class UnbanTask extends ScheduledTask {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
+			// eslint-disable-next-line @stylistic/max-len
 			this.container.logger.error(`Interaction[Tasks][Moderation][unban] Cannot find log channel (${guildConfig.logChannel}) in ${payload.guildId}`);
 			return;
 		}
@@ -58,9 +59,8 @@ export class UnbanTask extends ScheduledTask {
 	}
 }
 
-/* eslint-disable no-unused-vars */
 declare module '@sapphire/plugin-scheduled-tasks' {
 	interface ScheduledTasks {
-		unban: never;
+		unban: IPayload;
 	}
 }
