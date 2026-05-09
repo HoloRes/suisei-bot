@@ -58,6 +58,8 @@ definitions:
           - "*.tar"
 
     - step: &publish
+        clone:
+          enabled: false
         name: Push to GHCR
         script:
           - IMAGE_NAME=$BITBUCKET_REPO_SLUG
