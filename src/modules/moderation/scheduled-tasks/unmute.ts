@@ -8,7 +8,7 @@ interface IPayload {
 }
 
 export class UnmuteTask extends ScheduledTask {
-	public constructor(context: ScheduledTask.Context, options: ScheduledTask.Options) {
+	public constructor(context: ScheduledTask.LoaderContext, options: ScheduledTask.Options) {
 		super(context, {
 			...options,
 			name: 'unmute',
@@ -34,7 +34,8 @@ export class UnmuteTask extends ScheduledTask {
 			},
 		});
 		if (!activeMute) {
-			this.container.logger.error(`Interaction[Tasks][Moderation][unmute] Unable to find active mute for log item id ${payload.id}, possibly failed to remove this task during manual unmute .`);
+			// eslint-disable-next-line @stylistic/max-len
+			this.container.logger.error(`Interaction[Tasks][Moderation][unmute] Unable to find active mute for log item id ${payload.id}, possibly failed to remove this task during manual unmute.`);
 			return;
 		}
 
@@ -73,6 +74,7 @@ export class UnmuteTask extends ScheduledTask {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
+			// eslint-disable-next-line @stylistic/max-len
 			this.container.logger.error(`Interaction[Tasks][Moderation][unmute] Cannot find log channel (${guildConfig.logChannel}) in ${payload.guildId}`);
 			return;
 		}
@@ -110,9 +112,8 @@ export class UnmuteTask extends ScheduledTask {
 	}
 }
 
-/* eslint-disable no-unused-vars */
 declare module '@sapphire/plugin-scheduled-tasks' {
 	interface ScheduledTasks {
-		unmute: never;
+		unmute: IPayload;
 	}
 }

@@ -65,7 +65,7 @@ export class MuteCommand extends Command {
 		if (!duration) {
 			await interaction.reply({
 				content: 'Given duration was invalid',
-				ephemeral: true,
+				flags: 'Ephemeral',
 			});
 			return;
 		}
@@ -85,7 +85,6 @@ export class MuteCommand extends Command {
 			},
 		});
 		if (existingMute) {
-			// eslint-disable-next-line max-len
 			const oldMuteEndDate = BigInt(existingMute.logItem.date.getTime()) + existingMute.logItem.duration!;
 			const newMuteEndDate = Date.now() + duration;
 
@@ -150,6 +149,6 @@ export class MuteCommand extends Command {
 			components: [row],
 		});
 
-		await this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
+		await this.container.tasks.create({ name: 'expirePendingModAction', payload: { id: logItem.id } }, 900_000);
 	}
 }

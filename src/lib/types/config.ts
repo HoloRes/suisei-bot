@@ -1,95 +1,90 @@
-import type { LogLevel } from '@sapphire/framework';
-import * as typia from 'typia';
-import type { TypeGuardError } from 'typia';
+import { z } from 'zod';
 
-const assertConfig = typia.createAssert<Config>();
+const logLevelSchema = z.enum(['debug', 'verbose', 'info', 'warn', 'error']);
+
+const configSchema = z.object({
+	discord: z.object({
+		token: z.string(),
+		id: z.string(),
+		secret: z.string(),
+	}),
+	config: z.object({
+		environmentId: z.string(),
+		api: z.string().optional(),
+	}),
+	db: z.object({
+		username: z.string(),
+		password: z.string(),
+		database: z.string(),
+		host: z.string(),
+		protocol: z.string(),
+		query: z.string().optional(),
+	}),
+	redis: z.object({
+		password: z.string().optional(),
+		host: z.string(),
+		port: z.number().optional(),
+		db: z.number().optional(),
+	}),
+	meilisearch: z.object({
+		host: z.string(),
+		key: z.string(),
+	}),
+	retraced: z.object({
+		endpoint: z.string(),
+		projectId: z.string(),
+		apiKey: z.string(),
+	}),
+	owners: z.array(z.string()),
+	api: z.object({
+		port: z.number(),
+		baseUrl: z.string(),
+		origin: z.string().optional(),
+		adminKey: z.string(),
+	}),
+	overrides: z.object({
+		discord: z.object({
+			defaultPrefix: z.string().optional(),
+			developerPrefix: z.string().optional(),
+		}).optional(),
+	}).optional(),
+	logLevel: logLevelSchema.optional(),
+	logTransports: z.object({
+		console: z.object({
+			level: logLevelSchema.optional(),
+		}).optional(),
+		loki: z.object({
+			host: z.string(),
+			level: logLevelSchema.optional(),
+		}).optional(),
+		file: z.object({
+			level: logLevelSchema.optional(),
+		}).optional(),
+	}).optional(),
+	holodex: z.object({
+		apikey: z.string(),
+	}),
+	bansApi: z.object({
+		keyId: z.string(),
+		apiKey: z.string(),
+		endpoint: z.string().optional(),
+		rabbitmqEndpoint: z.string().optional(),
+	}),
+	twitter: z.object({
+		managementGuilds: z.array(z.string()),
+	}),
+	sentry: z.object({
+		dsn: z.string(),
+	}).optional(),
+});
 
 export function checkConfig(config: unknown): config is Config {
-	try {
-		assertConfig(config);
-		return true;
-	} catch (err: unknown) {
-		if (err) {
-			console.error(`${(err as TypeGuardError).name}: ${(err as TypeGuardError).message}`);
-		}
-		return false;
-	}
+	const result = configSchema.safeParse(config);
+	if (result.success) return true;
+
+	console.error(result.error.issues.map((issue) => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('\n'));
+	return false;
 }
 
-export default interface Config {
-	discord: {
-		token: string;
-		id: string;
-		secret: string;
-	};
-	config: {
-		environmentId: string;
-		api?: string;
-	};
-	db: {
-		username: string;
-		password: string;
-		database: string;
-		host: string;
-		protocol: string;
-		query?: string;
-	};
-	redis: {
-		password?: string;
-		host: string;
-		port?: number;
-		db?: number;
-	};
-	meilisearch: {
-		host: string;
-		key: string;
-	};
-	retraced: {
-		endpoint: string;
-		projectId: string;
-		apiKey: string;
-	};
-	owners: string[];
-	api: {
-		port: number;
-		baseUrl: string;
-		origin?: string;
-		adminKey: string;
-	};
-	overrides?: {
-		discord?: {
-			defaultPrefix?: string;
-			developerPrefix?: string;
-		};
-		[key: string]: any;
-	};
-	logLevel?: LogLevel;
-	logTransports?: {
-		console?: {
-			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error';
-		};
-		loki?: {
-			host: string;
-			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error';
-		};
-		file?: {
-			level?: 'debug' | 'verbose' | 'info' | 'warn' | 'error';
-		};
-	};
-	holodex: {
-		apikey: string;
-	};
-	bansApi: {
-		keyId: string;
-		apiKey: string;
-		endpoint?: string;
-		rabbitmqEndpoint?: string;
-	};
-	twitter: {
-		managementGuilds: string[];
-	}
-	sentry?: {
-		dsn: string;
-	};
-// eslint-disable-next-line
-}
+type Config = z.infer<typeof configSchema>;
+export default Config;

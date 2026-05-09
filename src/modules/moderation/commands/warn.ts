@@ -1,7 +1,11 @@
 import { Command } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
 import {
-	ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits,
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	EmbedBuilder,
+	PermissionFlagsBits,
 } from 'discord.js';
 
 @ApplyOptions<Command.Options>({
@@ -76,7 +80,7 @@ export class WarnCommand extends Command {
 			.setStyle(ButtonStyle.Danger);
 
 		const cancelButton = new ButtonBuilder()
-			.setCustomId(`moderation:warn	:cancel:${logItem.id}`)
+			.setCustomId(`moderation:warn:cancel:${logItem.id}`)
 			.setLabel('Cancel')
 			.setStyle(ButtonStyle.Secondary);
 
@@ -88,6 +92,6 @@ export class WarnCommand extends Command {
 			components: [row],
 		});
 
-		await this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
+		await this.container.tasks.create({ name: 'expirePendingModAction', payload: { id: logItem.id } }, 900_000);
 	}
 }

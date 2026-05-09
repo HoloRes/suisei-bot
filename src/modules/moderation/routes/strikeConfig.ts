@@ -1,8 +1,8 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import {
-	ApiRequest, ApiResponse, methods, Route, RouteOptions,
+	ApiRequest, ApiResponse, Route, RouteOptions,
 } from '@sapphire/plugin-api';
-import { authenticated } from '@/lib/api/authenticated';
+import { authenticated } from '#src/lib/api/authenticated';
 
 interface Body {
 	actions: {
@@ -12,10 +12,10 @@ interface Body {
 	}[];
 }
 
-@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/moderation/strikeConfig' })
+@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/moderation/strikeConfig', methods: ['POST'] })
 export class ModerationStrikeConfigRoute extends Route {
 	@authenticated()
-	public async [methods.POST](request: ApiRequest, response: ApiResponse) {
+	public async run(request: ApiRequest, response: ApiResponse) {
 		const config = await this.container.db.moderationGuildConfig.findUnique({
 			where: {
 				guildId: request.params.guildId,
@@ -31,12 +31,14 @@ export class ModerationStrikeConfigRoute extends Route {
 		}
 
 		try {
+			const body = await request.readBodyJson() as Body;
+
 			await this.container.db.moderationGuildConfig.update({
 				where: {
 					guildId: request.params.guildId,
 				},
 				data: {
-					strikes: (request.body as Body).actions.map((action) => {
+					strikes: body.actions.map((action) => {
 						const updatedAction = { ...action };
 						delete updatedAction.internalId;
 

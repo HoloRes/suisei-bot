@@ -36,7 +36,6 @@ export class MuteButtonHandler extends InteractionHandler {
 				},
 			});
 			if (existingMute) {
-				// eslint-disable-next-line max-len
 				const oldMuteEndDate = BigInt(existingMute.logItem.date.getTime()) + existingMute.logItem.duration!;
 				const newMuteEndDate = Date.now() + pendingItem.duration!;
 
@@ -77,11 +76,13 @@ export class MuteButtonHandler extends InteractionHandler {
 
 			// Create unmute task
 			const unmuteTask = await this.container.tasks.create(
-				'unmute',
 				{
-					userId: pendingItem.offenderId,
-					guildId: pendingItem.guildId,
-					id: logItem.id,
+					name: 'unmute',
+					payload: {
+						userId: pendingItem.offenderId,
+						guildId: pendingItem.guildId,
+						id: logItem.id,
+					},
 				},
 				pendingItem.duration!,
 			);
@@ -197,7 +198,7 @@ export class MuteButtonHandler extends InteractionHandler {
 					content: `Muted ${offender.user.tag}${notifyFailed ? ', but failed to send DM notification' : ''}`,
 				});
 			} catch (e) {
-				this.container.logger.error('');
+				this.container.logger.error(e);
 				await interaction.editReply(`Failed to mute ${offender.user.tag}`);
 				return;
 			}
@@ -206,6 +207,7 @@ export class MuteButtonHandler extends InteractionHandler {
 			const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 			if (!logChannel) {
+				// eslint-disable-next-line @stylistic/max-len
 				this.container.logger.error(`Interaction[Handlers][Moderation][mute] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
 				return;
 			}
@@ -217,6 +219,7 @@ export class MuteButtonHandler extends InteractionHandler {
 
 			const logEmbed = new EmbedBuilder()
 				.setTitle(`mute${pendingItem.silent ? ' (silent)' : ''}${pendingItem.hardMute ? ' (hardmute)' : ''} | case ${logItem.id}`)
+				// eslint-disable-next-line @stylistic/max-len
 				.setDescription(`**Offender:** ${offender.user.tag} (<@${offender.id}>)\n**Reason:** ${pendingItem.reason}\n**Moderator:** ${moderator.tag}\n**Duration:** ${this.container.humanizeDuration(pendingItem.duration!)}`)
 				.setFooter({ text: `ID: ${pendingItem.offenderId}` })
 				.setTimestamp()

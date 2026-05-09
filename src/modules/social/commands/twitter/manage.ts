@@ -179,7 +179,7 @@ export class TwitterManageCommand extends Subcommand {
 			const searchResult = await this.container.meiliClient.index('twitter-users').search<{ handle: string }>(focusedOption.value, {
 				limit: 25,
 			});
-			await interaction.respond(searchResult.hits.map((result) => ({
+			await interaction.respond((searchResult.hits as { handle: string }[]).map((result) => ({
 				name: result.handle,
 				value: result.handle,
 			})));

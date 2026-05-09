@@ -10,21 +10,26 @@ import { ApplyOptions } from '@sapphire/decorators';
 })
 export class EvalCommand extends Command {
 	public override async messageRun(message: Message) {
-		const args = message.content.split(' ').slice(1);
+		const args = message.content.split(' ')
+			.slice(1);
 
-		// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 		function clean(text: string | any) {
-			if (typeof (text) === 'string') return text.replace(/'/g, `\`${String.fromCharCode(8203)}`).replace(/@/g, `@${String.fromCharCode(8203)}`);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+			if (typeof (text) === 'string') {
+				return text.replace(/'/g, `\`${String.fromCharCode(8203)}`)
+					.replace(/@/g, `@${String.fromCharCode(8203)}`);
+			}
+
 			return text;
 		}
 
 		try {
 			const code = args.join(' ');
-			// eslint-disable-next-line no-eval,@typescript-eslint/no-unsafe-assignment
+			// eslint-disable-next-line no-eval
 			let evaled = eval(code);
 
-			if (typeof evaled !== 'string') { evaled = util.inspect(evaled); }
+			if (typeof evaled !== 'string') {
+				evaled = util.inspect(evaled);
+			}
 
 			await (message.channel as TextChannel).send(codeBlock(clean(evaled)));
 		} catch (err) {

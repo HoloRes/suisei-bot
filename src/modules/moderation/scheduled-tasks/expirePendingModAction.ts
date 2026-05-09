@@ -6,7 +6,7 @@ interface IPayload {
 }
 
 export class ExpirePendingModAction extends ScheduledTask {
-	public constructor(context: ScheduledTask.Context, options: ScheduledTask.Options) {
+	public constructor(context: ScheduledTask.LoaderContext, options: ScheduledTask.Options) {
 		super(context, {
 			...options,
 			name: 'expirePendingModAction',
@@ -43,9 +43,8 @@ export class ExpirePendingModAction extends ScheduledTask {
 	}
 }
 
-/* eslint-disable no-unused-vars */
 declare module '@sapphire/plugin-scheduled-tasks' {
 	interface ScheduledTasks {
-		expirePendingModAction: never;
+		expirePendingModAction: IPayload;
 	}
 }

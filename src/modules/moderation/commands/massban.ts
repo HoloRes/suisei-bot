@@ -3,7 +3,6 @@ import { ApplyOptions } from '@sapphire/decorators';
 import {
 	ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, EmbedBuilder, PermissionFlagsBits,
 } from 'discord.js';
-import axios from 'axios';
 
 @ApplyOptions<Command.Options>({
 	name: 'massban',
@@ -61,8 +60,9 @@ export class MassbanCommand extends Command {
 			}
 
 			await interaction.deferReply();
-			const res = await axios.get<string>(file.url);
-			ids = res.data.replace(/\r/g, '').split(/\n+|\s+|,/g);
+			const res = await fetch(file.url);
+			const body = await res.text();
+			ids = body.replace(/\r/g, '').split(/\n+|\s+|,/g);
 		}
 
 		if (ids.length <= 1) {
@@ -108,6 +108,7 @@ export class MassbanCommand extends Command {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
+			// eslint-disable-next-line @stylistic/max-len
 			this.container.logger.error(`Interaction[Handlers][Moderation][ban] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId}`);
 			return;
 		}
