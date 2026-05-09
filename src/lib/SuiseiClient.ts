@@ -1,14 +1,15 @@
 import { container, SapphireClient, SapphireClientOptions } from '@sapphire/framework';
 import { Enumerable } from '@sapphire/decorators';
-import { PrismaClient } from '@prisma/client';
 import HolodexClient from '@holores/holodex';
-import { MeiliSearch } from 'meilisearch';
+import { Meilisearch } from 'meilisearch';
 import * as Retraced from '@retracedhq/retraced';
 import type { ClientOptions } from 'discord.js';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
 import { Humanizer, humanizer } from 'humanize-duration';
 import BansApiClient from '@holores/bansapi.js';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '#src/generated/prisma/client';
 import type Config from './types/config';
 import { Counters } from './types/client';
 
@@ -27,13 +28,11 @@ export class SuiseiClient extends SapphireClient {
 	}
 
 	public override async login(token: string) {
-		container.db = new PrismaClient({
-			datasources: {
-				db: {
-					url: `${container.config.db.protocol}://${container.config.db.username}:${container.config.db.password}@${container.config.db.host}/${container.config.db.database}${container.config.db.query ?? ''}`,
-				},
-			},
+		const adapter = new PrismaPg({
+			connectionString: `${container.config.db.protocol}://${container.config.db.username}:${container.config.db.password}@${container.config.db.host}/${container.config.db.database}${container.config.db.query ?? ''}`,
 		});
+
+		container.db = new PrismaClient({ adapter });
 
 		// Set Holodex API key
 		container.holodexClient = new HolodexClient({
@@ -59,7 +58,7 @@ export class SuiseiClient extends SapphireClient {
 		});
 
 		// Connect to MeiliSearch
-		container.meiliClient = new MeiliSearch({
+		container.meiliClient = new Meilisearch({
 			host: container.config.meilisearch.host,
 			apiKey: container.config.meilisearch.key,
 		});
@@ -80,13 +79,11 @@ export class SuiseiClient extends SapphireClient {
 	}
 }
 
-/* eslint-disable no-unused-vars, no-use-before-define */
 declare module 'discord.js' {
-	// eslint-disable-next-line @typescript-eslint/no-empty-interface
+
 	interface Client {
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-shadow
 	interface ClientOptions extends SapphireClientOptions {
 	}
 }
@@ -94,11 +91,10 @@ declare module 'discord.js' {
 declare module '@sapphire/pieces' {
 	interface Container {
 		db: PrismaClient;
-		// remoteConfig: IFlagsmith;
 		bansApi: BansApiClient;
 		holodexClient: HolodexClient;
 		retracedClient: Retraced.Client;
-		meiliClient: MeiliSearch;
+		meiliClient: Meilisearch;
 		config: Config;
 		counters: Counters;
 		humanizeDuration: Humanizer;

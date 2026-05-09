@@ -1,0 +1,17 @@
+allowBuilds:
+  '@prisma/engines': true
+  bufferutil: true
+  msgpackr-extract: true
+  prisma: true
+  protobufjs: true
+  re2: true
+  unrs-resolver: true
+  utf-8-validate: true
+  zlib-sync: true
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - bufferutil
+  - prisma
+  - re2
+  - utf-8-validate
+  - zlib-sync

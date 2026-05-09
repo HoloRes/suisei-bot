@@ -126,6 +126,6 @@ export class StrikeCommand extends Command {
 			components: [row],
 		});
 
-		await this.container.tasks.create('expirePendingModAction', { id: logItem.id }, 900_000);
+		await this.container.tasks.create({ name: 'expirePendingModAction', payload: { id: logItem.id } }, 900_000);
 	}
 }

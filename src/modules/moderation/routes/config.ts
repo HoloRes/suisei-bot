@@ -1,37 +1,39 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import {
-	ApiRequest, ApiResponse, methods, Route, RouteOptions,
+	ApiRequest, ApiResponse, Route, RouteOptions,
 } from '@sapphire/plugin-api';
-import { authenticated } from '@/lib/api/authenticated';
+import { authenticated } from '#src/lib/api/authenticated';
 
-@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/moderation/config' })
+@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/moderation/config', methods: ['GET', 'PUT'] })
 export class ModerationConfigRoute extends Route {
 	@authenticated()
-	public async [methods.GET](request: ApiRequest, response: ApiResponse) {
-		const config = await this.container.db.moderationGuildConfig.findUnique({
-			where: {
-				guildId: request.params.guildId,
-			},
-		});
+	public async run(request: ApiRequest, response: ApiResponse) {
+		if (request.method === 'GET') {
+			const config = await this.container.db.moderationGuildConfig.findUnique({
+				where: {
+					guildId: request.params.guildId,
+				},
+			});
 
-		response.status(200).json(config);
-	}
+			response.status(200).json(config);
+			return;
+		}
 
-	@authenticated()
-	public async [methods.PUT](request: ApiRequest, response: ApiResponse) {
-		await this.container.db.moderationGuildConfig.upsert({
-			where: {
-				guildId: request.params.guildId,
-			},
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			update: request.body as any,
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			create: {
-				guildId: request.params.guildId,
-				...request.body as any,
-			},
-		});
+		if (request.method === 'PUT') {
+			const body = await request.readBodyJson() as any;
 
-		response.status(204).end();
+			await this.container.db.moderationGuildConfig.upsert({
+				where: {
+					guildId: request.params.guildId,
+				},
+				update: body,
+				create: {
+					guildId: request.params.guildId,
+					...body,
+				},
+			});
+
+			response.status(204).end();
+		}
 	}
 }

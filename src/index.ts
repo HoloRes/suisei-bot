@@ -6,21 +6,20 @@ import '@sapphire/plugin-scheduled-tasks/register';
 
 import process from 'process';
 import * as Sentry from '@sentry/node';
-import { RewriteFrames } from '@sentry/integrations';
 import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { container, LogLevel } from '@sapphire/framework';
 import * as promClient from 'prom-client';
 import express from 'express';
-import { SuiseiClient } from './lib/SuiseiClient';
-import { checkConfig } from './lib/types/config';
+import { SuiseiClient } from '#src/lib/SuiseiClient';
+import { checkConfig } from '#src/lib/types/config';
 
 // Types
-import type Config from './lib/types/config';
+import type Config from '#src/lib/types/config';
 
 // Local files
-// eslint-disable-next-line import/extensions,global-require,@typescript-eslint/no-var-requires
+// eslint-disable-next-line import-x/extensions
 const config: unknown = require('../config.js');
 
 // Config validation
@@ -32,21 +31,14 @@ console.log('Config validated. Initializing...');
 // Set config in the Saphire container
 container.config = config;
 
-// Enable Flagsmith
-/* const flagsmith = new Flagsmith({
-	api: config.config.api ?? 'https://config.suisei.app',
-	environmentKey: config.config.environmentId,
-});
-container.remoteConfig = flagsmith; */
-
 // Enable Sentry if needed
 if (config.sentry) {
 	Sentry.init({
 		dsn: config.sentry.dsn,
 		integrations: [
-			new Sentry.Integrations.Modules(),
-			new Sentry.Integrations.Http({ breadcrumbs: true, tracing: true }),
-			new RewriteFrames({ root: join(getRootData().root, '..') }),
+			Sentry.modulesIntegration(),
+			Sentry.httpIntegration({ breadcrumbs: true }),
+			Sentry.rewriteFramesIntegration({ root: join(getRootData().root, '..') }),
 		],
 	});
 }
@@ -68,7 +60,6 @@ container.counters = {
 	},
 };
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 app.get('/metrics', async (req, res) => {
 	try {
 		res.set('Content-Type', promClient.register.contentType);
@@ -85,7 +76,7 @@ const client = new SuiseiClient({
 	partials: [Partials.Channel, Partials.GuildMember, Partials.Message, Partials.Reaction],
 	intents: [
 		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.GuildBans,
+		GatewayIntentBits.GuildModeration,
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.MessageContent,
 	],

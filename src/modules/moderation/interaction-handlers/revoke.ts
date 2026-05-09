@@ -40,6 +40,7 @@ export class RevokeButtonHandler extends InteractionHandler {
 			const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 			if (!logChannel) {
+				// eslint-disable-next-line @stylistic/max-len
 				this.container.logger.error(`Interaction[Handlers][Moderation][revoke] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
 				return;
 			}

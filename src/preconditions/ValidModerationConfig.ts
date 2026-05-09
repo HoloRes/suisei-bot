@@ -38,7 +38,6 @@ export class ValidModerationConfigPrecondition extends Precondition {
 	}
 }
 
-/* eslint-disable no-unused-vars */
 declare module '@sapphire/framework' {
 	interface Preconditions {
 		ValidModerationConfig: never;

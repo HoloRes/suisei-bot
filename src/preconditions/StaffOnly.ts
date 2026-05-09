@@ -28,7 +28,6 @@ export class StaffOnlyPrecondition extends Precondition {
 	}
 }
 
-/* eslint-disable no-unused-vars */
 declare module '@sapphire/framework' {
 	interface Preconditions {
 		StaffOnly: never;

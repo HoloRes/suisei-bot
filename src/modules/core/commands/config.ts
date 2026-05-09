@@ -11,6 +11,10 @@ import { PermissionFlagsBits } from 'discord.js';
 			chatInputRun: 'chatInputSet',
 		},
 		{
+			name: 'clear',
+			chatInputRun: 'chatInputClear',
+		},
+		{
 			name: 'get',
 			chatInputRun: 'chatInputGet',
 		},
@@ -39,6 +43,17 @@ export class ConfigCommand extends Subcommand {
 						.setName('value')
 						.setDescription('Value to set it to')))
 				.addSubcommand((command) => command
+					.setName('clear')
+					.setDescription('Clear a config option')
+					.addStringOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('module')
+						.setDescription('Module to configure'))
+					.addStringOption((optBuilder) => optBuilder
+						.setRequired(true)
+						.setName('key')
+						.setDescription('Config key to clear')))
+				.addSubcommand((command) => command
 					.setName('get')
 					.setDescription('Get a config value')
 					.addStringOption((optBuilder) => optBuilder
@@ -62,7 +77,7 @@ export class ConfigCommand extends Subcommand {
 		const key = interaction.options.getString('key', true);
 		const value = interaction.options.getString('value', true);
 
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ flags: 'Ephemeral' });
 
 		await this.container.db.configValue.upsert({
 			where: {
@@ -83,10 +98,52 @@ export class ConfigCommand extends Subcommand {
 			},
 		});
 
-		await interaction.editReply('Updated!');
+		await interaction.editReply(`Updated to \`${value}\``);
+	}
+
+	public async chatInputClear(interaction: Subcommand.ChatInputCommandInteraction) {
+		if (!interaction.inGuild()) {
+			await interaction.reply('This command cannot run outside a guild');
+			return;
+		}
+
+		const module = interaction.options.getString('module', true);
+		const key = interaction.options.getString('key', true);
+
+		await interaction.deferReply({ flags: 'Ephemeral' });
+
+		await this.container.db.configValue.delete({
+			where: {
+				guildId_module_key: {
+					guildId: interaction.guildId,
+					module,
+					key,
+				},
+			},
+		});
+
+		await interaction.editReply(`Cleared ${module}.${key}`);
 	}
 
 	public async chatInputGet(interaction: Subcommand.ChatInputCommandInteraction) {
-		return interaction.reply('Not implemented yet');
+		if (!interaction.inGuild()) {
+			await interaction.reply('This command cannot run outside a guild');
+			return;
+		}
+
+		await interaction.deferReply({ flags: 'Ephemeral' });
+
+		const module = interaction.options.getString('module', true);
+		const key = interaction.options.getString('key', true);
+
+		const record = await this.container.db.configValue.findFirst({
+			where: {
+				guildId: interaction.guildId,
+				module,
+				key,
+			},
+		});
+
+		await interaction.editReply(record ? `Current value for ${module}.${key}: \`${record.value}\`` : 'This option could not be found or is not set');
 	}
 }

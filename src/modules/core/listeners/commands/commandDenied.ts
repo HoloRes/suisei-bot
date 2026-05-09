@@ -12,7 +12,7 @@ export class ChatInputCommandDenied extends Listener<typeof Events.ChatInputComm
 
 		return interaction.reply({
 			content: error.message,
-			ephemeral: true,
+			flags: 'Ephemeral',
 		});
 	}
 }

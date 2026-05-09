@@ -1,13 +1,13 @@
 import { ApplyOptions } from '@sapphire/decorators';
 import {
-	ApiRequest, ApiResponse, methods, Route, RouteOptions,
+	ApiRequest, ApiResponse, Route, RouteOptions,
 } from '@sapphire/plugin-api';
-import { authenticated } from '@/lib/api/authenticated';
+import { authenticated } from '#src/lib/api/authenticated';
 
-@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/roles' })
+@ApplyOptions<RouteOptions>({ route: '/guilds/:guildId/roles', methods: ['GET'] })
 export class GuildRolesTokenRoute extends Route {
 	@authenticated()
-	public async [methods.GET](request: ApiRequest, response: ApiResponse) {
+	public async run(request: ApiRequest, response: ApiResponse) {
 		const guild = await this.container.client.guilds.fetch(request.params.guildId).catch(() => {});
 		if (!guild) {
 			response.status(400).end();

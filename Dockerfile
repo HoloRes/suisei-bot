@@ -18,10 +18,8 @@ RUN apk add --no-cache --virtual .gyp python3 make g++ \
 	&& corepack prepare pnpm@latest --activate \
     && npm pkg delete scripts.prepare \
     && pnpm i --frozen-lockfile \
-    && pnpm typia patch \
     && pnpm db:generate \
     && pnpm build \
-    && npm pkg delete scripts.postinstall \
     && pnpm prune --prod
 
 FROM node:lts-alpine AS runner

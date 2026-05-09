@@ -6,21 +6,15 @@
 			"./node_modules/@types"
 		],
 		"resolveJsonModule": true,
-		"plugins": [
-			{ "transform": "typia/lib/transform" },
-			{ "transform": "typescript-transform-paths" }
-		],
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"importHelpers": true,
 		"strict": true,
 		"strictNullChecks": true,
-		"paths": {
-			"@/*": ["./src/*"]
-		}
 	},
 	"include": [
-		"./src/**/*"
+		"./src/**/*",
+		"./prisma.config.ts"
 	],
-	"extends": "@tsconfig/node18/tsconfig.json"
+	"extends": "@tsconfig/node24/tsconfig.json"
 }

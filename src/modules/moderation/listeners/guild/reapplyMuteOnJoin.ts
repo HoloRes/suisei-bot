@@ -1,9 +1,9 @@
-import { Events, Listener, ListenerOptions } from '@sapphire/framework';
+import { Events, Listener, type ListenerOptions } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
 import { GuildMember } from 'discord.js';
 
 @ApplyOptions<ListenerOptions>({ event: Events.GuildMemberAdd })
-export class GuildMemberAddListener extends Listener<typeof Events.GuildMemberAdd> {
+export class ReapplyMuteOnJoinListener extends Listener<typeof Events.GuildMemberAdd> {
 	public override async run(member: GuildMember) {
 		const activeMute = await this.container.db.activeMute.findUnique({
 			where: {
@@ -22,6 +22,7 @@ export class GuildMemberAddListener extends Listener<typeof Events.GuildMemberAd
 			},
 		});
 		if (!guildConfig) {
+			// eslint-disable-next-line @stylistic/max-len
 			this.container.logger.error(`Listeners[Moderation][guildMemberAdd] Failed to fetch guild config to re-apply mute for log item ${activeMute.logItemId}`);
 			return;
 		}

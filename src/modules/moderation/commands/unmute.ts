@@ -78,6 +78,7 @@ export class UnmuteCommand extends Command {
 		const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 		if (!logChannel) {
+			// eslint-disable-next-line @stylistic/max-len
 			this.container.logger.error(`Interaction[Commands][Moderation][unmute] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId}`);
 			return;
 		}
@@ -152,5 +153,7 @@ export class UnmuteCommand extends Command {
 		} else {
 			await this.container.tasks.delete(unmuteTask.jobId);
 		}
+
+		await interaction.editReply(`Unmuted ${offenderUser.tag} (${offenderUser.id})`);
 	}
 }

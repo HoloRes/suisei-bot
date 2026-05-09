@@ -267,7 +267,6 @@ export class SubscriptionCommand extends Subcommand {
 			});
 		}
 
-		// eslint-disable-next-line eqeqeq
 		await interaction.editReply(`<#${notifChannel.id}> is now subscribed to ${channel.englishName ?? channel.name}`);
 	}
 
@@ -287,7 +286,7 @@ export class SubscriptionCommand extends Subcommand {
 				org?: string | string[];
 				subOrg?: string | string[];
 				vtuber?: string | string[];
-			}
+			};
 		}
 
 		const parsedQuery = searchQuery.parse(query, {
@@ -457,7 +456,6 @@ export class SubscriptionCommand extends Subcommand {
 			}),
 		});
 
-		// eslint-disable-next-line no-restricted-syntax
 		for (const subscription of subscriptions) {
 			display.addPageEmbed((embed) => {
 				if (subscription.channel.photo) {
@@ -465,7 +463,7 @@ export class SubscriptionCommand extends Subcommand {
 				}
 
 				return embed
-					// eslint-disable-next-line max-len
+
 					.setTitle(subscription.channel.englishName ?? subscription.channel.name)
 					.setURL(`https://www.youtube.com/channel/${subscription.channel.id}`)
 					.addFields([
@@ -485,14 +483,16 @@ export class SubscriptionCommand extends Subcommand {
 	}
 
 	public async chatInputTwitterUpsert(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true).toLowerCase();
+		const handle = interaction.options.getString('handle', true)
+			.toLowerCase();
 		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 		const message = interaction.options.getString('message');
 
 		await interaction.deferReply();
 
 		try {
-			await this.container.meiliClient.index('twitter-users').getDocument(handle);
+			await this.container.meiliClient.index('twitter-users')
+				.getDocument(handle);
 		} catch {
 			await interaction.editReply('This user is not on the whitelist.');
 			return;
@@ -519,7 +519,8 @@ export class SubscriptionCommand extends Subcommand {
 	}
 
 	public async chatInputTwitterRemove(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true).toLowerCase();
+		const handle = interaction.options.getString('handle', true)
+			.toLowerCase();
 		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 
 		await interaction.deferReply();
@@ -543,18 +544,20 @@ export class SubscriptionCommand extends Subcommand {
 	public override async autocompleteRun(interaction: Subcommand.AutocompleteInteraction) {
 		const focusedOption = interaction.options.getFocused(true);
 		if (focusedOption.name === 'vtuber') {
-			const searchResult = await this.container.meiliClient.index('vtubers').search<VTuber>(focusedOption.value, {
-				limit: 25,
-			});
-			await interaction.respond(searchResult.hits.map((result) => ({
+			const searchResult = await this.container.meiliClient.index('vtubers')
+				.search<VTuber>(focusedOption.value, {
+					limit: 25,
+				});
+			await interaction.respond((searchResult.hits).map((result) => ({
 				name: `${result.englishName ?? result.name} (${result.org})`,
 				value: result.id,
 			})));
 		} else if (focusedOption.name === 'handle') {
-			const searchResult = await this.container.meiliClient.index('twitter-users').search<{ handle: string }>(focusedOption.value, {
-				limit: 25,
-			});
-			await interaction.respond(searchResult.hits.map((result) => ({
+			const searchResult = await this.container.meiliClient.index('twitter-users')
+				.search<{ handle: string }>(focusedOption.value, {
+					limit: 25,
+				});
+			await interaction.respond((searchResult.hits as { handle: string }[]).map((result) => ({
 				name: result.handle,
 				value: result.handle,
 			})));

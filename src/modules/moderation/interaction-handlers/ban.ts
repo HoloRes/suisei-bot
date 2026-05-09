@@ -93,11 +93,13 @@ export class BanButtonHandler extends InteractionHandler {
 			// Create unban task if tempban
 			if (pendingItem.duration) {
 				await this.container.tasks.create(
-					'unban',
 					{
-						userId: pendingItem.offenderId,
-						guildId: interaction.guildId,
-						id: logItem.id,
+						name: 'unban',
+						payload: {
+							userId: pendingItem.offenderId,
+							guildId: interaction.guildId!,
+							id: logItem.id,
+						},
 					},
 					pendingItem.duration,
 				);
@@ -135,6 +137,7 @@ export class BanButtonHandler extends InteractionHandler {
 			const logChannel = await this.container.client.channels.fetch(guildConfig.logChannel);
 
 			if (!logChannel) {
+				// eslint-disable-next-line @stylistic/max-len
 				this.container.logger.error(`Interaction[Handlers][Moderation][ban] Cannot find log channel (${guildConfig.logChannel}) in ${interaction.guildId!}`);
 				return;
 			}
