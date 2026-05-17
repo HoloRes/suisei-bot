@@ -36,6 +36,7 @@ model QuerySubscription {
 model Livestream {
     id    String @id
     title String
+    createdAt DateTime @default(now())
 
     messageIds String[]
 }

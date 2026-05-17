@@ -2,28 +2,91 @@ import { ScheduledTask } from '@sapphire/plugin-scheduled-tasks';
 import { Video, VideoWithChannel } from '@holores/holodex/dist/types';
 import { ChannelType, EmbedBuilder } from 'discord.js';
 import formatStringTemplate from 'string-template';
+import { Prisma, YoutubeChannel } from '#src/generated/prisma/client';
 
 export class YoutubeNotifyTask extends ScheduledTask {
-	public constructor(context: ScheduledTask.Context, options: ScheduledTask.Options) {
+	public constructor(context: ScheduledTask.LoaderContext, options: ScheduledTask.Options) {
 		super(context, {
 			...options,
 			name: 'youtubeNotify',
 			pattern: '*/5 * * * *',
+			customJobOptions: {
+				removeOnComplete: {
+					age: 24 * 3600,
+					count: 1000,
+				},
+				removeOnFail: {
+					count: 5000,
+				},
+			},
 		});
 	}
 
-	private async notify(stream: VideoWithChannel) {
-		// Check if the stream already exists in the db
-		const dbStream = await this.container.db.livestream.findUnique({
-			where: {
-				id: stream.id,
-			},
-		});
+	private async sendNotification(
+		embed: EmbedBuilder,
+		channel: YoutubeChannel,
+		channelId: string,
+		message: string,
+		messageIds: string[],
+	): Promise<void> {
+		const notifChannel = await this.container.client.channels.fetch(channelId)
+			.catch((e) => {
+				this.container.logger.error('Tasks[YouTube][notify]', e);
+			});
 
-		// Pre-emptively return if there's nothing to update
-		if (dbStream) {
-			this.container.counters.youtube.success.inc(1);
+		// Channel is missing or broken, ignore for now. Should delete the row at some point
+		if (!notifChannel) return;
+
+		if (notifChannel.type !== ChannelType.GuildAnnouncement
+			&& notifChannel.type !== ChannelType.GuildText) {
 			return;
+		}
+
+		const webhooks = await notifChannel.fetchWebhooks();
+		let webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
+
+		if (!webhook) {
+			const newWebhook = await notifChannel.createWebhook({ name: 'Stream notification' })
+				.catch((e) => {
+					this.container.logger.error('Tasks[YouTube][notify]', e);
+				});
+
+			if (!newWebhook) return;
+			webhook = newWebhook;
+		}
+
+		try {
+			const msg = await webhook.send({
+				content: message,
+				embeds: [embed],
+				username: channel.englishName ?? channel.name,
+				avatarURL: channel.photo ?? undefined,
+			});
+
+			messageIds.push(msg.id);
+		} catch (e) {
+			this.container.logger.error('Failed to send YouTube notification', e);
+		}
+	}
+
+	private async notify(stream: VideoWithChannel) {
+		if (stream.title.trim().length === 0 || (stream.channel.englishName?.trim().length === 0 && stream.channel.name.trim().length === 0)) {
+			this.container.logger.warn(`Failed to send notification for stream ${stream.id}, either title or channel name is an empty string.`);
+			return;
+		}
+
+		// Check if the stream already exists in the db
+		try {
+			await this.container.db.livestream.create({
+				data: {
+					id: stream.id,
+					title: stream.title,
+					messageIds: [],
+				},
+			});
+		} catch (e) {
+			if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return;
+			throw e;
 		}
 
 		// Fetch the YouTube channel from the db
@@ -54,44 +117,11 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			.setURL(`https://youtu.be/${stream.id}`)
 			.setImage(`https://i.ytimg.com/vi/${stream.id}/maxresdefault.jpg`)
 			.setColor('#FF0000')
-			.setFooter({ text: 'Powered by Suisei\'s mic' });
+			.setFooter({ text: `Powered by ${this.container.client.user?.displayName ?? 'Suisei\'s Mic'}` });
 
 		const messageIds: string[] = [];
 
-		const notifMessages = subscriptions.map(async (sub) => {
-			const notifChannel = await this.container.client.channels.fetch(sub.id)
-				.catch((err) => {
-					this.container.logger.error(err);
-				});
-
-			// Channel is missing or broken, ignore for now. Should delete the row at some point
-			if (!notifChannel) return;
-
-			if (notifChannel.type !== ChannelType.GuildAnnouncement
-				&& notifChannel.type !== ChannelType.GuildText) return;
-
-			const webhooks = await notifChannel.fetchWebhooks();
-			let webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
-
-			if (!webhook) {
-				const newWebhook = await notifChannel.createWebhook({ name: 'Stream notification' })
-					.catch((err) => {
-						this.container.logger.error(err);
-					});
-
-				if (!newWebhook) return;
-				webhook = newWebhook;
-			}
-
-			const msg = await webhook.send({
-				content: sub.message,
-				embeds: [embed],
-				username: channel.englishName ?? channel.name,
-				avatarURL: channel.photo ?? undefined,
-			});
-
-			messageIds.push(msg.id);
-		});
+		const notifMessages = subscriptions.map((sub) => this.sendNotification(embed, channel, sub.id, sub.message, messageIds));
 
 		const queryChannels = await this.container.db.querySubscription.findMany({
 			where: {
@@ -128,54 +158,24 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			},
 		});
 
-		const queryNotifMessages = queryChannels.map(async (sub) => {
-			const notifChannel = await this.container.client.channels.fetch(sub.id)
-				.catch((err) => {
-					this.container.logger.error(err);
-				});
-
-			// Channel is missing or broken, ignore for now. Should delete the row at some point
-			if (!notifChannel) return;
-
-			if (notifChannel.type !== ChannelType.GuildAnnouncement
-				&& notifChannel.type !== ChannelType.GuildText) return;
-
-			const webhooks = await notifChannel.fetchWebhooks();
-			let webhook = webhooks.find((wh) => wh.name.toLowerCase() === 'stream notification');
-
-			if (!webhook) {
-				const newWebhook = await notifChannel.createWebhook({ name: 'Stream notification' })
-					.catch((err) => {
-						this.container.logger.error(err);
-					});
-
-				if (!newWebhook) return;
-				webhook = newWebhook;
-			}
-
+		const queryNotifMessages = queryChannels.map((sub) => {
 			const message = formatStringTemplate(sub.message, {
 				name: channel.englishName ?? channel.name,
 				org: channel.org,
 				subOrg: channel.subOrg,
 			});
 
-			const msg = await webhook.send({
-				content: message,
-				embeds: [embed],
-				username: channel.englishName ?? channel.name,
-				avatarURL: channel.photo ?? undefined,
-			});
-
-			messageIds.push(msg.id);
+			return this.sendNotification(embed, channel, sub.id, message, messageIds);
 		});
 
 		await Promise.all([...notifMessages, ...queryNotifMessages]);
 
-		await this.container.db.livestream.create({
+		await this.container.db.livestream.update({
 			data: {
-				id: stream.id,
-				title: stream.title,
 				messageIds,
+			},
+			where: {
+				id: stream.id,
 			},
 		});
 		this.container.counters.youtube.success.inc(1);
@@ -202,14 +202,31 @@ export class YoutubeNotifyTask extends ScheduledTask {
 					id: stream.id,
 				},
 			});
-			// eslint-disable-next-line no-empty
-		} catch {}
+		} catch (e) {
+			this.container.logger.error('Tasks[YouTube][notify]', e);
+		}
+	}
+
+	private async cleanupStreams() {
+		try {
+			await this.container.db.livestream.deleteMany({
+				where: {
+					createdAt: {
+						lte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+					},
+				},
+			});
+		} catch (e) {
+			this.container.logger.error('Tasks[YouTube][notify]', e);
+		}
 	}
 
 	public async run() {
 		this.container.logger.debug('Tasks[YouTube][notify] Pushing notifications');
 		let count = 0;
 		const tasks: Promise<void>[] = [];
+
+		const foundStreamIds = new Set<string>();
 
 		const firstStreamsPage = await this.container.holodexClient.videos.getLivePaginated({
 			status: 'live',
@@ -222,7 +239,10 @@ export class YoutubeNotifyTask extends ScheduledTask {
 		this.container.logger.debug(`Tasks[YouTube][notify] Found ${count} livestreams`);
 
 		firstStreamsPage.items.forEach((stream) => {
-			tasks.push(this.notify(stream as VideoWithChannel));
+			if (!foundStreamIds.has(stream.id)) {
+				foundStreamIds.add(stream.id);
+				tasks.push(this.notify(stream as VideoWithChannel));
+			}
 		});
 
 		const fetchNextStreams = async (page: number) => {
@@ -237,7 +257,10 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			count += currentPage.total;
 
 			currentPage.items.forEach((stream) => {
-				tasks.push(this.notify(stream as VideoWithChannel));
+				if (!foundStreamIds.has(stream.id)) {
+					foundStreamIds.add(stream.id);
+					tasks.push(this.notify(stream as VideoWithChannel));
+				}
 			});
 		};
 
@@ -250,7 +273,9 @@ export class YoutubeNotifyTask extends ScheduledTask {
 		// Increase Prometheus counter
 		this.container.counters.youtube.total.inc(count);
 
-		const firstPastPage = await this.container.holodexClient.videos.getVideosPaginated({
+		tasks.push(this.cleanupStreams());
+
+		/* const firstPastPage = await this.container.holodexClient.videos.getVideosPaginated({
 			status: 'past',
 			type: 'stream',
 			sort: 'end_actual',
@@ -286,7 +311,7 @@ export class YoutubeNotifyTask extends ScheduledTask {
 			// Await to ease load on the API
 			// eslint-disable-next-line no-await-in-loop
 			await fetchNextPastStreams(i);
-		}
+		} */
 
 		await Promise.all(tasks);
 	}
