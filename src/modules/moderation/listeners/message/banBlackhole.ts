@@ -103,7 +103,10 @@ export class BanBlackholeListener extends Listener<typeof Events.MessageCreate> 
 		}
 
 		try {
-			await message.member!.ban({ reason: logItem.reason });
+			await message.member!.ban({
+				reason: logItem.reason,
+				deleteMessageSeconds: 604_800, // 7 days
+			});
 		} catch (e) {
 			this.container.logger.error(e);
 
