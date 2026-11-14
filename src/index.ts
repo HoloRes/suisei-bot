@@ -10,7 +10,7 @@ import { getRootData } from '@sapphire/pieces';
 import { join } from 'node:path';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { container, LogLevel } from '@sapphire/framework';
-import * as promClient from 'prom-client';
+import * as promClient from '@prometheus-io/client';
 import express from 'express';
 import { SuiseiClient } from '#src/lib/SuiseiClient';
 import { checkConfig } from '#src/lib/types/config';

@@ -42,7 +42,7 @@ interface VTuber {
 				},
 			],
 		},
-		{
+		/* {
 			name: 'twitter',
 			type: 'group',
 			entries: [
@@ -58,12 +58,12 @@ interface VTuber {
 					name: 'remove',
 					chatInputRun: 'chatInputTwitterRemove',
 				},
-				/* {
+				/!* {
 					name: 'list',
 					chatInputRun: 'chatInputTwitterList',
-				}, */
+				}, *!/
 			],
-		},
+		}, */
 	],
 })
 export class SubscriptionCommand extends Subcommand {
@@ -483,7 +483,9 @@ export class SubscriptionCommand extends Subcommand {
 	}
 
 	public async chatInputTwitterUpsert(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true)
+		return interaction.reply({ content: 'Twitter notifications are currently disabled.', flags: 'Ephemeral' });
+
+		/* const handle = interaction.options.getString('handle', true)
 			.toLowerCase();
 		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 		const message = interaction.options.getString('message');
@@ -515,11 +517,13 @@ export class SubscriptionCommand extends Subcommand {
 			},
 		});
 
-		await interaction.editReply(`Successfully added Twitter subscription for @${handle} in <#${notifChannel.id}>`);
+		await interaction.editReply(`Successfully added Twitter subscription for @${handle} in <#${notifChannel.id}>`); */
 	}
 
 	public async chatInputTwitterRemove(interaction: Subcommand.ChatInputCommandInteraction) {
-		const handle = interaction.options.getString('handle', true)
+		return interaction.reply({ content: 'Twitter notifications are currently disabled.', flags: 'Ephemeral' });
+
+		/* const handle = interaction.options.getString('handle', true)
 			.toLowerCase();
 		const notifChannel = interaction.options.getChannel('channel', true, [ChannelType.GuildAnnouncement, ChannelType.GuildText]);
 
@@ -538,7 +542,7 @@ export class SubscriptionCommand extends Subcommand {
 			await interaction.editReply(`Successfully removed Twitter subscription for @${handle} in <#${notifChannel.id}>`);
 		} catch {
 			await interaction.editReply('Channel was not subscribed to that user or something went wrong.');
-		}
+		} */
 	}
 
 	public override async autocompleteRun(interaction: Subcommand.AutocompleteInteraction) {
