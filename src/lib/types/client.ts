@@ -1,5 +1,5 @@
 import { SapphireClientOptions } from '@sapphire/framework';
-import type { Counter } from 'prom-client';
+import type { Counter } from '@prometheus-io/client';
 
 declare module 'discord.js' {
 

@@ -1,4 +1,5 @@
-import { Events, Listener, type ListenerOptions } from '@sapphire/framework';
+/* eslint-disable @stylistic/max-len */
+/* import { Events, Listener, type ListenerOptions } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
 import { GuildMember } from 'discord.js';
 
@@ -35,4 +36,4 @@ export class ReapplyMuteOnJoinListener extends Listener<typeof Events.GuildMembe
 
 		// TODO: Maybe log to modlog?
 	}
-}
+} */
